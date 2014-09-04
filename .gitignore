@@ -1,0 +1,6 @@
+# vim temp files
+.*.un~
+.*.swp
+
+.pyc
+
