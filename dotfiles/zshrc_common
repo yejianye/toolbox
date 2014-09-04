@@ -1,0 +1,83 @@
+ZSH=$HOME/.oh-my-zsh
+MODE_INDICATOR="-- NORMAL --"
+ZSH_THEME="templar"
+DISABLE_AUTO_UPDATE="true"
+DISABLE_AUTO_TITLE="true"
+
+plugins=(autojump vi-mode)
+
+source $ZSH/oh-my-zsh.sh
+
+setopt ALL_EXPORT
+alias ll='ls -l'
+
+#text manipulate
+alias sum="awk '{SUM += \$1} END {print SUM}'"
+
+MANPAGER="less"
+
+bindkey -M viins '^B' vi-backward-word
+bindkey -M viins '^F' vi-forward-word
+bindkey -M viins '^H' backward-char
+bindkey -M viins '^L' forward-char
+bindkey -M viins '^J' history-beginning-search-forward
+bindkey -M viins '^K' history-beginning-search-backward
+bindkey -M viins '^D' delete-char-or-list
+bindkey -M viins '^S' delete-word
+bindkey -M viins '^W' backward-delete-word
+bindkey -M viins '^?' backward-delete-char
+bindkey -M viins '^A' beginning-of-line
+bindkey -M viins '^E' end-of-line
+bindkey -M viins '^U' kill-whole-line
+bindkey -M vicmd 'j' history-beginning-search-forward
+bindkey -M vicmd 'k' history-beginning-search-backward
+bindkey '^R' history-incremental-search-backward
+bindkey '^S' history-incremental-search-forward
+
+# GIT Settings
+function git_track_branch() {
+	git branch --track $1 origin/$1
+}
+
+function get_git_branch(){
+	git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'
+}
+
+function git_hash_by_date {
+	git rev-list -n 1 --before="$1" master
+}
+
+function git_checkout_by_date {
+	git checkout `git_hash_by_date $1`
+}
+
+alias gc="git checkout"
+alias gd="git diff"
+alias gs="git status"
+alias gp='git pull'
+alias gps='git push origin `get_git_branch`'
+alias gt='git_track_branch'
+alias gcdate='git_checkout_by_date'
+
+# Fabric 
+alias f='fab -f ~/toolbox/fabfile.py'
+alias fp='fab -f ~/toolbox/fabfile.py -I' # initial prompt for sudo password
+alias fl='fab -f ~/toolbox/fabfile.py -l' # show all available commands
+alias fh='fab -f ~/toolbox/fabfile.py -d' # show help on specific command
+
+[[ -s $HOME/.tmuxinator/scripts/tmuxinator ]] && source $HOME/.tmuxinator/scripts/tmuxinator
+
+# enable ctrl+s 
+stty -ixon
+
+# simple http server
+function httpserver {
+    if [ -n "$1" ]; then
+        python -m SimpleHTTPServer $1
+    else
+        python -m SimpleHTTPServer 8000
+    fi
+}
+
+# edit vimrc
+alias vimrc='vim ~/.vim/.vimrc_common'
