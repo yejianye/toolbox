@@ -2,5 +2,5 @@
 .*.un~
 .*.swp
 
-.pyc
+*.pyc
 
