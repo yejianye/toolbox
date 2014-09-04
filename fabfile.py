@@ -44,7 +44,7 @@ def install_vim73():
         sudo('make install')
 
 @task
-def dotrepo(path='~/toolbox'):
+def toolbox(path='~/toolbox'):
     ensure_git_repo(path, 'git://github.com/yejianye/toolbox.git', pushurl='git@github.com:yejianye/toolbox.git')
 
 @task
@@ -138,10 +138,16 @@ def coffeescript():
 def less():
     ensure_nodejs_pkg('less')
 
+@task
+def migrate_from_oldrepo():
+    zsh()
+    tmux()
+    ctags()
+    terminfo()
 
 @task
 def all():
-    dotrepo()
+    toolbox()
     zsh()
     vim()
     tmux()
