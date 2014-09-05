@@ -11,6 +11,8 @@ from fablibs.vcs import ensure_git_repo
 
 from fabscripts import wordpress
 
+from custom.fabfile import *
+
 if os.path.exists(os.path.join(os.environ['HOME'], '.ssh/config')):
     env.use_ssh_config = True
 
@@ -46,6 +48,9 @@ def install_vim73():
 @task
 def toolbox(path='~/toolbox'):
     ensure_git_repo(path, 'git://github.com/yejianye/toolbox.git', pushurl='git@github.com:yejianye/toolbox.git')
+    run('mkdir -p %s/custom' % path)
+    run('touch %s/custom/__init__.py' % path)
+    upload_template('templates/custom_fabfile.py', '%s/custom/fabfile.py' % path)    
 
 @task
 def vim():
@@ -90,7 +95,7 @@ def watchdog():
 
 @task
 def gitconfig(name='Ryan Ye', email='yejianye@gmail.com'):
-    upload_template('gitconfig', '.gitconfig', context={'name': name, 'email' : email})    
+    upload_template('templates/gitconfig', '.gitconfig', context={'name': name, 'email' : email})    
 
 @task
 def tmux():

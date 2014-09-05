@@ -1,8 +1,8 @@
-tags
+custom/
 
-# vim temp files
 .*.un~
 .*.swp
-
 *.pyc
 
+tags
+session.vim
