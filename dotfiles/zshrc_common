@@ -4,7 +4,7 @@ ZSH_THEME="templar"
 DISABLE_AUTO_UPDATE="true"
 DISABLE_AUTO_TITLE="true"
 
-plugins=(autojump vi-mode)
+plugins=(fabric autojump vi-mode)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -64,6 +64,7 @@ alias f='fab -f ~/toolbox/fabfile.py'
 alias fp='fab -f ~/toolbox/fabfile.py -I' # initial prompt for sudo password
 alias fl='fab -f ~/toolbox/fabfile.py -l' # show all available commands
 alias fh='fab -f ~/toolbox/fabfile.py -d' # show help on specific command
+alias fedit='vim -S ~/toolbox/project.vim' # open vim to edit files in toolbox 
 
 [[ -s $HOME/.tmuxinator/scripts/tmuxinator ]] && source $HOME/.tmuxinator/scripts/tmuxinator
 
