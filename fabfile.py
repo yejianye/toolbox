@@ -163,10 +163,12 @@ def all():
     toolbox()
     zsh()
     vim()
-    tmux()
     ctags()
     terminfo()
     python()
+    gitconfig()
+    with settings(warn_only=True):
+        tmux()
 
 @task
 def test():
