@@ -11,7 +11,10 @@ from fablibs.vcs import ensure_git_repo
 
 from fabscripts import wordpress
 
-from custom.fabfile import *
+try:
+    from custom.fabfile import *
+except ImportError:
+    pass
 
 if os.path.exists(os.path.join(os.environ['HOME'], '.ssh/config')):
     env.use_ssh_config = True
@@ -48,6 +51,10 @@ def install_vim73():
 @task
 def toolbox(path='~/toolbox'):
     ensure_git_repo(path, 'git://github.com/yejianye/toolbox.git', pushurl='git@github.com:yejianye/toolbox.git')
+    custom_fabfile(path)
+
+@task
+def custom_fabfile(path='~/toolbox'):
     run('mkdir -p %s/custom' % path)
     run('touch %s/custom/__init__.py' % path)
     upload_template('templates/custom_fabfile.py', '%s/custom/fabfile.py' % path)    
