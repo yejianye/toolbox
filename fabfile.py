@@ -57,7 +57,9 @@ def toolbox(path='~/toolbox'):
 def custom_fabfile(path='~/toolbox'):
     run('mkdir -p %s/custom' % path)
     run('touch %s/custom/__init__.py' % path)
-    upload_template('templates/custom_fabfile.py', '%s/custom/fabfile.py' % path)    
+    custom_fabfile_path = '%s/custom/fabfile.py' % path
+    if not exists(custom_fabfile_path):
+        upload_template('templates/custom_fabfile.py', custom_fabfile_path)
 
 @task
 def vim():
