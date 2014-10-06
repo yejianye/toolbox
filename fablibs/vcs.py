@@ -1,7 +1,7 @@
 from fabric.contrib.files import exists
 from fabric.api import run, cd
-from fabtask.packages import ensure_package
-from fabtask.utils import program_exists
+from .packages import ensure_package
+from .utils import program_exists
 
 def ensure_git_repo(path, url, pushurl=None, submodules=False):
 	if not exists(path):
