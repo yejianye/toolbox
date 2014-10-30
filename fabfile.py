@@ -10,6 +10,7 @@ from fablibs.packages import ensure_package, ensure_python_pkg, ensure_nodejs_pk
 from fablibs.vcs import ensure_git_repo
 
 from fabscripts import wordpress
+from fabscripts import ios
 
 try:
     from custom.fabfile import *
