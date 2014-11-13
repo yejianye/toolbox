@@ -47,6 +47,7 @@ def qrcode_url(text):
     resp = requests.post('http://cli.im/api/browser/generate', {'data':text, 'zm':1, 'dwz':shorten})
     if resp.status_code == 200:
         result = resp.json()
+        logging.info('Get response from cli.im: code=%d content=%s', resp.status_code, resp.content)
         return result['data']['qr_filepath']
     else:
         logging.error('Error Response from cli.im: code=%d content=%s', resp.status_code, resp.content)
