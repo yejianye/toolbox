@@ -1,0 +1,6 @@
+{
+	"name": "passwdgen",
+	"displayName": "Password Generator",
+	"description": "Generate a password",
+	"examples": ["passwdgen"]
+}

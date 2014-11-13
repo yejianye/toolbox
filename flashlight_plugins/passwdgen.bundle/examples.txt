@@ -1,0 +1,3 @@
+passwdgen
+passgen
+generate password
