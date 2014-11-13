@@ -11,6 +11,7 @@ logging.basicConfig(filename='/tmp/qrcode.log', format='%(asctime)s %(message)s'
 def results(parsed, original_query):
     return {
         "title": "Turn text into QR-code (press enter)",
+        "html": "<h3>Turn your text into QR-code and save to Downloads folder</h4>",
         "run_args": [parsed['~text']],
     }
 
