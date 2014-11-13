@@ -17,6 +17,15 @@ try:
 except ImportError:
     pass
 
+PYTHON_PACKAGES = [
+    'ipython', 
+    'ipdb',
+    'pylint',
+    'fabric',
+    'requests',
+    'pythonpy'
+]
+
 if os.path.exists(os.path.join(os.environ['HOME'], '.ssh/config')):
     env.use_ssh_config = True
 
@@ -136,14 +145,7 @@ def terminfo():
 
 @task
 def python():
-    pkgs = [
-        'ipython', 
-        'ipdb',
-        'pylint',
-        'fabric',
-        'requests'
-    ]
-    [ensure_python_pkg(pkg) for pkg in pkgs]
+    [ensure_python_pkg(pkg) for pkg in PYTHON_PACKAGES]
 
 @task
 def coffeescript():
