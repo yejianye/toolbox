@@ -96,6 +96,7 @@ def vim():
 
 @task
 def zsh():
+    '''Install zsh and on-my-zsh, and my zsh configuration'''
     if not program_exists('zsh'):
         ensure_package('zsh')
     ensure_git_repo('~/.oh-my-zsh', 'git://github.com/yejianye/oh-my-zsh.git', pushurl='git@github.com:yejianye/oh-my-zsh.git')
@@ -105,6 +106,8 @@ def zsh():
     ensure_dir('~/bin')
     ensure_git_repo('~/utils', 'git://github.com/yejianye/util-scripts.git', pushurl='git@github.com:yejianye/util-scripts.git')
     ensure_bin_path(['.', '~/bin', '~/utils', '/usr/local/bin'])
+    # install plugins
+    ensure_package("autojump")
 
 @task
 def watchdog():
@@ -177,4 +180,5 @@ def all():
 
 @task
 def test():
-    ensure_bin_path(['.', '~/bin', '~/utils', '~/localbin'])
+    #ensure_bin_path(['.', '~/bin', '~/utils', '~/localbin'])
+    ensure_package('autojump')

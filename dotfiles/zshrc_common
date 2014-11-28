@@ -59,6 +59,9 @@ alias gps='git push origin `get_git_branch`'
 alias gt='git_track_branch'
 alias gcdate='git_checkout_by_date'
 
+# Toolbox
+alias toolbox='cd ~/toolbox'
+
 # Fabric 
 alias f='fab -f ~/toolbox/fabfile.py'
 alias fp='fab -f ~/toolbox/fabfile.py -I' # initial prompt for sudo password
