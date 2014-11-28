@@ -156,9 +156,10 @@ def less():
 def migrate_from_oldrepo():
     toolbox()
     zsh()
-    tmux()
     ctags()
     terminfo()
+    with settings(warn_only=True):
+        tmux()
 
 @task
 def all():
