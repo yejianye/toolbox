@@ -1,5 +1,5 @@
 from fabric.api import env, sudo, run, settings
-from fabtask.utils import program_exists, is_linux, is_macos
+from .utils import program_exists, is_linux, is_macos
 
 class PackageError(Exception):
     pass
@@ -8,13 +8,15 @@ def find_package_management_program():
     if env.get('install_package_command'):
         return
     if is_linux():
+        env.install_package_sudo = True
         if program_exists('apt-get'):
-            env.install_package_command = 'sudo apt-get install -y'
+            env.install_package_command = 'apt-get install -y'
         elif program_exists('yum'):
-            env.install_package_command = 'sudo yum -y install'
+            env.install_package_command = 'yum -y install'
     elif is_macos():
         ensure_homebrew()
         env.install_package_command = 'brew install'
+        env.install_package_sudo = False
 
 def ensure_homebrew():
     if not program_exists('brew'):
@@ -26,7 +28,10 @@ def ensure_package(name, install_args=""):
     if install_args:
         cmd += ' ' + install_args
     with settings(warn_only=True):
-        result = run(cmd)
+        if env.install_package_sudo:
+            result = sudo(cmd)
+        else:
+            result = run(cmd)
         if not result.succeeded and not 'already installed' in result:
             raise PackageError()
 

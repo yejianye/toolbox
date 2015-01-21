@@ -1,0 +1,2 @@
+qrcode ~text(http://www.google.com)
+qr ~text(http://www.google.com)

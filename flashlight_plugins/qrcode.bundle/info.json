@@ -1,0 +1,6 @@
+{
+	"name": "qrcode",
+	"displayName": "QRCode",
+	"description": "Turn text into QR-code",
+	"examples": ["qrcode http://www.google.com"]
+}

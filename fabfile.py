@@ -10,8 +10,21 @@ from fablibs.packages import ensure_package, ensure_python_pkg, ensure_nodejs_pk
 from fablibs.vcs import ensure_git_repo
 
 from fabscripts import wordpress
+from fabscripts import ios
 
-from custom.fabfile import *
+try:
+    from custom.fabfile import *
+except ImportError:
+    pass
+
+PYTHON_PACKAGES = [
+    'ipython', 
+    'ipdb',
+    'pylint',
+    'fabric',
+    'requests',
+    'pythonpy'
+]
 
 if os.path.exists(os.path.join(os.environ['HOME'], '.ssh/config')):
     env.use_ssh_config = True
@@ -48,9 +61,15 @@ def install_vim73():
 @task
 def toolbox(path='~/toolbox'):
     ensure_git_repo(path, 'git://github.com/yejianye/toolbox.git', pushurl='git@github.com:yejianye/toolbox.git')
+    custom_fabfile(path)
+
+@task
+def custom_fabfile(path='~/toolbox'):
     run('mkdir -p %s/custom' % path)
     run('touch %s/custom/__init__.py' % path)
-    upload_template('templates/custom_fabfile.py', '%s/custom/fabfile.py' % path)    
+    custom_fabfile_path = '%s/custom/fabfile.py' % path
+    if not exists(custom_fabfile_path):
+        upload_template('templates/custom_fabfile.py', custom_fabfile_path)
 
 @task
 def vim():
@@ -77,6 +96,7 @@ def vim():
 
 @task
 def zsh():
+    '''Install zsh and on-my-zsh, and my zsh configuration'''
     if not program_exists('zsh'):
         ensure_package('zsh')
     ensure_git_repo('~/.oh-my-zsh', 'git://github.com/yejianye/oh-my-zsh.git', pushurl='git@github.com:yejianye/oh-my-zsh.git')
@@ -86,6 +106,8 @@ def zsh():
     ensure_dir('~/bin')
     ensure_git_repo('~/utils', 'git://github.com/yejianye/util-scripts.git', pushurl='git@github.com:yejianye/util-scripts.git')
     ensure_bin_path(['.', '~/bin', '~/utils', '/usr/local/bin'])
+    # install plugins
+    ensure_package("autojump")
 
 @task
 def watchdog():
@@ -126,14 +148,7 @@ def terminfo():
 
 @task
 def python():
-    pkgs = [
-        'ipython', 
-        'ipdb',
-        'pylint',
-        'fabric',
-        'requests'
-    ]
-    [ensure_python_pkg(pkg) for pkg in pkgs]
+    [ensure_python_pkg(pkg) for pkg in PYTHON_PACKAGES]
 
 @task
 def coffeescript():
@@ -145,21 +160,26 @@ def less():
 
 @task
 def migrate_from_oldrepo():
+    toolbox()
     zsh()
-    tmux()
     ctags()
     terminfo()
+    with settings(warn_only=True):
+        tmux()
 
 @task
 def all():
     toolbox()
     zsh()
     vim()
-    tmux()
     ctags()
     terminfo()
     python()
+    gitconfig()
+    with settings(warn_only=True):
+        tmux()
 
 @task
 def test():
-    ensure_bin_path(['.', '~/bin', '~/utils', '~/localbin'])
+    #ensure_bin_path(['.', '~/bin', '~/utils', '~/localbin'])
+    ensure_package('autojump')
