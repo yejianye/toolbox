@@ -90,4 +90,18 @@ alias fedit='vim -S ~/toolbox/project.vim' # open vim to edit files in toolbox
 stty -ixon
 # }}}
 
+# {{{ ===SSH-AGENT===
+# If no SSH agent is already running, start one now. Re-use sockets so we never
+# have to start more than one session.
+
+export SSH_AUTH_SOCK=/home/ryan/.ssh-socket
+
+ssh-add -l >/dev/null 2>&1
+if [ $? = 2 ]; then
+   eval `ssh-agent -a $SSH_AUTH_SOCK`
+   ssh-add
+   echo $SSH_AGENT_PID >| ~/.ssh-agent-pid
+fi
+# }}}
+
 # vim: foldmethod=marker
