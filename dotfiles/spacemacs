@@ -14,14 +14,16 @@
    '(
      auto-completion
      markdown
-     osx
      python
+     emacs-lisp
+     javascript
+     ansible
      org
+     osx
      syntax-checking
+     (git :variables
+        git-enable-github-support t)
      ;; better-defaults
-     ;; (git :variables
-     ;;      git-gutter-use-fringe ;TODO: )
-     ;; org
      )
    ;; A list of packages and/or extensions that will not be install and loaded.
    dotspacemacs-excluded-packages '()
@@ -58,10 +60,8 @@ before layers configuration."
    ;; Press <SPC> T n to cycle to the next theme in the list (works great
    ;; with 2 themes variants, one dark and one light)
    dotspacemacs-themes '(solarized-light
-                         solarized-dark
-                         leuven
-                         monokai
-                         zenburn)
+                         zenburn
+                         )
    ;; If non nil the cursor color matches the state color.
    dotspacemacs-colorize-cursor-according-to-state t
    ;; Default font. `powerline-scale' allows to quickly tweak the mode-line
@@ -104,7 +104,7 @@ before layers configuration."
    ;; If non nil the frame is maximized when Emacs starts up.
    ;; Takes effect only if `dotspacemacs-fullscreen-at-startup' is nil.
    ;; (Emacs 24.4+ only)
-   dotspacemacs-maximized-at-startup nil
+   dotspacemacs-maximized-at-startup t
    ;; A value from the range (0..100), in increasing opacity, which describes
    ;; the transparency level of a frame when it's active or selected.
    ;; Transparency can be toggled through `toggle-transparency'.
@@ -140,8 +140,24 @@ before layers configuration."
 layers configuration."
   (define-key evil-normal-state-map (kbd "C-j") (kbd "5j"))
   (define-key evil-normal-state-map (kbd "C-k") (kbd "5k"))
+  (define-key evil-insert-state-map (kbd "C-v") 'evil-paste-after)
+  ;; evilified mode
+  (define-key evil-evilified-state-map "gg" 'evil-goto-first-line)
+  (define-key evil-evilified-state-map "G" 'evil-goto-line)
+  (define-key evil-evilified-state-map (kbd "C-f") 'evil-scroll-page-down)
+  (define-key evil-evilified-state-map (kbd "C-b") 'evil-scroll-page-up)
+  ;; helm settings
   (setq helm-M-x-fuzzy-match t
         helm-recentf-fuzzy-match t)
+  (with-eval-after-load "helm"
+    (define-key helm-map (kbd "C-u") 'backward-kill-sentence)
+  )
+  ;; magit settings
+  (evil-leader/set-key "gL" 'magit-log-long)
+  (evil-leader/set-key "gr" 'magit-reflog)
+  (add-hook 'magit-mode-hook
+            '(lambda ()
+               (local-set-key (kbd "C-o") 'magit-key-mode-popup-gitflow)))
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
