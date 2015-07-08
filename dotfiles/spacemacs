@@ -56,12 +56,6 @@ before layers configuration."
    ;; List of items to show in the startup buffer. If nil it is disabled.
    ;; Possible values are: `recents' `bookmarks' `projects'."
    dotspacemacs-startup-lists '(recents projects)
-   ;; List of themes, the first of the list is loaded when spacemacs starts.
-   ;; Press <SPC> T n to cycle to the next theme in the list (works great
-   ;; with 2 themes variants, one dark and one light)
-   dotspacemacs-themes '(solarized-light
-                         zenburn
-                         )
    ;; If non nil the cursor color matches the state color.
    dotspacemacs-colorize-cursor-according-to-state t
    ;; Default font. `powerline-scale' allows to quickly tweak the mode-line
@@ -132,33 +126,98 @@ before layers configuration."
    dotspacemacs-default-package-repository nil
    )
   ;; User initialization goes here
+  ;; List of themes, the first of the list is loaded when spacemacs starts.
+  ;; Press <SPC> T n to cycle to the next theme in the list (works great
+  ;; with 2 themes variants, one dark and one light)
+  (if (display-graphic-p)
+      (setq dotspacemacs-themes '(solarized-light
+                                  zenburn))
+    (setq dotspacemacs-themes '(zenburn
+                                solarized-light))
+      )
   )
 
 (defun dotspacemacs/config ()
   "Configuration function.
  This function is called at the very end of Spacemacs initialization after
 layers configuration."
+  (setq-default indent-tabs-mode nil)
+  (setq-default tab-width 4)
+
+  ;; Custom keybindings
+  (evil-leader/set-key "py" 'find-tag)
+
+  ;; normal mode
   (define-key evil-normal-state-map (kbd "C-j") (kbd "5j"))
   (define-key evil-normal-state-map (kbd "C-k") (kbd "5k"))
   (define-key evil-insert-state-map (kbd "C-v") 'evil-paste-after)
+  (define-key evil-insert-state-map (kbd "DEL") 'ry/backspace-whitespace-to-tab-stop)
+
   ;; evilified mode
   (define-key evil-evilified-state-map "gg" 'evil-goto-first-line)
   (define-key evil-evilified-state-map "G" 'evil-goto-line)
   (define-key evil-evilified-state-map (kbd "C-f") 'evil-scroll-page-down)
   (define-key evil-evilified-state-map (kbd "C-b") 'evil-scroll-page-up)
+
   ;; helm settings
   (setq helm-M-x-fuzzy-match t
         helm-recentf-fuzzy-match t)
   (with-eval-after-load "helm"
     (define-key helm-map (kbd "C-u") 'backward-kill-sentence)
   )
+
   ;; magit settings
   (evil-leader/set-key "gL" 'magit-log-long)
   (evil-leader/set-key "gr" 'magit-reflog)
   (add-hook 'magit-mode-hook
             '(lambda ()
                (local-set-key (kbd "C-o") 'magit-key-mode-popup-gitflow)))
+
+  ;; projectile settings
+  (setq enable-local-variables :all)
+
+  ;; python settings
+  (setq-default python-indent 4)
+  (with-eval-after-load "python"
+    (modify-syntax-entry ?_ "w" python-mode-syntax-table)
+    )
+  (add-hook 'python-mode-hook
+            '(lambda ()
+               (setq indent-line-function 'indent-relative)))
+
+  (with-eval-after-load "anaconda-mode"
+    (define-key anaconda-mode-map [remap find-tag] nil))
+
+  ;; termnial settings
+  (if (display-graphic-p)
+      nil
+    (ry/terminal-config)
+    )
 )
+
+(defun ry/terminal-config()
+  (setq linum-format "%4d \u2502 "
+        linum-relative-format "%3s \u2502 ")
+)
+
+(defun ry/backspace-whitespace-to-tab-stop ()
+  "Delete whitespace backwards to the next tab-stop, otherwise delete one character."
+  (interactive)
+  (if (or indent-tabs-mode
+          (region-active-p)
+          (save-excursion
+            (> (point) (progn (back-to-indentation)
+                              (point)))))
+      (call-interactively 'backward-delete-char-untabify)
+    (let ((movement (% (current-column) tab-width))
+          (p (point)))
+      (when (= movement 0) (setq movement tab-width))
+      ;; Account for edge case near beginning of buffer
+      (setq movement (min (- p 1) movement))
+      (save-match-data
+        (if (string-match "[^\t ]*\\([\t ]+\\)$" (buffer-substring-no-properties (- p movement) p))
+            (backward-delete-char (- (match-end 1) (match-beginning 1)))
+          (call-interactively 'backward-delete-char))))))
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
