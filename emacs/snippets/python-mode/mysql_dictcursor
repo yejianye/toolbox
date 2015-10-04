@@ -1,0 +1,12 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: mysql_dictcursor
+# key: 
+# binding: direct-keybinding
+# --
+import MySQLdb 
+import MySQLdb.cursors 
+
+db = MySQLdb.connect(user='andy47', passwd='password', db='db_name', cursorclass=MySQLdb.cursors.DictCursor) 
+cursor = db.cursor() 
+cursor.execute("SELECT columna, columnb FROM tablea") 
+rows = cursor.fetchall() 

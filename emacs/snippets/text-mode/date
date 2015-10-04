@@ -1,0 +1,5 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: current date
+# key: date
+# --
+`(calendar-date-string (calendar-current-date) nil nil)`

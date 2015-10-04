@@ -1,0 +1,7 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: python code snippet
+# key: pycode
+# --
+#+BEGIN_SRC python
+$0
+#+END_SRC

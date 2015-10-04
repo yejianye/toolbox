@@ -12,7 +12,9 @@
    ;; of a list then all discovered layers will be installed.
    dotspacemacs-configuration-layers
    '(
-     auto-completion
+     (auto-completion :variables
+                      auto-completion-enable-snippets-in-popup t
+                      auto-completion-private-snippets-directory "~/toolbox/emacs/snippets")
      markdown
      python
      emacs-lisp
@@ -21,8 +23,7 @@
      org
      osx
      syntax-checking
-     (git :variables
-        git-enable-github-support t)
+     git
      ;; better-defaults
      )
    ;; A list of packages and/or extensions that will not be install and loaded.
@@ -141,37 +142,72 @@ before layers configuration."
   "Configuration function.
  This function is called at the very end of Spacemacs initialization after
 layers configuration."
-  (setq-default indent-tabs-mode nil)
-  (setq-default tab-width 4)
+  (setq-default indent-tabs-mode nil
+                tab-width 4)
+
+  (with-eval-after-load 'linum
+    (linum-relative-toggle))
 
   ;; Custom keybindings
-  (evil-leader/set-key "py" 'find-tag)
+  (evil-leader/set-key "py" 'helm-etags-select)
+  (evil-leader/set-key "rf" 'frameset-to-register)
+  (evil-leader/set-key "rj" 'jump-to-register)
+  (evil-leader/set-key "is" 'ry/insert-yas)
+  (evil-leader/set-key "x=" 'align)
 
   ;; normal mode
+  (define-key evil-normal-state-map "j" 'evil-next-visual-line)
+  (define-key evil-normal-state-map "k" 'evil-previous-visual-line)
   (define-key evil-normal-state-map (kbd "C-j") (kbd "5j"))
   (define-key evil-normal-state-map (kbd "C-k") (kbd "5k"))
+
+  ;; insert mode
   (define-key evil-insert-state-map (kbd "C-v") 'evil-paste-after)
   (define-key evil-insert-state-map (kbd "DEL") 'ry/backspace-whitespace-to-tab-stop)
+  (define-key evil-insert-state-map (kbd "<s-left>") 'beginning-of-line)
+  (define-key evil-insert-state-map (kbd "<s-right>") 'end-of-line)
+  (define-key evil-insert-state-map (kbd "C-a") 'beginning-of-line)
+  (define-key evil-insert-state-map (kbd "C-e") 'end-of-line)
 
   ;; evilified mode
-  (define-key evil-evilified-state-map "gg" 'evil-goto-first-line)
-  (define-key evil-evilified-state-map "G" 'evil-goto-line)
-  (define-key evil-evilified-state-map (kbd "C-f") 'evil-scroll-page-down)
-  (define-key evil-evilified-state-map (kbd "C-b") 'evil-scroll-page-up)
+  ;; (define-key evil-evilified-state-map "gg" 'evil-goto-first-line)
+  ;; (define-key evil-evilified-state-map "G" 'evil-goto-line)
+  ;; (define-key evil-evilified-state-map (kbd "C-f") 'evil-scroll-page-down)
+  ;; (define-key evil-evilified-state-map (kbd "C-b") 'evil-scroll-page-up)
+
+  ;; org mode
+  (setq org-startup-truncated nil)
+  (evil-leader/set-key "oa" 'org-agenda)
+  (evil-leader/set-key-for-mode 'org-mode "mid" 'ry/insert-today-date)
+  (evil-leader/set-key-for-mode 'org-mode "m>" 'org-demote-subtree)
+  (evil-leader/set-key-for-mode 'org-mode "m<" 'org-promote-subtree)
+  (evil-leader/set-key-for-mode 'org-mode "my" 'ry/org-copy-to-clipboard)
+  (evil-leader/set-key-for-mode 'org-mode "mS" 'org-sort)
+  (evil-leader/set-key-for-mode 'org-mode "ml" 'org-open-at-point)
+  (add-hook 'org-mode-hook (lambda () (toggle-word-wrap 1)))
+  (setq org-todo-keywords
+        '((sequence "NEXT(n)" "SOON(s)" "SOMEDAY(o)" "WAITING(w)" "DELEGATE(e)"
+                    "|" "DONE(d)" "CANCELLED(c)")))
+
+  ;; Artist mode
+  (with-eval-after-load "artist"
+    (define-key artist-mode-map [(down-mouse-3)] 'artist-mouse-choose-operation)
+  )
+
+  ;; shell keybindings
+  (with-eval-after-load "comint"
+    (define-key comint-mode-map (kbd "C-u") 'backward-kill-sentence)
+  )
 
   ;; helm settings
   (setq helm-M-x-fuzzy-match t
         helm-recentf-fuzzy-match t)
   (with-eval-after-load "helm"
-    (define-key helm-map (kbd "C-u") 'backward-kill-sentence)
+    (define-key helm-map (kbd "C-w") 'backward-kill-word)
   )
 
   ;; magit settings
-  (evil-leader/set-key "gL" 'magit-log-long)
   (evil-leader/set-key "gr" 'magit-reflog)
-  (add-hook 'magit-mode-hook
-            '(lambda ()
-               (local-set-key (kbd "C-o") 'magit-key-mode-popup-gitflow)))
 
   ;; projectile settings
   (setq enable-local-variables :all)
@@ -181,24 +217,53 @@ layers configuration."
   (with-eval-after-load "python"
     (modify-syntax-entry ?_ "w" python-mode-syntax-table)
     )
-  (add-hook 'python-mode-hook
-            '(lambda ()
-               (setq indent-line-function 'indent-relative)))
 
   (with-eval-after-load "anaconda-mode"
     (define-key anaconda-mode-map [remap find-tag] nil))
 
   ;; termnial settings
   (if (display-graphic-p)
-      nil
+      (ry/gui-config)
     (ry/terminal-config)
     )
+
+  ;; Workaround for fci-mode and company mode
+  ;; https://github.com/company-mode/company-mode/issues/180
+  (with-eval-after-load "company-mode"
+    (ry/fci-company-workaround)
+  )
+
+  ;; load local config
+  (load "~/.emacs-local.el")
 )
+
+(defun ry/fci-company-workaround()
+  (defvar-local company-fci-mode-on-p nil)
+
+  (defun company-turn-off-fci (&rest ignore)
+    (when (boundp 'fci-mode)
+      (setq company-fci-mode-on-p fci-mode)
+      (when fci-mode (fci-mode -1))))
+
+  (defun company-maybe-turn-on-fci (&rest ignore)
+    (when company-fci-mode-on-p (fci-mode 1)))
+
+  (add-hook 'company-completion-started-hook 'company-turn-off-fci)
+  (add-hook 'company-completion-finished-hook 'company-maybe-turn-on-fci)
+  (add-hook 'company-completion-cancelled-hook 'company-maybe-turn-on-fci)
+  )
+
+(defun ry/gui-config()
+  (setq frame-title-format '(buffer-file-name "%f" ("%b"))))
 
 (defun ry/terminal-config()
   (setq linum-format "%4d \u2502 "
-        linum-relative-format "%3s \u2502 ")
-)
+        linum-relative-format "%3s \u2502 "))
+
+(defun ry/insert-today-date()
+  (interactive)
+  (insert (calendar-date-string (calendar-current-date) nil
+                                nil)))
 
 (defun ry/backspace-whitespace-to-tab-stop ()
   "Delete whitespace backwards to the next tab-stop, otherwise delete one character."
@@ -219,5 +284,33 @@ layers configuration."
             (backward-delete-char (- (match-end 1) (match-beginning 1)))
           (call-interactively 'backward-delete-char))))))
 
+(defun ry/insert-yas ()
+  (interactive)
+  (evil-insert-state)
+  (helm-yas-complete))
+
+(defun ry/read-file-content (filename)
+  (when (file-exists-p filename)
+    (with-temp-buffer
+        (insert-file-contents filename)
+        (buffer-string)))
+  )
+
+(defun ry/org-copy-to-clipboard ()
+  "Copy current region as rich text to clipboard.
+This function makes use of command-line utility: pbcopy, textutil
+and only works on MacOS."
+  (interactive)
+  (let* ((beg (region-beginning))
+         (end (region-end))
+         (content (org-export-string-as (buffer-substring beg end) 'html t))
+         (fname (make-temp-file "org-clipboard"))
+         (style (ry/read-file-content "~/.org-clipboard.css"))
+         (content-with-style (format "<style>%s</style>%s" style content)))
+    (write-region content-with-style nil fname)
+    (shell-command (format "cat %s | textutil -stdin -format html -convert rtf -stdout | pbcopy" fname))
+    (delete-file fname))
+  )
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
+
