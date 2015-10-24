@@ -13,18 +13,22 @@
    dotspacemacs-configuration-layers
    '(
      (auto-completion :variables
-                      auto-completion-enable-snippets-in-popup t
-                      auto-completion-private-snippets-directory "~/toolbox/emacs/snippets")
+                      auto-completion-enable-snippets-in-popup nil
+                      auto-completion-private-snippets-directory "~/toolbox/emacs/snippets"
+                      :disabled-for org)
      markdown
      python
      emacs-lisp
      javascript
      ansible
+     yaml
      org
      osx
      syntax-checking
+     spell-checking
      git
-     ;; better-defaults
+     better-defaults
+     eyebrowse
      )
    ;; A list of packages and/or extensions that will not be install and loaded.
    dotspacemacs-excluded-packages '()
@@ -138,22 +142,23 @@ before layers configuration."
       )
   )
 
-(defun dotspacemacs/config ()
+(defun dotspacemacs/user-config ()
   "Configuration function.
  This function is called at the very end of Spacemacs initialization after
 layers configuration."
   (setq-default indent-tabs-mode nil
                 tab-width 4)
 
-  (with-eval-after-load 'linum
-    (linum-relative-toggle))
-
+  (setq vc-follow-symlinks t)
   ;; Custom keybindings
   (evil-leader/set-key "py" 'helm-etags-select)
   (evil-leader/set-key "rf" 'frameset-to-register)
   (evil-leader/set-key "rj" 'jump-to-register)
   (evil-leader/set-key "is" 'ry/insert-yas)
   (evil-leader/set-key "x=" 'align)
+  (evil-leader/set-key "ps" 'ry/rsync-project-to-remote)
+  (evil-leader/set-key "cs" 'ry/helm-code-snippets)
+  (evil-leader/set-key "oc" 'org-capture)
 
   ;; normal mode
   (define-key evil-normal-state-map "j" 'evil-next-visual-line)
@@ -164,16 +169,14 @@ layers configuration."
   ;; insert mode
   (define-key evil-insert-state-map (kbd "C-v") 'evil-paste-after)
   (define-key evil-insert-state-map (kbd "DEL") 'ry/backspace-whitespace-to-tab-stop)
-  (define-key evil-insert-state-map (kbd "<s-left>") 'beginning-of-line)
+  (define-key evil-insert-state-map (kbd "<s-left>") 'spacemacs/smart-move-beginning-of-line)
   (define-key evil-insert-state-map (kbd "<s-right>") 'end-of-line)
-  (define-key evil-insert-state-map (kbd "C-a") 'beginning-of-line)
+  (define-key evil-insert-state-map (kbd "C-a") 'spacemacs/smart-move-beginning-of-line)
   (define-key evil-insert-state-map (kbd "C-e") 'end-of-line)
 
   ;; evilified mode
+  ;; Example:
   ;; (define-key evil-evilified-state-map "gg" 'evil-goto-first-line)
-  ;; (define-key evil-evilified-state-map "G" 'evil-goto-line)
-  ;; (define-key evil-evilified-state-map (kbd "C-f") 'evil-scroll-page-down)
-  ;; (define-key evil-evilified-state-map (kbd "C-b") 'evil-scroll-page-up)
 
   ;; org mode
   (setq org-startup-truncated nil)
@@ -188,6 +191,17 @@ layers configuration."
   (setq org-todo-keywords
         '((sequence "NEXT(n)" "SOON(s)" "SOMEDAY(o)" "WAITING(w)" "DELEGATE(e)"
                     "|" "DONE(d)" "CANCELLED(c)")))
+
+  (setq org-capture-templates
+        '(("c" "Code snippet" entry (file+headline "~/baidu/org/code-snippets.org" "Others")
+           "** %^{desc}\n#+BEGIN_SRC %^{language|python|emacs-lisp}\n%?\n#+END_SRC")
+          ("t" "Task" entry (file+headline "~/baidu/org/tasks.org" "Work")
+           "** %^{priority|NEXT|SOON|SOMEDAY} %?\n" :prepend t)
+          ("e" "Learn Emacs" entry (file+headline "~/baidu/org/tasks.org" "Learn Emacs")
+           "*** %^{priority|NEXT|SOON|SOMEDAY} %?\n" :prepend t)
+          ("j" "Journal" entry (file+datetree "~/baidu/org/journal.org")
+           "* %?\n")
+          ))
 
   ;; Artist mode
   (with-eval-after-load "artist"
@@ -211,15 +225,20 @@ layers configuration."
 
   ;; projectile settings
   (setq enable-local-variables :all)
+  (add-hook 'emacs-lisp-mode-hook 'ry/auto-reload-dir-locals-hook)
 
   ;; python settings
   (setq-default python-indent 4)
   (with-eval-after-load "python"
     (modify-syntax-entry ?_ "w" python-mode-syntax-table)
     )
+  (remove-hook 'python-mode-hook 'turn-on-evil-matchit-mode)
 
   (with-eval-after-load "anaconda-mode"
     (define-key anaconda-mode-map [remap find-tag] nil))
+
+  ;; markdown
+  (setq markdown-open-command "~/utils/mark.sh")
 
   ;; termnial settings
   (if (display-graphic-p)
@@ -236,6 +255,10 @@ layers configuration."
   ;; load local config
   (load "~/.emacs-local.el")
 )
+
+(defmacro ry/set-key-for-file (key filename)
+  `(evil-leader/set-key ,key (lambda () (interactive)(find-file ,filename)))
+  )
 
 (defun ry/fci-company-workaround()
   (defvar-local company-fci-mode-on-p nil)
@@ -311,6 +334,66 @@ and only works on MacOS."
     (shell-command (format "cat %s | textutil -stdin -format html -convert rtf -stdout | pbcopy" fname))
     (delete-file fname))
   )
+
+(defun ry/rsync-project-to-remote ()
+  (interactive)
+  (if (boundp 'sync-remote-dir)
+      (save-window-excursion
+        (message (format "Sync project with %s!" sync-remote-dir))
+        (async-shell-command (format "rsync -av --delete --exclude='/.git' --filter=':- .gitignore' '%s' '%s'" (projectile-project-root) sync-remote-dir))
+        )
+    (message "sync-remote-dir undefined!")
+    )
+  )
+
+;; The following snippets for reloading dir locals are copied from stackoverflow
+;; link: http://emacs.stackexchange.com/questions/13080/reloading-directory-local-variables
+(defun ry/reload-dir-locals-for-current-buffer ()
+  "reload dir locals for the current buffer"
+  (interactive)
+  (let ((enable-local-variables :all))
+    (hack-dir-local-variables-non-file-buffer)))
+
+(defun ry/reload-dir-locals-for-all-buffer-in-this-project ()
+  "For every buffer with the same `default-directory` as the 
+current buffer's, reload dir-locals."
+  (interactive)
+  (let ((dir default-directory))
+    (dolist (buffer (buffer-list))
+      (with-current-buffer buffer
+        (when (string-prefix-p dir default-directory))
+        (ry/reload-dir-locals-for-current-buffer)))))
+
+(defun ry/auto-reload-dir-locals-hook ()
+  (when (and (buffer-file-name)
+             (equal dir-locals-file
+                    (file-name-nondirectory (buffer-file-name))))
+    (add-hook (make-variable-buffer-local 'after-save-hook)
+              'ry/reload-dir-locals-for-all-buffer-in-this-project)))
+
+;; Code snippets
+(cl-defun ry/helm-source-code-snippets (filenames)
+  (helm-build-sync-source "Code snippets"
+    :candidates (helm-org-get-candidates filenames 1 2)
+    :action '(("View code snippet" . ry/helm-org-view-code-snippet)
+              )))
+
+(defun ry/helm-org-view-code-snippet (marker)
+  (switch-to-buffer-other-window (marker-buffer marker))
+  (hide-sublevels 1)
+  (goto-char (marker-position marker))
+  (org-show-context)
+  (org-show-entry))
+
+(defun ry/helm-code-snippets ()
+  (interactive)
+  (require 'helm-org)
+  (let ((helm-org-headings--nofilename t)
+        (code-snippets-org-file "~/baidu/org/code-snippets.org")
+        )
+    (helm :sources (ry/helm-source-code-snippets (list code-snippets-org-file))
+          :candidate-number-limit 99999
+          :buffer "*helm code snippets*")))
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
 

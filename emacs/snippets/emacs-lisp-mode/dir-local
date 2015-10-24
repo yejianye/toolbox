@@ -1,0 +1,9 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: dir-local
+# key: dir-local
+# binding: direct-keybinding
+# --
+((nil . ((${local-var-name} . ${local-var-value})
+         )
+      )
+ )
