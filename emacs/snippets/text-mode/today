@@ -1,9 +1,6 @@
 # -*- mode: snippet; require-final-newline: nil -*-
-# name: src
-# key: src
+# name: today
+# key: today
 # binding: direct-keybinding
 # --
-BEGIN_SRC ${1:python}
-${}
-END_SRC
-
+`(format-time-string "%Y-%m-%d %A")`

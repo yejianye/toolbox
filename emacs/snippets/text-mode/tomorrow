@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: tomorrow
+# key: tomorrow
+# binding: direct-keybinding
+# --
+`(format-time-string "%Y-%m-%d %A" (seconds-to-time (+ (float-time) 86400)))`

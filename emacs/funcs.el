@@ -108,9 +108,8 @@ current buffer's, reload dir-locals."
   (interactive)
   (require 'helm-org)
   (let ((helm-org-headings--nofilename t)
-        (code-snippets-org-file "~/baidu/org/code-snippets.org")
         )
-    (helm :sources (ry/helm-source-code-snippets (list code-snippets-org-file))
+    (helm :sources (ry/helm-source-code-snippets (list ry-org-code-snippet-file))
           :candidate-number-limit 99999
           :buffer "*helm code snippets*")))
 
@@ -118,13 +117,92 @@ current buffer's, reload dir-locals."
   "Copy region to OS X system pasteboard."
   (interactive)
   (shell-command-on-region
-   (region-beginning) (region-end) "pbcopy")
+   (region-beginning) (region-end) "LANG=en_US.UTF-8 pbcopy")
   (evil-normal-state)
   )
 
 (defun ry/osx-paste()
   "Paste from OS X system pasteboard via `pbpaste' to point."
   (interactive)
-  (shell-command-on-region
-   (point) (if mark-active (mark) (point)) "pbpaste" nil t))
+  (insert (shell-command-to-string "LANG=en_US.UTF-8 pbpaste")))
+
+(defun ry/org-paste-image()
+  (interactive)
+  (let* ((is-retina (y-or-n-p "Is the screenshot taken from a retina display?"))
+         (date-string (format-time-string "%Y-%m-%d-%H-%M"))
+         (filename (format "%s-%04x.png" date-string (random (expt 16 4))))
+         (fullpath (expand-file-name (concat ry-org-images-dir filename))))
+    (if is-retina
+        (shell-command (format "~/utils/save_screen.py --scale=0.5 --filename=%s" fullpath))
+      (shell-command (format "~/utils/save_screen.py --filename=%s" fullpath)))
+    (insert (format "[[file:%s]]" fullpath))
+    (org-redisplay-inline-images)
+    )
+  )
+
+(defun ry/markdown-cleanup-org-tables()
+  (save-excursion
+    (goto-char (point-min))
+    (while (search-forward-regexp "^|-" nil t)
+      (replace-string "-+-" "-|-" nil (point) (line-end-position)))
+    ))
+
+(defun ry/markdown-convert-to-org-tables()
+  (save-excursion
+    (goto-char (point-min))
+    (while (search-forward-regexp "^|-" nil t)
+      (replace-string "-|-" "-+-" nil (point) (line-end-position)))
+    ))
+
+(defun ry/markdown-orgtbl-mode()
+  (require 'org)
+  (orgtbl-mode)
+  (add-hook (make-variable-buffer-local 'first-change-hook) 'ry/markdown-convert-to-org-tables)
+  (add-hook (make-variable-buffer-local 'before-save-hook) 'ry/markdown-cleanup-org-tables)
+  )
+
+(defun ry//string-in-buffer-p(str)
+  (save-excursion
+    (widen)
+    (goto-char (point-min))
+    (search-forward str nil t))
+  )
+
+;; Journal
+(defun ry/org-goto-journal()
+  "Goto journal org file, and create headings for today if not exists"
+  (interactive)
+  (let ((journal-file (concat ry-org-journal-dir (format-time-string "%Y-%m.org")))
+        (today (format-time-string "* %Y-%m-%d %A"))
+        (title (format-time-string "#+title: Journal - %b, %Y\n"))
+        (todo "#+TODO: NEW(n) | REVIEWED(r)\n"))
+    (find-file journal-file)
+    (unless (file-exists-p journal-file)
+      (insert (concat title todo))
+      (save-buffer))
+    (unless (ry//string-in-buffer-p today)
+      (goto-char (point-max))
+      (insert (format "\n%s" today))))
+  )
+
+(defun ry/helm-org-journal ()
+  (interactive)
+  (require 'helm-org)
+  (let ((journal-files (file-expand-wildcards (format "%s/*.org" ry-org-journal-dir)))
+        )
+    (helm :sources (helm-source-org-headings-for-files journal-files)
+          :candidate-number-limit 99999
+          :buffer "*helm journal*"))
+  )
+
+;; Syntax table
+(defun ry//underscore-as-word()
+  (modify-syntax-entry ?_ "w")
+  )
+
+(defun ry/add-hook-underscore-as-word (hook-list)
+  (mapcar (lambda (mode-hook)
+            (add-hook mode-hook 'ry//underscore-as-word))
+          hook-list)
+  )
 

@@ -14,8 +14,7 @@
    '(
      (auto-completion :variables
                       auto-completion-enable-snippets-in-popup nil
-                      auto-completion-private-snippets-directory "~/toolbox/emacs/snippets"
-                      :disabled-for org)
+                      auto-completion-private-snippets-directory "~/toolbox/emacs/snippets")
      markdown
      python
      emacs-lisp
@@ -23,9 +22,9 @@
      ansible
      yaml
      org
-     osx
      syntax-checking
-     spell-checking
+     (spell-checking :variables
+                     spell-checking-enable-by-default nil)
      git
      better-defaults
      eyebrowse
@@ -35,7 +34,11 @@
    ;; If non-nil spacemacs will delete any orphan packages, i.e. packages that
    ;; are declared in a layer which is not a member of
    ;; the list `dotspacemacs-configuration-layers'
-   dotspacemacs-delete-orphan-packages t))
+   dotspacemacs-delete-orphan-packages t
+   dotspacemacs-additional-packages
+   '(
+     jade-mode
+    )))
 
 (defun dotspacemacs/init ()
   "Initialization function.
@@ -119,7 +122,7 @@ before layers configuration."
    ;; point when it reaches the top or bottom of the screen.
    dotspacemacs-smooth-scrolling t
    ;; If non-nil smartparens-strict-mode will be enabled in programming modes.
-   dotspacemacs-smartparens-strict-mode t
+   dotspacemacs-smartparens-strict-mode nil
    ;; If non nil advises quit functions to keep server open when quitting.
    dotspacemacs-persistent-server nil
    ;; List of search tool executable names. Spacemacs uses the first installed
@@ -129,6 +132,7 @@ before layers configuration."
    ;; specified with an installed package.
    ;; Not used for now.
    dotspacemacs-default-package-repository nil
+   dotspacemacs-distinguish-gui-tab t
    )
   ;; User initialization goes here
   ;; List of themes, the first of the list is loaded when spacemacs starts.
@@ -146,20 +150,31 @@ before layers configuration."
   "Configuration function.
  This function is called at the very end of Spacemacs initialization after
 layers configuration."
+  ;; Enable auto-completion globally
+  (global-company-mode)
+
+  ;; Disable smartparens
+  (spacemacs/toggle-smartparens-globally-off)
+  (remove-hook 'prog-mode-hook 'smartparens-mode)
+
+  ;; Treat underscore as part of the word
+  ;; (add-hook 'prog-mode-hook 'ry/global-underscore-as-word)
+  (ry/add-hook-underscore-as-word '(prog-mode-hook yaml-mode-hook))
+
   (setq-default indent-tabs-mode nil
                 tab-width 4)
 
   (setq vc-follow-symlinks t)
   ;; Custom keybindings
-  (evil-leader/set-key "py" 'helm-etags-select)
-  (evil-leader/set-key "rf" 'frameset-to-register)
-  (evil-leader/set-key "rj" 'jump-to-register)
-  (evil-leader/set-key "is" 'ry/insert-yas)
-  (evil-leader/set-key "x=" 'align)
-  (evil-leader/set-key "ps" 'ry/rsync-project-to-remote)
-  (evil-leader/set-key "cs" 'ry/helm-code-snippets)
-  (evil-leader/set-key "oc" 'org-capture)
-
+  (spacemacs/set-leader-keys
+    "py" 'helm-etags-select
+    "rf" 'frameset-to-register
+    "rj" 'jump-to-register
+    "x=" 'align
+    "ps" 'ry/rsync-project-to-remote
+    "cs" 'ry/helm-code-snippets
+    "E" 'eval-expression
+    )
   ;; normal mode
   (define-key evil-normal-state-map "j" 'evil-next-visual-line)
   (define-key evil-normal-state-map "k" 'evil-previous-visual-line)
@@ -180,27 +195,37 @@ layers configuration."
 
   ;; org mode
   (setq org-startup-truncated nil)
-  (evil-leader/set-key "oa" 'org-agenda)
-  (evil-leader/set-key-for-mode 'org-mode "mid" 'ry/insert-today-date)
-  (evil-leader/set-key-for-mode 'org-mode "m>" 'org-demote-subtree)
-  (evil-leader/set-key-for-mode 'org-mode "m<" 'org-promote-subtree)
-  (evil-leader/set-key-for-mode 'org-mode "my" 'ry/org-copy-to-clipboard)
-  (evil-leader/set-key-for-mode 'org-mode "mS" 'org-sort)
-  (evil-leader/set-key-for-mode 'org-mode "ml" 'org-open-at-point)
+  (setq org-export-with-sub-superscripts nil)
+  (setq ry-org-images-dir "~/Dropbox/org/images/")
+  (setq ry-org-journal-dir "~/Dropbox/org/journals/")
+  (setq ry-org-code-snippet-file "~/Dropbox/org/code-snippets.org")
+  (spacemacs/set-leader-keys
+    "oc" 'org-capture
+    "oa" 'org-agenda
+    "oj" 'ry/org-goto-journal
+    "oJ" 'ry/helm-org-journal
+    )
+  (spacemacs/set-leader-keys-for-major-mode 'org-mode
+     "id" 'ry/insert-today-date
+     "is" 'ry/org-paste-image
+     ">" 'org-demote-subtree
+     "<" 'org-promote-subtree
+     "y" 'ry/org-copy-to-clipboard
+     "S" 'org-sort
+     "l" 'org-open-at-point
+    )
   (add-hook 'org-mode-hook (lambda () (toggle-word-wrap 1)))
   (setq org-todo-keywords
         '((sequence "NEXT(n)" "SOON(s)" "SOMEDAY(o)" "WAITING(w)" "DELEGATE(e)"
                     "|" "DONE(d)" "CANCELLED(c)")))
 
   (setq org-capture-templates
-        '(("c" "Code snippet" entry (file+headline "~/baidu/org/code-snippets.org" "Others")
+        '(("c" "Code snippet" entry (file+headline "~/Dropbox/org/code-snippets.org" "Others")
            "** %^{desc}\n#+BEGIN_SRC %^{language|python|emacs-lisp}\n%?\n#+END_SRC")
-          ("t" "Task" entry (file+headline "~/baidu/org/tasks.org" "Work")
+          ("t" "Task" entry (file+headline "~/Dropbox/org/tasks.org" "Work")
            "** %^{priority|NEXT|SOON|SOMEDAY} %?\n" :prepend t)
-          ("e" "Learn Emacs" entry (file+headline "~/baidu/org/tasks.org" "Learn Emacs")
+          ("e" "Learn Emacs" entry (file+headline "~/Dropbox/org/tasks.org" "Learn Emacs")
            "*** %^{priority|NEXT|SOON|SOMEDAY} %?\n" :prepend t)
-          ("j" "Journal" entry (file+datetree "~/baidu/org/journal.org")
-           "* %?\n")
           ))
 
   ;; Artist mode
@@ -218,9 +243,11 @@ layers configuration."
         helm-recentf-fuzzy-match t)
   (with-eval-after-load "helm"
     (define-key helm-map (kbd "C-w") 'backward-kill-word)
+    (define-key helm-map (kbd "C-,") 'helm-toggle-visible-mark)
   )
 
   ;; magit settings
+  (setq magit-push-always-verify nil)
   (evil-leader/set-key "gr" 'magit-reflog)
 
   ;; projectile settings
@@ -228,22 +255,42 @@ layers configuration."
   (add-hook 'emacs-lisp-mode-hook 'ry/auto-reload-dir-locals-hook)
 
   ;; python settings
+  ;; It should be '-i' to keep ipython in interactive mode
+  ;; But ipython would fail to boot with '-i', and currently
+  ;; I have no idea why it happens.
+  (setq python-shell-interpreter-args "-i --profile=emacs")
   (setq-default python-indent 4)
-  (with-eval-after-load "python"
-    (modify-syntax-entry ?_ "w" python-mode-syntax-table)
-    )
+  ;; (with-eval-after-load "python"
+  ;;   (modify-syntax-entry ?_ "w" python-mode-syntax-table)
+  ;;   )
   (remove-hook 'python-mode-hook 'turn-on-evil-matchit-mode)
 
   (with-eval-after-load "anaconda-mode"
     (define-key anaconda-mode-map [remap find-tag] nil))
 
+  ;; ediff
+  (with-eval-after-load "ediff"
+    (ediff-setup-keymap)
+    (define-key ediff-mode-map " " nil)
+    )
+
   ;; markdown
   (setq markdown-open-command "~/utils/mark.sh")
+
+  (add-hook 'markdown-mode-hook 'ry/markdown-orgtbl-mode)
+
+  ;; osx settings
+  (setq mac-command-modifier 'super)
+  (setq mac-option-modifier 'meta)
+  (define-key evil-insert-state-map (kbd "s-v") 'ry/osx-paste)
+  (define-key evil-visual-state-map (kbd "s-c") 'ry/osx-copy)
+  (define-key evil-normal-state-map (kbd "s-=") 'spacemacs/scale-up-font)
+  (define-key evil-normal-state-map (kbd "s--") 'spacemacs/scale-down-font)
 
   ;; termnial settings
   (if (display-graphic-p)
       (ry/gui-config)
-    (ry/terminal-config)
+    (Ry/terminal-config)
     )
 
   ;; load local config
@@ -253,8 +300,6 @@ layers configuration."
 (defun ry/gui-config()
   (setq interprogram-cut-function nil)
   (setq interprogram-paste-function nil)
-  (global-set-key (kbd "s-v") 'ry/osx-paste)
-  (global-set-key (kbd "s-c") 'ry/osx-copy)
   (setq frame-title-format '(buffer-file-name "%f" ("%b"))))
 
 (defun ry/terminal-config()
