@@ -37,6 +37,9 @@ TOOLBOX_DIR = os.path.abspath(os.path.dirname(__file__))
 def toolbox_path(path):
     return os.path.join(TOOLBOX_DIR, path)
 
+def foo():
+    print "bar"
+
 @task
 def ssh_localhost():
     home_dir = os.getenv('HOME')
