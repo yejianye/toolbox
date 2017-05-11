@@ -19,6 +19,7 @@
      python
      emacs-lisp
      javascript
+     html
      ansible
      yaml
      org
@@ -27,7 +28,6 @@
                      spell-checking-enable-by-default nil)
      git
      better-defaults
-     eyebrowse
      )
    ;; A list of packages and/or extensions that will not be install and loaded.
    dotspacemacs-excluded-packages '()
@@ -38,6 +38,7 @@
    dotspacemacs-additional-packages
    '(
      jade-mode
+     vue-mode
     )))
 
 (defun dotspacemacs/init ()
@@ -150,8 +151,12 @@ before layers configuration."
   "Configuration function.
  This function is called at the very end of Spacemacs initialization after
 layers configuration."
+  (load "~/toolbox/emacs/funcs.el")
   ;; Enable auto-completion globally
   (global-company-mode)
+
+  ;; Auto-saving
+  (setq auto-save-visited-file-name t)
 
   ;; Disable smartparens
   (spacemacs/toggle-smartparens-globally-off)
@@ -178,15 +183,17 @@ layers configuration."
   ;; normal mode
   (define-key evil-normal-state-map "j" 'evil-next-visual-line)
   (define-key evil-normal-state-map "k" 'evil-previous-visual-line)
-  (define-key evil-normal-state-map (kbd "C-j") (kbd "5j"))
-  (define-key evil-normal-state-map (kbd "C-k") (kbd "5k"))
+  (define-key evil-normal-state-map ";w" 'subword-forward)
+  (define-key evil-normal-state-map ";b" 'subword-backward)
+  (define-key evil-normal-state-map (kbd "C-j") (kbd "jjjjj"))
+  (define-key evil-normal-state-map (kbd "C-k") (kbd "kkkkk"))
 
   ;; insert mode
   (define-key evil-insert-state-map (kbd "C-v") 'evil-paste-after)
   (define-key evil-insert-state-map (kbd "DEL") 'ry/backspace-whitespace-to-tab-stop)
-  (define-key evil-insert-state-map (kbd "<s-left>") 'spacemacs/smart-move-beginning-of-line)
+  (define-key evil-insert-state-map (kbd "<s-left>") 'beginning-of-line)
   (define-key evil-insert-state-map (kbd "<s-right>") 'end-of-line)
-  (define-key evil-insert-state-map (kbd "C-a") 'spacemacs/smart-move-beginning-of-line)
+  (define-key evil-insert-state-map (kbd "C-a") 'beginning-of-line)
   (define-key evil-insert-state-map (kbd "C-e") 'end-of-line)
 
   ;; evilified mode
@@ -196,14 +203,17 @@ layers configuration."
   ;; org mode
   (setq org-startup-truncated nil)
   (setq org-export-with-sub-superscripts nil)
-  (setq ry-org-images-dir "~/Dropbox/org/images/")
-  (setq ry-org-journal-dir "~/Dropbox/org/journals/")
-  (setq ry-org-code-snippet-file "~/Dropbox/org/code-snippets.org")
+  (setq ry-org-root-dir "~/Dropbox/org/")
+  (setq ry-org-images-dir (concat ry-org-root-dir "images/"))
+  (setq ry-org-journal-dir (concat ry-org-root-dir "journals/"))
+  (setq ry-org-code-snippet-file (concat ry-org-root-dir "code-snippets.org"))
   (spacemacs/set-leader-keys
     "oc" 'org-capture
     "oa" 'org-agenda
     "oj" 'ry/org-goto-journal
     "oJ" 'ry/helm-org-journal
+    "od" 'ry/org-goto-diary
+    "on" 'ry/org-new-today-todo
     )
   (spacemacs/set-leader-keys-for-major-mode 'org-mode
      "id" 'ry/insert-today-date
@@ -213,10 +223,13 @@ layers configuration."
      "y" 'ry/org-copy-to-clipboard
      "S" 'org-sort
      "l" 'org-open-at-point
+     "T" 'ry/org-filter-todo-keyword
     )
-  (add-hook 'org-mode-hook (lambda () (toggle-word-wrap 1)))
+  (add-hook 'org-mode-hook (lambda ()
+                             (toggle-word-wrap 1)
+                             (org-indent-mode 1)))
   (setq org-todo-keywords
-        '((sequence "NEXT(n)" "SOON(s)" "SOMEDAY(o)" "WAITING(w)" "DELEGATE(e)"
+        '((sequence "WIP(w)" "NEXT(n)" "SOON(s)" "SOMEDAY(o)" "WAITING(W)" "DELEGATE(e)"
                     "|" "DONE(d)" "CANCELLED(c)")))
 
   (setq org-capture-templates
@@ -282,7 +295,7 @@ layers configuration."
   ;; osx settings
   (setq mac-command-modifier 'super)
   (setq mac-option-modifier 'meta)
-  (define-key evil-insert-state-map (kbd "s-v") 'ry/osx-paste)
+  (global-set-key (kbd "s-v") 'ry/osx-paste)
   (define-key evil-visual-state-map (kbd "s-c") 'ry/osx-copy)
   (define-key evil-normal-state-map (kbd "s-=") 'spacemacs/scale-up-font)
   (define-key evil-normal-state-map (kbd "s--") 'spacemacs/scale-down-font)
@@ -305,8 +318,3 @@ layers configuration."
 (defun ry/terminal-config()
   (setq linum-format "%4d \u2502 "
         linum-relative-format "%3s \u2502 "))
-
-(load "~/toolbox/emacs/funcs.el")
-;; Do not write anything past this comment. This is where Emacs will
-;; auto-generate custom variable definitions.
-

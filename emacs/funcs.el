@@ -93,7 +93,7 @@ current buffer's, reload dir-locals."
 ;; Code snippets
 (cl-defun ry/helm-source-code-snippets (filenames)
   (helm-build-sync-source "Code snippets"
-    :candidates (helm-org-get-candidates filenames 1 2)
+    :candidates (helm-org-get-candidates filenames)
     :action '(("View code snippet" . ry/helm-org-view-code-snippet)
               )))
 
@@ -112,6 +112,12 @@ current buffer's, reload dir-locals."
     (helm :sources (ry/helm-source-code-snippets (list ry-org-code-snippet-file))
           :candidate-number-limit 99999
           :buffer "*helm code snippets*")))
+
+(defun ry/org-filter-todo-keyword ()
+  (interactive)
+  (require 'helm-org)
+  (org-show-todo-tree '(4))
+  )
 
 (defun ry/osx-copy()
   "Copy region to OS X system pasteboard."
@@ -161,10 +167,10 @@ current buffer's, reload dir-locals."
   (add-hook (make-variable-buffer-local 'before-save-hook) 'ry/markdown-cleanup-org-tables)
   )
 
-(defun ry//string-in-buffer-p(str)
+(defun ry//string-in-buffer-p(str &optional start)
   (save-excursion
     (widen)
-    (goto-char (point-min))
+    (goto-char (or start (point-min)))
     (search-forward str nil t))
   )
 
@@ -185,6 +191,31 @@ current buffer's, reload dir-locals."
       (insert (format "\n%s" today))))
   )
 
+(defun ry//org-insert-today-todo(text)
+  "Insert a todo item in Today's journal"
+  (ry/org-goto-journal)
+  (let ((today-heading (format-time-string "* %Y-%m-%d %A"))
+        (todo-heading "** Todo"))
+    (goto-char (point-min))
+    (search-forward today-heading)
+    (if (ry//string-in-buffer-p todo-heading (point))
+      (progn
+        (search-forward todo-heading)
+        (insert (format "\n- [ ] %s" text))
+        )
+      (progn
+       (insert (format "\n%s" todo-heading))
+       (insert (format "\n- [ ] %s" text)))
+      )
+    )
+  )
+
+(defun ry/org-new-today-todo()
+  "Quick shortcut to add todo item in Today's journal"
+  (interactive)
+  (ry//org-insert-today-todo (read-string "Todo:"))
+  )
+
 (defun ry/helm-org-journal ()
   (interactive)
   (require 'helm-org)
@@ -193,6 +224,22 @@ current buffer's, reload dir-locals."
     (helm :sources (helm-source-org-headings-for-files journal-files)
           :candidate-number-limit 99999
           :buffer "*helm journal*"))
+  )
+
+;; Diary
+(defun ry/org-goto-diary()
+  "Goto Diary org file, and create headings for today if not exists"
+  (interactive)
+  (let* ((diary-file (concat ry-org-root-dir "diary.org"))
+        (today (format-time-string "* %Y-%m-%d %A"))
+        )
+    (find-file diary-file)
+    (widen)
+    (goto-char (point-max))
+    (unless (ry//string-in-buffer-p today)
+      (insert (format "\n%s" today)))
+    (org-narrow-to-subtree)
+    )
   )
 
 ;; Syntax table
