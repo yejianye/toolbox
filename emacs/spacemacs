@@ -28,6 +28,7 @@
                      spell-checking-enable-by-default nil)
      git
      better-defaults
+     restclient
      )
    ;; A list of packages and/or extensions that will not be install and loaded.
    dotspacemacs-excluded-packages '()
@@ -39,6 +40,7 @@
    '(
      jade-mode
      vue-mode
+     jedi-direx
     )))
 
 (defun dotspacemacs/init ()
@@ -107,7 +109,7 @@ before layers configuration."
    ;; If non nil the frame is maximized when Emacs starts up.
    ;; Takes effect only if `dotspacemacs-fullscreen-at-startup' is nil.
    ;; (Emacs 24.4+ only)
-   dotspacemacs-maximized-at-startup t
+   dotspacemacs-maximized-at-startup nil
    ;; A value from the range (0..100), in increasing opacity, which describes
    ;; the transparency level of a frame when it's active or selected.
    ;; Transparency can be toggled through `toggle-transparency'.
@@ -134,6 +136,7 @@ before layers configuration."
    ;; Not used for now.
    dotspacemacs-default-package-repository nil
    dotspacemacs-distinguish-gui-tab t
+   dotspacemacs-large-file-size 100
    )
   ;; User initialization goes here
   ;; List of themes, the first of the list is loaded when spacemacs starts.
@@ -170,6 +173,10 @@ layers configuration."
                 tab-width 4)
 
   (setq vc-follow-symlinks t)
+
+  ;; Custom filetypes
+  (add-to-list 'auto-mode-alist '("\\.jsx\\'" . javascript-mode))
+
   ;; Custom keybindings
   (spacemacs/set-leader-keys
     "py" 'helm-etags-select
@@ -179,6 +186,9 @@ layers configuration."
     "ps" 'ry/rsync-project-to-remote
     "cs" 'ry/helm-code-snippets
     "E" 'eval-expression
+    "yi" 'yas-insert-snippet
+    "yn" 'yas-new-snippet
+    "pn" 'ry/projectile-add-new-project
     )
   ;; normal mode
   (define-key evil-normal-state-map "j" 'evil-next-visual-line)
@@ -221,13 +231,18 @@ layers configuration."
      ">" 'org-demote-subtree
      "<" 'org-promote-subtree
      "y" 'ry/org-copy-to-clipboard
-     "S" 'org-sort
      "l" 'org-open-at-point
      "T" 'ry/org-filter-todo-keyword
+     ;; "S" 'org-sort
     )
+
+  (evil-define-key 'normal evil-org-mode-map
+    (kbd "TAB") 'ry/org-cycle)
+
   (add-hook 'org-mode-hook (lambda ()
                              (toggle-word-wrap 1)
                              (org-indent-mode 1)))
+
   (setq org-todo-keywords
         '((sequence "WIP(w)" "NEXT(n)" "SOON(s)" "SOMEDAY(o)" "WAITING(W)" "DELEGATE(e)"
                     "|" "DONE(d)" "CANCELLED(c)")))
@@ -271,12 +286,16 @@ layers configuration."
   ;; It should be '-i' to keep ipython in interactive mode
   ;; But ipython would fail to boot with '-i', and currently
   ;; I have no idea why it happens.
-  (setq python-shell-interpreter-args "-i --profile=emacs")
+  (setq python-shell-interpreter-args "-i --simple-prompt --profile=emacs")
   (setq-default python-indent 4)
   ;; (with-eval-after-load "python"
   ;;   (modify-syntax-entry ?_ "w" python-mode-syntax-table)
   ;;   )
   (remove-hook 'python-mode-hook 'turn-on-evil-matchit-mode)
+
+  ;; (message "bind leader key for python mode in my config")
+  ;; (spacemacs/set-leader-keys-for-major-mode 'python-mode
+  ;;   "'" 'ry/python-start-or-switch-repl)
 
   (with-eval-after-load "anaconda-mode"
     (define-key anaconda-mode-map [remap find-tag] nil))
@@ -291,6 +310,10 @@ layers configuration."
   (setq markdown-open-command "~/utils/mark.sh")
 
   (add-hook 'markdown-mode-hook 'ry/markdown-orgtbl-mode)
+
+  ;; tags
+  ;; Never keep tag tables across projects
+  (setq tags-add-tables nil)
 
   ;; osx settings
   (setq mac-command-modifier 'super)

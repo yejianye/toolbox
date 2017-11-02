@@ -59,7 +59,7 @@ and only works on MacOS."
   (if (boundp 'sync-remote-dir)
       (save-window-excursion
         (message (format "Sync project with %s!" sync-remote-dir))
-        (async-shell-command (format "rsync -av --delete --exclude='/.git' --filter=':- .gitignore' '%s' '%s'" (projectile-project-root) sync-remote-dir))
+        (async-shell-command (format "rsync -av --delete --exclude='terraform.tfstate' --exclude='/.git' --filter=':- .gitignore' '%s' '%s'" (projectile-project-root) sync-remote-dir))
         )
     (message "sync-remote-dir undefined!")
     )
@@ -194,18 +194,23 @@ current buffer's, reload dir-locals."
 (defun ry//org-insert-today-todo(text)
   "Insert a todo item in Today's journal"
   (ry/org-goto-journal)
-  (let ((today-heading (format-time-string "* %Y-%m-%d %A"))
-        (todo-heading "** Todo"))
+  (let* ((today-heading (format-time-string "* %Y-%m-%d %A"))
+        (todo-heading "** Todo")
+        (todo-words (split-string text))
+        (first-word (capitalize (car todo-words)))
+        (remaining-words (cdr todo-words))
+        (todo-desc (s-join " " (cons first-word remaining-words)))
+        )
     (goto-char (point-min))
     (search-forward today-heading)
     (if (ry//string-in-buffer-p todo-heading (point))
       (progn
         (search-forward todo-heading)
-        (insert (format "\n- [ ] %s" text))
+        (insert (format "\n- [ ] %s" todo-desc))
         )
       (progn
        (insert (format "\n%s" todo-heading))
-       (insert (format "\n- [ ] %s" text)))
+       (insert (format "\n- [ ] %s" todo-desc)))
       )
     )
   )
@@ -214,6 +219,13 @@ current buffer's, reload dir-locals."
   "Quick shortcut to add todo item in Today's journal"
   (interactive)
   (ry//org-insert-today-todo (read-string "Todo:"))
+  )
+
+(defun ry/org-cycle()
+  "Cycle visibility at anywhere inside a subtree"
+  (interactive)
+  (org-back-to-heading)
+  (org-cycle)
   )
 
 (defun ry/helm-org-journal ()
@@ -238,7 +250,6 @@ current buffer's, reload dir-locals."
     (goto-char (point-max))
     (unless (ry//string-in-buffer-p today)
       (insert (format "\n%s" today)))
-    (org-narrow-to-subtree)
     )
   )
 
@@ -253,3 +264,31 @@ current buffer's, reload dir-locals."
           hook-list)
   )
 
+;; Projectile
+(defun ry/projectile-add-new-project (project-root)
+  (interactive (list (read-directory-name "Add a new project: " "/Users/ryan/source_code/")))
+  (projectile-add-known-project project-root)
+  (projectile-switch-project-by-name project-root)
+  )
+
+;; Python
+;; This is copied from https://github.com/syl20bnr/spacemacs/pull/7070
+(defun ry/python-start-or-switch-repl ()
+  "Start and/or switch to the REPL."
+  (interactive)
+  (let ((shell-process
+         (or (python-shell-get-process)
+             ;; `run-python' has different return values and different
+             ;; errors in different emacs versions. In 24.4, it throws an
+             ;; error when the process didn't start, but in 25.1 it
+             ;; doesn't throw an error, so we demote errors here and
+             ;; check the process later
+             (with-demoted-errors "Error: %S"
+               ;; in Emacs 24.5 and 24.4, `run-python' doesn't return the
+               ;; shell process
+               (call-interactively #'run-python)
+               (python-shell-get-process)))))
+    (unless shell-process
+      (error "Failed to start python shell properly"))
+    (pop-to-buffer (process-buffer shell-process))
+    (evil-insert-state)))
