@@ -292,3 +292,8 @@ current buffer's, reload dir-locals."
       (error "Failed to start python shell properly"))
     (pop-to-buffer (process-buffer shell-process))
     (evil-insert-state)))
+
+(defun ry/treemacs-ignore-file-predicate (file)
+  "Custom file ignores for treemacs"
+  (s-matches? "^.*\.pyc$" file)
+  )

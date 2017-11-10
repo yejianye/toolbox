@@ -23,12 +23,15 @@
      ansible
      yaml
      org
-     syntax-checking
+     (syntax-checking :variables
+                      syntax-checking-enable-by-default nil)
      (spell-checking :variables
                      spell-checking-enable-by-default nil)
      git
      better-defaults
      restclient
+     imenu-list
+     treemacs
      )
    ;; A list of packages and/or extensions that will not be install and loaded.
    dotspacemacs-excluded-packages '()
@@ -40,7 +43,7 @@
    '(
      jade-mode
      vue-mode
-     jedi-direx
+     sr-speedbar
     )))
 
 (defun dotspacemacs/init ()
@@ -143,10 +146,10 @@ before layers configuration."
   ;; Press <SPC> T n to cycle to the next theme in the list (works great
   ;; with 2 themes variants, one dark and one light)
   (if (display-graphic-p)
-      (setq dotspacemacs-themes '(solarized-light
-                                  zenburn))
+      (setq dotspacemacs-themes '(solarized-dark
+                                  solarized-light))
     (setq dotspacemacs-themes '(zenburn
-                                solarized-light))
+                                solarized-dark))
       )
   )
 
@@ -282,7 +285,18 @@ layers configuration."
   (setq enable-local-variables :all)
   (add-hook 'emacs-lisp-mode-hook 'ry/auto-reload-dir-locals-hook)
 
+  ;; treemacs
+  (spacemacs|use-package-add-hook treemacs
+    :post-config
+    (add-to-list 'treemacs-ignored-file-predicates 'ry/treemacs-ignore-file-predicate)
+    )
+
   ;; python settings
+  (spacemacs|use-package-add-hook python
+    :post-config
+    (spacemacs/set-leader-keys-for-major-mode 'python-mode
+      "'" 'ry/python-start-or-switch-repl))
+
   ;; It should be '-i' to keep ipython in interactive mode
   ;; But ipython would fail to boot with '-i', and currently
   ;; I have no idea why it happens.
