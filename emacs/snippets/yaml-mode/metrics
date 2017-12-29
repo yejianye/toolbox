@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: metrics
+# key: metrics
+# expand-env: ((yas-indent-line 'fixed))
+# --
+- name: $1
+  type: primitive
+  sql: {{ metrics_key('$1') }}

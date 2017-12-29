@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: csv_reader
+# key: 
+# --
+import unicodecsv as csv
+with open('clinic_names.csv', 'rU') as f:
+    rows = csv.reader(f)
+    for r in rows:
+        print r

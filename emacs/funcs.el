@@ -297,3 +297,7 @@ current buffer's, reload dir-locals."
   "Custom file ignores for treemacs"
   (s-matches? "^.*\.pyc$" file)
   )
+
+(defun ry/mdmail-send-buffer ()
+  (interactive)
+  (shell-command-on-region (point-min) (point-max) "mdmail"))

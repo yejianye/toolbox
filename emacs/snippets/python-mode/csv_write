@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: csv_write
+# key: 
+# --
+import unicodecsv as csv
+with open('$1', 'w') as f:
+    writer = csv.writer(f, encoding='utf-8')
+    writer.writerow(['col1', 'col2'])

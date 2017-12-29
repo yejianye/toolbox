@@ -11,7 +11,7 @@
    ;; List of configuration layers to load. If it is the symbol `all' instead
    ;; of a list then all discovered layers will be installed.
    dotspacemacs-configuration-layers
-   '(
+   '(windows-scripts
      (auto-completion :variables
                       auto-completion-enable-snippets-in-popup nil
                       auto-completion-private-snippets-directory "~/toolbox/emacs/snippets")
@@ -32,6 +32,7 @@
      restclient
      imenu-list
      treemacs
+     react
      )
    ;; A list of packages and/or extensions that will not be install and loaded.
    dotspacemacs-excluded-packages '()
@@ -178,7 +179,7 @@ layers configuration."
   (setq vc-follow-symlinks t)
 
   ;; Custom filetypes
-  (add-to-list 'auto-mode-alist '("\\.jsx\\'" . javascript-mode))
+  (add-to-list 'auto-mode-alist '("\\.js\\'" . react-mode))
 
   ;; Custom keybindings
   (spacemacs/set-leader-keys
@@ -227,20 +228,26 @@ layers configuration."
     "oJ" 'ry/helm-org-journal
     "od" 'ry/org-goto-diary
     "on" 'ry/org-new-today-todo
+    "yi" 'ry/insert-yas
     )
-  (spacemacs/set-leader-keys-for-major-mode 'org-mode
-     "id" 'ry/insert-today-date
-     "is" 'ry/org-paste-image
-     ">" 'org-demote-subtree
-     "<" 'org-promote-subtree
-     "y" 'ry/org-copy-to-clipboard
-     "l" 'org-open-at-point
-     "T" 'ry/org-filter-todo-keyword
-     ;; "S" 'org-sort
+  (spacemacs|use-package-add-hook evil-org
+    :post-config
+    (progn
+      (message "My custom evil-org-mode mapping")
+      (spacemacs/set-leader-keys-for-major-mode 'org-mode
+        "id" 'ry/insert-today-date
+        "is" 'ry/org-paste-image
+        ">" 'org-demote-subtree
+        "<" 'org-promote-subtree
+        "y" 'ry/org-copy-to-clipboard
+        "l" 'org-open-at-point
+        "T" 'ry/org-filter-todo-keyword
+        )
+      (evil-define-key 'normal evil-org-mode-map
+        "t" 'org-todo
+        (kbd "<tab>") 'ry/org-cycle)
+      )
     )
-
-  (evil-define-key 'normal evil-org-mode-map
-    (kbd "TAB") 'ry/org-cycle)
 
   (add-hook 'org-mode-hook (lambda ()
                              (toggle-word-wrap 1)
@@ -355,3 +362,24 @@ layers configuration."
 (defun ry/terminal-config()
   (setq linum-format "%4d \u2502 "
         linum-relative-format "%3s \u2502 "))
+
+(defun dotspacemacs/emacs-custom-settings ()
+  "Emacs custom settings.
+This is an auto-generated function, do not modify its content directly, use
+Emacs customize menu instead.
+This function is called at the very end of Spacemacs initialization."
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   (quote
+    (powershell helm-gtags ggtags yapfify yaml-mode ws-butler winum which-key web-mode web-beautify vue-mode volatile-highlights vi-tilde-fringe uuidgen use-package unfill treemacs-projectile treemacs-evil toc-org tagedit symon string-inflection sr-speedbar spaceline solarized-theme smeargle slim-mode scss-mode sass-mode restclient-helm restart-emacs rainbow-delimiters pyvenv pytest pyenv-mode py-isort pug-mode popwin pip-requirements persp-mode pcre2el password-generator paradox orgit org-projectile org-present org-pomodoro org-download org-bullets org-brain open-junk-file ob-restclient ob-http mwim move-text markdown-toc magit-gitflow macrostep lorem-ipsum livid-mode live-py-mode linum-relative link-hint less-css-mode json-mode js2-refactor js-doc jinja2-mode jade-mode info+ indent-guide impatient-mode hy-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation hide-comnt help-fns+ helm-themes helm-swoop helm-pydoc helm-purpose helm-projectile helm-mode-manager helm-make helm-gitignore helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag google-translate golden-ratio gnuplot gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link gh-md fuzzy flyspell-correct-helm flycheck-pos-tip flx-ido fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-org evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-ediff evil-args evil-anzu eval-sexp-fu emmet-mode elisp-slime-nav editorconfig dumb-jump define-word cython-mode company-web company-tern company-statistics company-restclient company-ansible company-anaconda column-enforce-mode coffee-mode clean-aindent-mode auto-yasnippet auto-highlight-symbol auto-dictionary auto-compile ansible-doc ansible aggressive-indent adaptive-wrap ace-link ace-jump-helm-line ac-ispell))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+)

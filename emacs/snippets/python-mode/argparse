@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: argparse
+# key: argparse
+# --
+import argparse
+parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
+parser.add_argument("--prod-db", default='emma', help="Export production DB")
+parser.add_argument("--logdb", action="store_true", help="Export logging DB (only the past day)")
+args = parser.parse_args()

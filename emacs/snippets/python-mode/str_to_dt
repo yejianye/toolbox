@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: str_to_dt
+# key: str_to_dt
+# --
+datetime.datetime.strptime(arg, '%Y-%m-%d')

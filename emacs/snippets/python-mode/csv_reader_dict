@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: csv_reader_dict
+# key: 
+# --
+import unicodecsv as csv
+with open('clinic_names.csv', 'rU') as f:
+    rows = csv.DictReader(f)
+    for r in rows:
+        print r

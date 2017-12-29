@@ -1,0 +1,33 @@
+# -*- mode: snippet -*-
+# name: logging_dictConfig
+# key: 
+# --
+log_config = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'default': {
+            'format': '[%(asctime)s] [%(levelname)s] %(message)s'
+        }
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'default',
+            'level': 'INFO',
+        }
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True
+        },
+        'requests': {
+            'handlers': ['console'],
+            'level': 'WARN',
+            'propagate': True
+        },
+    }
+}
+logging.config.dictConfig(log_config)

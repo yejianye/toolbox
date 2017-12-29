@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: logging_basic
+# key: 
+# --
+logging.basicConfig(
+    stream=sys.stdout,
+    #filename="example.log",
+    level=logging.INFO,
+    format='[%(asctime)s] [%(levelname)s] %(message)s'
+)
