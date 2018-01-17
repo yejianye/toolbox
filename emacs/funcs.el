@@ -50,7 +50,7 @@ and only works on MacOS."
          (style (ry/read-file-content "~/.org-clipboard.css"))
          (content-with-style (format "<style>%s</style>%s" style content)))
     (write-region content-with-style nil fname)
-    (shell-command (format "cat %s | textutil -stdin -format html -convert rtf -stdout | pbcopy" fname))
+    (shell-command (format "LANG=en_US.UTF-8 cat %s | textutil -stdin -format html -convert rtf -stdout | pbcopy" fname))
     (delete-file fname))
   )
 
@@ -130,7 +130,13 @@ current buffer's, reload dir-locals."
 (defun ry/osx-paste()
   "Paste from OS X system pasteboard via `pbpaste' to point."
   (interactive)
-  (insert (shell-command-to-string "LANG=en_US.UTF-8 pbpaste")))
+  (let ((clipboard (shell-command-to-string "LANG=en_US.UTF-8 pbpaste"))
+        )
+    (when (eq evil-state 'visual)
+      (kill-region (region-beginning) (region-end))
+      (evil-normal-state)
+      )
+    (insert clipboard)))
 
 (defun ry/org-paste-image()
   (interactive)
@@ -145,6 +151,14 @@ current buffer's, reload dir-locals."
     (org-redisplay-inline-images)
     )
   )
+
+(defun ry/org-cliplink-osx ()
+  "Takes a URL from the OSX clipboard and inserts an org-mode link
+with the title of a page found by the URL into the current
+buffer"
+  (interactive)
+  (org-cliplink-insert-transformed-title (shell-command-to-string "LANG=en_US.UTF-8 pbpaste")
+                                         'org-cliplink-org-mode-link-transformer))
 
 (defun ry/markdown-cleanup-org-tables()
   (save-excursion
@@ -301,3 +315,10 @@ current buffer's, reload dir-locals."
 (defun ry/mdmail-send-buffer ()
   (interactive)
   (shell-command-on-region (point-min) (point-max) "mdmail"))
+
+(defun ry/writeroom-font-size ()
+  (if (bound-and-true-p writeroom-mode)
+      (cnfonts-increase-fontsize)
+    (cnfonts-decrease-fontsize)
+    )
+  )

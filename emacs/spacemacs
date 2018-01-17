@@ -45,6 +45,9 @@
      jade-mode
      vue-mode
      sr-speedbar
+     org-cliplink
+     writeroom-mode
+     cnfonts
     )))
 
 (defun dotspacemacs/init ()
@@ -159,6 +162,12 @@ before layers configuration."
  This function is called at the very end of Spacemacs initialization after
 layers configuration."
   (load "~/toolbox/emacs/funcs.el")
+  ;; Set font family
+  ;; (ry/set-chinese-font "Hiragino Sans GB" 14)
+  (require 'cnfonts)
+  (cnfonts-enable)
+  (cnfonts-set-spacemacs-fallback-fonts)
+
   ;; Enable auto-completion globally
   (global-company-mode)
 
@@ -237,15 +246,17 @@ layers configuration."
       (spacemacs/set-leader-keys-for-major-mode 'org-mode
         "id" 'ry/insert-today-date
         "is" 'ry/org-paste-image
+        "iL" 'ry/org-cliplink-osx
         ">" 'org-demote-subtree
         "<" 'org-promote-subtree
         "y" 'ry/org-copy-to-clipboard
         "l" 'org-open-at-point
-        "T" 'ry/org-filter-todo-keyword
+        ;; "T" 'ry/org-filter-todo-keyword
         )
       (evil-define-key 'normal evil-org-mode-map
         "t" 'org-todo
-        (kbd "<tab>") 'ry/org-cycle)
+        ;; (kbd "<tab>") 'ry/org-cycle
+        )
       )
     )
 
@@ -336,13 +347,19 @@ layers configuration."
   ;; Never keep tag tables across projects
   (setq tags-add-tables nil)
 
+  ;; writeroom
+  ;; (add-hook 'writeroom-mode-hook 'ry/writeroom-font-size)
+  (setq writeroom-extra-line-spacing 0.5)
+  (setq writeroom-width 100)
+
   ;; osx settings
+  (setq select-enable-clipboard nil)
   (setq mac-command-modifier 'super)
   (setq mac-option-modifier 'meta)
   (global-set-key (kbd "s-v") 'ry/osx-paste)
   (define-key evil-visual-state-map (kbd "s-c") 'ry/osx-copy)
-  (define-key evil-normal-state-map (kbd "s-=") 'spacemacs/scale-up-font)
-  (define-key evil-normal-state-map (kbd "s--") 'spacemacs/scale-down-font)
+  (define-key evil-normal-state-map (kbd "s-=") 'cnfonts-increase-fontsize)
+  (define-key evil-normal-state-map (kbd "s--") 'cnfonts-decrease-fontsize)
 
   ;; termnial settings
   (if (display-graphic-p)
@@ -373,9 +390,11 @@ This function is called at the very end of Spacemacs initialization."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(evil-want-Y-yank-to-eol nil)
  '(package-selected-packages
    (quote
-    (powershell helm-gtags ggtags yapfify yaml-mode ws-butler winum which-key web-mode web-beautify vue-mode volatile-highlights vi-tilde-fringe uuidgen use-package unfill treemacs-projectile treemacs-evil toc-org tagedit symon string-inflection sr-speedbar spaceline solarized-theme smeargle slim-mode scss-mode sass-mode restclient-helm restart-emacs rainbow-delimiters pyvenv pytest pyenv-mode py-isort pug-mode popwin pip-requirements persp-mode pcre2el password-generator paradox orgit org-projectile org-present org-pomodoro org-download org-bullets org-brain open-junk-file ob-restclient ob-http mwim move-text markdown-toc magit-gitflow macrostep lorem-ipsum livid-mode live-py-mode linum-relative link-hint less-css-mode json-mode js2-refactor js-doc jinja2-mode jade-mode info+ indent-guide impatient-mode hy-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation hide-comnt help-fns+ helm-themes helm-swoop helm-pydoc helm-purpose helm-projectile helm-mode-manager helm-make helm-gitignore helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag google-translate golden-ratio gnuplot gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link gh-md fuzzy flyspell-correct-helm flycheck-pos-tip flx-ido fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-org evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-ediff evil-args evil-anzu eval-sexp-fu emmet-mode elisp-slime-nav editorconfig dumb-jump define-word cython-mode company-web company-tern company-statistics company-restclient company-ansible company-anaconda column-enforce-mode coffee-mode clean-aindent-mode auto-yasnippet auto-highlight-symbol auto-dictionary auto-compile ansible-doc ansible aggressive-indent adaptive-wrap ace-link ace-jump-helm-line ac-ispell))))
+    (cnfonts yapfify yaml-mode ws-butler writeroom-mode winum which-key web-mode web-beautify vue-mode volatile-highlights vi-tilde-fringe uuidgen use-package unfill treemacs-projectile treemacs-evil toc-org tagedit symon string-inflection sr-speedbar spaceline solarized-theme smeargle slim-mode scss-mode sass-mode restclient-helm restart-emacs rainbow-delimiters pyvenv pytest pyenv-mode py-isort pug-mode powershell popwin pip-requirements persp-mode pcre2el password-generator paradox orgit org-projectile org-present org-pomodoro org-download org-cliplink org-bullets org-brain open-junk-file ob-restclient ob-http mwim move-text markdown-toc magit-gitflow macrostep lorem-ipsum livid-mode live-py-mode linum-relative link-hint less-css-mode json-mode js2-refactor js-doc jinja2-mode jade-mode info+ indent-guide impatient-mode hy-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation hide-comnt help-fns+ helm-themes helm-swoop helm-pydoc helm-purpose helm-projectile helm-mode-manager helm-make helm-gitignore helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag google-translate golden-ratio gnuplot gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link gh-md fuzzy flyspell-correct-helm flycheck-pos-tip flx-ido fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-org evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-ediff evil-args evil-anzu eval-sexp-fu emmet-mode elisp-slime-nav editorconfig dumb-jump define-word cython-mode company-web company-tern company-statistics company-restclient company-ansible company-anaconda column-enforce-mode coffee-mode clean-aindent-mode auto-yasnippet auto-highlight-symbol auto-dictionary auto-compile ansible-doc ansible aggressive-indent adaptive-wrap ace-link ace-jump-helm-line ac-ispell)))
+ )
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
