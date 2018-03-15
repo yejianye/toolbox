@@ -1,9 +1,9 @@
-# -*- mode: snippet; require-final-newline: nil -*-
+# -*- mode: snippet -*-
 # name: dir-local
-# key: dir-local
-# binding: direct-keybinding
+# key:
 # --
-((nil . ((${local-var-name} . ${local-var-value})
-         )
-      )
- )
+
+((nil . ((sync-remote-dir . "prod-bastion0.glow.net:~/glow_ansible")
+)
+)
+)

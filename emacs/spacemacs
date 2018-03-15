@@ -11,7 +11,10 @@
    ;; List of configuration layers to load. If it is the symbol `all' instead
    ;; of a list then all discovered layers will be installed.
    dotspacemacs-configuration-layers
-   '(windows-scripts
+   '(ruby
+     sql
+     clojure
+     windows-scripts
      (auto-completion :variables
                       auto-completion-enable-snippets-in-popup nil
                       auto-completion-private-snippets-directory "~/toolbox/emacs/snippets")
@@ -32,7 +35,9 @@
      restclient
      imenu-list
      treemacs
-     react
+     sql
+     ;; react
+     itome-react
      )
    ;; A list of packages and/or extensions that will not be install and loaded.
    dotspacemacs-excluded-packages '()
@@ -48,6 +53,7 @@
      org-cliplink
      writeroom-mode
      cnfonts
+     yafolding
     )))
 
 (defun dotspacemacs/init ()
@@ -116,7 +122,7 @@ before layers configuration."
    ;; If non nil the frame is maximized when Emacs starts up.
    ;; Takes effect only if `dotspacemacs-fullscreen-at-startup' is nil.
    ;; (Emacs 24.4+ only)
-   dotspacemacs-maximized-at-startup nil
+   dotspacemacs-maximized-at-startup t
    ;; A value from the range (0..100), in increasing opacity, which describes
    ;; the transparency level of a frame when it's active or selected.
    ;; Transparency can be toggled through `toggle-transparency'.
@@ -127,6 +133,7 @@ before layers configuration."
    dotspacemacs-inactive-transparency 90
    ;; If non nil unicode symbols are displayed in the mode line.
    dotspacemacs-mode-line-unicode-symbols t
+   dotspacemacs-mode-line-theme 'spacemacs
    ;; If non nil smooth scrolling (native-scrolling) is enabled. Smooth
    ;; scrolling overrides the default behavior of Emacs which recenters the
    ;; point when it reaches the top or bottom of the screen.
@@ -162,16 +169,22 @@ before layers configuration."
  This function is called at the very end of Spacemacs initialization after
 layers configuration."
   (load "~/toolbox/emacs/funcs.el")
-  ;; Set font family
-  ;; (ry/set-chinese-font "Hiragino Sans GB" 14)
+
+  ;; Command-line switches
+  (add-to-list 'command-switch-alist '("--diff" . ry/command-line-diff))
+
+  ;; Fonts
   (require 'cnfonts)
   (cnfonts-enable)
   (cnfonts-set-spacemacs-fallback-fonts)
+  (setq cnfonts-use-face-font-rescale t)
+  (setq solarized-scale-org-headlines nil)
 
   ;; Enable auto-completion globally
   (global-company-mode)
 
   ;; Auto-saving
+  (setq create-lockfiles nil)
   (setq auto-save-visited-file-name t)
 
   ;; Disable smartparens
@@ -188,7 +201,7 @@ layers configuration."
   (setq vc-follow-symlinks t)
 
   ;; Custom filetypes
-  (add-to-list 'auto-mode-alist '("\\.js\\'" . react-mode))
+  ;; (add-to-list 'auto-mode-alist '("\\.js\\'" . react-mode))
 
   ;; Custom keybindings
   (spacemacs/set-leader-keys
@@ -202,6 +215,7 @@ layers configuration."
     "yi" 'yas-insert-snippet
     "yn" 'yas-new-snippet
     "pn" 'ry/projectile-add-new-project
+    "fy" 'ry/show-and-copy-buffer-filename
     )
   ;; normal mode
   (define-key evil-normal-state-map "j" 'evil-next-visual-line)
@@ -219,10 +233,6 @@ layers configuration."
   (define-key evil-insert-state-map (kbd "C-a") 'beginning-of-line)
   (define-key evil-insert-state-map (kbd "C-e") 'end-of-line)
 
-  ;; evilified mode
-  ;; Example:
-  ;; (define-key evil-evilified-state-map "gg" 'evil-goto-first-line)
-
   ;; org mode
   (setq org-startup-truncated nil)
   (setq org-export-with-sub-superscripts nil)
@@ -239,30 +249,32 @@ layers configuration."
     "on" 'ry/org-new-today-todo
     "yi" 'ry/insert-yas
     )
+
   (spacemacs|use-package-add-hook evil-org
     :post-config
     (progn
-      (message "My custom evil-org-mode mapping")
       (spacemacs/set-leader-keys-for-major-mode 'org-mode
         "id" 'ry/insert-today-date
         "is" 'ry/org-paste-image
         "iL" 'ry/org-cliplink-osx
         ">" 'org-demote-subtree
         "<" 'org-promote-subtree
-        "y" 'ry/org-copy-to-clipboard
+        "yy" 'ry/org-copy-as-rtf
+        "ym" 'ry/org-copy-as-markdown
         "l" 'org-open-at-point
-        ;; "T" 'ry/org-filter-todo-keyword
+        "<tab>" 'ry/org-cycle
         )
       (evil-define-key 'normal evil-org-mode-map
         "t" 'org-todo
-        ;; (kbd "<tab>") 'ry/org-cycle
         )
       )
     )
 
   (add-hook 'org-mode-hook (lambda ()
                              (toggle-word-wrap 1)
-                             (org-indent-mode 1)))
+                             (org-indent-mode 1)
+                             )
+            )
 
   (setq org-todo-keywords
         '((sequence "WIP(w)" "NEXT(n)" "SOON(s)" "SOMEDAY(o)" "WAITING(W)" "DELEGATE(e)"
@@ -315,6 +327,9 @@ layers configuration."
     (spacemacs/set-leader-keys-for-major-mode 'python-mode
       "'" 'ry/python-start-or-switch-repl))
 
+  (add-hook 'python-mode-hook (lambda ()
+                                (yafolding-mode 1)
+                                ))
   ;; It should be '-i' to keep ipython in interactive mode
   ;; But ipython would fail to boot with '-i', and currently
   ;; I have no idea why it happens.
@@ -341,7 +356,7 @@ layers configuration."
   ;; markdown
   (setq markdown-open-command "~/utils/mark.sh")
 
-  (add-hook 'markdown-mode-hook 'ry/markdown-orgtbl-mode)
+  (add-hook 'markdown-mode-hook 'ry/setup-markdown-mode)
 
   ;; tags
   ;; Never keep tag tables across projects
@@ -357,9 +372,14 @@ layers configuration."
   (setq mac-command-modifier 'super)
   (setq mac-option-modifier 'meta)
   (global-set-key (kbd "s-v") 'ry/osx-paste)
+  (define-key evil-normal-state-map (kbd "s-n") 'new-frame)
   (define-key evil-visual-state-map (kbd "s-c") 'ry/osx-copy)
-  (define-key evil-normal-state-map (kbd "s-=") 'cnfonts-increase-fontsize)
-  (define-key evil-normal-state-map (kbd "s--") 'cnfonts-decrease-fontsize)
+  ;; (define-key evil-normal-state-map (kbd "s-=") 'spacemacs/scale-up-font)
+  ;; (define-key evil-normal-state-map (kbd "s--") 'spacemacs/scale-down-font)
+  (global-set-key (kbd "s-=") 'spacemacs/scale-up-font)
+  (global-set-key (kbd "s--") 'spacemacs/scale-down-font)
+  ;; (define-key evil-normal-state-map (kbd "s-=") 'cnfonts-increase-fontsize)
+  ;; (define-key evil-normal-state-map (kbd "s--") 'cnfonts-decrease-fontsize)
 
   ;; termnial settings
   (if (display-graphic-p)
@@ -390,11 +410,9 @@ This function is called at the very end of Spacemacs initialization."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(evil-want-Y-yank-to-eol nil)
  '(package-selected-packages
    (quote
-    (cnfonts yapfify yaml-mode ws-butler writeroom-mode winum which-key web-mode web-beautify vue-mode volatile-highlights vi-tilde-fringe uuidgen use-package unfill treemacs-projectile treemacs-evil toc-org tagedit symon string-inflection sr-speedbar spaceline solarized-theme smeargle slim-mode scss-mode sass-mode restclient-helm restart-emacs rainbow-delimiters pyvenv pytest pyenv-mode py-isort pug-mode powershell popwin pip-requirements persp-mode pcre2el password-generator paradox orgit org-projectile org-present org-pomodoro org-download org-cliplink org-bullets org-brain open-junk-file ob-restclient ob-http mwim move-text markdown-toc magit-gitflow macrostep lorem-ipsum livid-mode live-py-mode linum-relative link-hint less-css-mode json-mode js2-refactor js-doc jinja2-mode jade-mode info+ indent-guide impatient-mode hy-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation hide-comnt help-fns+ helm-themes helm-swoop helm-pydoc helm-purpose helm-projectile helm-mode-manager helm-make helm-gitignore helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag google-translate golden-ratio gnuplot gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link gh-md fuzzy flyspell-correct-helm flycheck-pos-tip flx-ido fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-org evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-ediff evil-args evil-anzu eval-sexp-fu emmet-mode elisp-slime-nav editorconfig dumb-jump define-word cython-mode company-web company-tern company-statistics company-restclient company-ansible company-anaconda column-enforce-mode coffee-mode clean-aindent-mode auto-yasnippet auto-highlight-symbol auto-dictionary auto-compile ansible-doc ansible aggressive-indent adaptive-wrap ace-link ace-jump-helm-line ac-ispell)))
- )
+    (zenburn-theme yasnippet-snippets yapfify yaml-mode yafolding ws-butler writeroom-mode winum which-key web-mode web-beautify vue-mode volatile-highlights vi-tilde-fringe uuidgen use-package unfill treemacs-projectile treemacs-evil toc-org tagedit symon string-inflection sr-speedbar sql-indent spaceline-all-the-icons solarized-theme smeargle slim-mode scss-mode sayid sass-mode rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocop rspec-mode robe rjsx-mode restclient-helm restart-emacs rbenv rake rainbow-delimiters pyvenv pytest pyenv-mode py-isort pug-mode powershell popwin pippel pip-requirements persp-mode password-generator paradox overseer orgit org-projectile org-present org-pomodoro org-mime org-download org-cliplink org-bullets org-brain open-junk-file ob-restclient ob-http nameless mwim move-text minitest markdown-toc magit-gitflow macrostep lorem-ipsum livid-mode live-py-mode linum-relative link-hint less-css-mode json-mode js2-refactor js-doc jinja2-mode jade-mode indent-guide importmagic impatient-mode hy-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation helm-themes helm-swoop helm-pydoc helm-purpose helm-projectile helm-mode-manager helm-make helm-gitignore helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag google-translate golden-ratio gnuplot gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link gh-md fuzzy flyspell-correct-helm flycheck-pos-tip flx-ido fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-org evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-ediff evil-cleverparens evil-args evil-anzu emmet-mode elisp-slime-nav editorconfig dumb-jump diminish define-word cython-mode counsel-projectile company-web company-tern company-statistics company-restclient company-ansible company-anaconda column-enforce-mode coffee-mode cnfonts clojure-snippets clojure-cheatsheet clj-refactor clean-aindent-mode cider-eval-sexp-fu chruby bundler auto-yasnippet auto-highlight-symbol auto-dictionary auto-compile ansible-doc ansible aggressive-indent adaptive-wrap ace-link ace-jump-helm-line ac-ispell))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

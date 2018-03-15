@@ -38,7 +38,7 @@
         (buffer-string)))
   )
 
-(defun ry/org-copy-to-clipboard ()
+(defun ry/org-copy-as-rtf ()
   "Copy current region as rich text to clipboard.
 This function makes use of command-line utility: pbcopy, textutil
 and only works on MacOS."
@@ -51,6 +51,21 @@ and only works on MacOS."
          (content-with-style (format "<style>%s</style>%s" style content)))
     (write-region content-with-style nil fname)
     (shell-command (format "LANG=en_US.UTF-8 cat %s | textutil -stdin -format html -convert rtf -stdout | pbcopy" fname))
+    (delete-file fname))
+  )
+
+(defun ry/org-copy-as-markdown ()
+  "Copy current region as markdown to clipboard.
+It only works in Mac OS "
+  (interactive)
+  (require 'ox-md)
+  (let* ((beg (region-beginning))
+         (end (region-end))
+         (region-string (format "#+OPTIONS: toc:nil\n%s" (buffer-substring beg end)))
+         (content (org-export-string-as region-string 'md t))
+         (fname (make-temp-file "org-clipboard")))
+    (write-region content nil fname)
+    (shell-command (format "LANG=en_US.UTF-8 cat %s | pbcopy" fname))
     (delete-file fname))
   )
 
@@ -119,6 +134,19 @@ current buffer's, reload dir-locals."
   (org-show-todo-tree '(4))
   )
 
+(defun ry//transform-evernote-link(note-link)
+  (require 's)
+  (s-replace "www.evernote.com" "app.yinxiang.com" note-link)
+  )
+
+(defun ry/paste-evernote-link()
+  (interactive)
+  (let ((note-link (shell-command-to-string "LANG=en_US.UTF-8 pbpaste"))
+        )
+    (insert (ry//transform-evernote-link note-link))
+  ))
+
+
 (defun ry/osx-copy()
   "Copy region to OS X system pasteboard."
   (interactive)
@@ -173,6 +201,11 @@ buffer"
     (while (search-forward-regexp "^|-" nil t)
       (replace-string "-|-" "-+-" nil (point) (line-end-position)))
     ))
+
+(defun ry/setup-markdown-mode()
+  (ry/markdown-orgtbl-mode)
+  (ry/set-buffer-variable-pitch)
+  )
 
 (defun ry/markdown-orgtbl-mode()
   (require 'org)
@@ -307,9 +340,9 @@ buffer"
     (pop-to-buffer (process-buffer shell-process))
     (evil-insert-state)))
 
-(defun ry/treemacs-ignore-file-predicate (file)
+(defun ry/treemacs-ignore-file-predicate (relpath abspath)
   "Custom file ignores for treemacs"
-  (s-matches? "^.*\.pyc$" file)
+  (s-matches? "^.*\.pyc$" relpath)
   )
 
 (defun ry/mdmail-send-buffer ()
@@ -322,3 +355,20 @@ buffer"
     (cnfonts-decrease-fontsize)
     )
   )
+
+(defun ry/show-and-copy-buffer-filename ()
+  "Show and copy the full path to the current file in the minibuffer."
+  (interactive)
+  ;; list-buffers-directory is the variable set in dired buffers
+  (let ((file-name (or (buffer-file-name) list-buffers-directory)))
+    (if file-name
+        (progn
+          (kill-new file-name)
+          (message file-name)
+          )
+      (error "Buffer not visiting a file"))))
+
+(defun ry/command-line-diff (switch)
+  (let ((file1 (pop command-line-args-left))
+        (file2 (pop command-line-args-left)))
+    (ediff file1 file2)))
