@@ -151,6 +151,7 @@ before layers configuration."
    dotspacemacs-default-package-repository nil
    dotspacemacs-distinguish-gui-tab t
    dotspacemacs-large-file-size 100
+   dotspacemacs-auto-resume-layouts t
    )
   ;; User initialization goes here
   ;; List of themes, the first of the list is loaded when spacemacs starts.

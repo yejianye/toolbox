@@ -204,7 +204,6 @@ buffer"
 
 (defun ry/setup-markdown-mode()
   (ry/markdown-orgtbl-mode)
-  (ry/set-buffer-variable-pitch)
   )
 
 (defun ry/markdown-orgtbl-mode()
