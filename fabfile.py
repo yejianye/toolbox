@@ -11,6 +11,7 @@ from fablibs.vcs import ensure_git_repo
 
 from fabscripts import wordpress
 from fabscripts import ios
+from fabscripts import redshift
 
 try:
     from custom.fabfile import *
@@ -36,9 +37,6 @@ TOOLBOX_DIR = os.path.abspath(os.path.dirname(__file__))
 
 def toolbox_path(path):
     return os.path.join(TOOLBOX_DIR, path)
-
-def foo():
-    print "bar"
 
 @task
 def ssh_localhost():

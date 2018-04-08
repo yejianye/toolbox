@@ -371,3 +371,57 @@ buffer"
   (let ((file1 (pop command-line-args-left))
         (file2 (pop command-line-args-left)))
     (ediff file1 file2)))
+
+(defun ry/sql-mode-hook ()
+  (sqlind-minor-mode 1)
+  (outline-minor-mode 1)
+  (setq-local outline-regexp "-- [*\f]+")
+  )
+
+(defun ry/elisp-add-to-watch (&optional region-start region-end)
+  "Add the current variable to the *EDebug* window"
+  (interactive "r")
+  (require 'eldoc)
+  (let ((statement
+         (if (and region-start region-end (use-region-p))
+             (buffer-substring region-start region-end)
+           (symbol-name (eldoc-current-symbol)))))
+    ;; open eval buffer
+    (edebug-visit-eval-list)
+    ;; jump to the end of it and add a newline
+    (goto-char (point-max))
+    (newline)
+    ;; insert the variable
+    (insert statement)
+    ;; update the list
+    (edebug-update-eval-list)
+    ;; jump back to where we were
+    (edebug-where)))
+
+(defun ry/sql-connect-and-bind (connection &optional new-name)
+  (interactive
+   (if sql-connection-alist
+       (list (sql-read-connection "Connection: " nil '(nil))
+             current-prefix-arg)
+     (user-error "No SQL Connections defined")))
+  (let* ((cur-buf (current-buffer))
+         (sqli-buf (sql-connect connection))
+         (connect-props (cdr (assoc connection sql-connection-alist)))
+         (startup-sql (car (alist-get 'sql-startup connect-props)))
+         )
+    (with-current-buffer sqli-buf
+      (sql-rename-buffer connection)
+      (setq sql-buffer (buffer-name sqli-buf))
+      )
+    (with-current-buffer cur-buf
+      (setq sql-buffer (buffer-name sqli-buf))
+      (run-hooks 'sql-set-sqli-hook)
+      (sql-send-string startup-sql)
+      )
+    ))
+
+(defun ry/sql-list-clear-cache ()
+  (interactive)
+  (with-current-buffer sql-buffer
+    (setq sql-completion-object nil)
+    ))
