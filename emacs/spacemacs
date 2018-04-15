@@ -22,6 +22,7 @@
      python
      emacs-lisp
      javascript
+     java
      html
      ansible
      yaml
@@ -184,9 +185,114 @@ before packages are loaded. If you are unsure, you should try in setting them in
  This function is called at the very end of Spacemacs initialization after
 layers configuration."
   (load "~/toolbox/emacs/funcs.el")
+  (ry/global-settings)
+  (ry/global-keybindings)
+  (ry/org-mode-settings)
+  (ry/python-mode-settings)
+  (ry/sql-mode-settings)
 
-  ;; Command-line switches
-  (add-to-list 'command-switch-alist '("--diff" . ry/command-line-diff))
+  ;; Custom filetypes
+  ;; (add-to-list 'auto-mode-alist '("\\.js\\'" . react-mode))
+
+  ;; Artist mode
+  (with-eval-after-load "artist"
+    (define-key artist-mode-map [(down-mouse-3)] 'artist-mouse-choose-operation)
+  )
+
+  ;; shell keybindings
+  (with-eval-after-load "comint"
+    (define-key comint-mode-map (kbd "C-u") 'backward-kill-sentence)
+  )
+
+  ;; helm settings
+  (setq helm-M-x-fuzzy-match t
+        helm-recentf-fuzzy-match t)
+  (with-eval-after-load "helm"
+    (define-key helm-map (kbd "C-w") 'backward-kill-word)
+    (define-key helm-map (kbd "C-,") 'helm-toggle-visible-mark)
+  )
+
+  ;; magit settings
+  (setq magit-push-always-verify nil)
+
+  ;; projectile settings
+  (setq enable-local-variables :all)
+  (add-hook 'emacs-lisp-mode-hook 'ry/auto-reload-dir-locals-hook)
+
+  ;; treemacs
+  (spacemacs|use-package-add-hook treemacs
+    :post-config
+    (add-to-list 'treemacs-ignored-file-predicates 'ry/treemacs-ignore-file-predicate)
+    )
+
+  ;; python settings
+  ;; ediff
+  (with-eval-after-load "ediff"
+    (ediff-setup-keymap)
+    (define-key ediff-mode-map " " nil)
+    )
+
+  ;; markdown
+  (setq markdown-open-command "~/utils/mark.sh")
+
+  (add-hook 'markdown-mode-hook 'ry/setup-markdown-mode)
+
+  ;; sql
+
+  ;; outline mode
+  (require 'outshine)
+  (add-hook 'outline-minor-mode-hook 'outshine-hook-function)
+
+  ;; writeroom
+  (setq writeroom-extra-line-spacing 0.5)
+  (setq writeroom-width 100)
+
+  ;; osx settings
+  (setq select-enable-clipboard nil)
+  (setq mac-command-modifier 'super)
+  (setq mac-option-modifier 'meta)
+  (global-set-key (kbd "s-v") 'ry/osx-paste)
+  (define-key evil-normal-state-map (kbd "s-n") 'new-frame)
+  (define-key evil-visual-state-map (kbd "s-c") 'ry/osx-copy)
+  (global-set-key (kbd "s-=") 'spacemacs/scale-up-font)
+  (global-set-key (kbd "s--") 'spacemacs/scale-down-font)
+  ;; (define-key evil-normal-state-map (kbd "s-=") 'cnfonts-increase-fontsize)
+  ;; (define-key evil-normal-state-map (kbd "s--") 'cnfonts-decrease-fontsize)
+
+  ;; termnial settings
+  (if (display-graphic-p)
+      (ry/gui-config)
+    (Ry/terminal-config)
+    )
+
+  ;; Edebug settings
+  (with-eval-after-load "edebug"
+    (define-key edebug-mode-map "A" 'ry/elisp-add-to-watch)
+    )
+
+  ;; load custom-file if it exists
+  (when (file-exists-p custom-file)
+    (load-file custom-file))
+
+  ;; Load local config
+  (setq local-config-file "~/.emacs-local.el")
+  (when (file-exists-p local-config-file)
+    (load local-config-file))
+)
+
+(defun ry/gui-config()
+  (setq interprogram-cut-function nil)
+  (setq interprogram-paste-function nil)
+  (setq frame-title-format '(buffer-file-name "%f" ("%b"))))
+
+(defun ry/terminal-config()
+  (setq linum-format "%4d \u2502 "
+        linum-relative-format "%3s \u2502 "))
+
+(defun ry/global-settings ()
+  ;; tags
+  (setq tags-add-tables nil)
+  (setq tags-revert-without-query t)
 
   ;; Fonts
   (require 'cnfonts)
@@ -207,18 +313,15 @@ layers configuration."
   (remove-hook 'prog-mode-hook 'smartparens-mode)
 
   ;; Treat underscore as part of the word
-  ;; (add-hook 'prog-mode-hook 'ry/global-underscore-as-word)
   (ry/add-hook-underscore-as-word '(prog-mode-hook yaml-mode-hook))
 
   (setq-default indent-tabs-mode nil
                 tab-width 4)
 
   (setq vc-follow-symlinks t)
+  )
 
-  ;; Custom filetypes
-  ;; (add-to-list 'auto-mode-alist '("\\.js\\'" . react-mode))
-
-  ;; Custom keybindings
+(defun ry/global-keybindings ()
   (spacemacs/set-leader-keys
     "py" 'helm-etags-select
     "rf" 'frameset-to-register
@@ -231,6 +334,8 @@ layers configuration."
     "yn" 'yas-new-snippet
     "pn" 'ry/projectile-add-new-project
     "fy" 'ry/show-and-copy-buffer-filename
+    "gr" 'magit-reflog
+    "gd" 'ry/git-diff
     )
   ;; normal mode
   (define-key evil-normal-state-map "j" 'evil-next-visual-line)
@@ -247,8 +352,9 @@ layers configuration."
   (define-key evil-insert-state-map (kbd "<s-right>") 'end-of-line)
   (define-key evil-insert-state-map (kbd "C-a") 'beginning-of-line)
   (define-key evil-insert-state-map (kbd "C-e") 'end-of-line)
+  )
 
-  ;; org mode
+(defun ry/org-mode-settings()
   (setq org-startup-truncated nil)
   (setq org-export-with-sub-superscripts nil)
   (setq ry-org-root-dir "~/Dropbox/org/")
@@ -304,40 +410,9 @@ layers configuration."
           ("e" "Learn Emacs" entry (file+headline "~/Dropbox/org/tasks.org" "Learn Emacs")
            "*** %^{priority|NEXT|SOON|SOMEDAY} %?\n" :prepend t)
           ))
-
-  ;; Artist mode
-  (with-eval-after-load "artist"
-    (define-key artist-mode-map [(down-mouse-3)] 'artist-mouse-choose-operation)
   )
 
-  ;; shell keybindings
-  (with-eval-after-load "comint"
-    (define-key comint-mode-map (kbd "C-u") 'backward-kill-sentence)
-  )
-
-  ;; helm settings
-  (setq helm-M-x-fuzzy-match t
-        helm-recentf-fuzzy-match t)
-  (with-eval-after-load "helm"
-    (define-key helm-map (kbd "C-w") 'backward-kill-word)
-    (define-key helm-map (kbd "C-,") 'helm-toggle-visible-mark)
-  )
-
-  ;; magit settings
-  (setq magit-push-always-verify nil)
-  (evil-leader/set-key "gr" 'magit-reflog)
-
-  ;; projectile settings
-  (setq enable-local-variables :all)
-  (add-hook 'emacs-lisp-mode-hook 'ry/auto-reload-dir-locals-hook)
-
-  ;; treemacs
-  (spacemacs|use-package-add-hook treemacs
-    :post-config
-    (add-to-list 'treemacs-ignored-file-predicates 'ry/treemacs-ignore-file-predicate)
-    )
-
-  ;; python settings
+(defun ry/python-mode-settings ()
   (spacemacs|use-package-add-hook python
     :post-config
     (spacemacs/set-leader-keys-for-major-mode 'python-mode
@@ -362,78 +437,16 @@ layers configuration."
 
   (with-eval-after-load "anaconda-mode"
     (define-key anaconda-mode-map [remap find-tag] nil))
+  )
 
-  ;; ediff
-  (with-eval-after-load "ediff"
-    (ediff-setup-keymap)
-    (define-key ediff-mode-map " " nil)
-    )
-
-  ;; markdown
-  (setq markdown-open-command "~/utils/mark.sh")
-
-  (add-hook 'markdown-mode-hook 'ry/setup-markdown-mode)
-
-  ;; sql
+(defun ry/sql-mode-settings ()
   (add-hook 'sql-mode-hook 'ry/sql-mode-hook)
   (spacemacs/set-leader-keys-for-major-mode 'sql-mode
     "c" 'ry/sql-connect-and-bind
     "lc" 'ry/sql-list-clear-cache
+    "bk" 'ry/sql-kill-buffer
+    "r" 'ry/sql-reconnect
+    "sv" 'ry/sql-show-viz
     )
-
-  ;; outline mode
-  (require 'outshine)
-  (add-hook 'outline-minor-mode-hook 'outshine-hook-function)
-
-  ;; tags
-  ;; Never keep tag tables across projects
-  (setq tags-add-tables nil)
-
-  ;; writeroom
-  ;; (add-hook 'writeroom-mode-hook 'ry/writeroom-font-size)
-  (setq writeroom-extra-line-spacing 0.5)
-  (setq writeroom-width 100)
-
-  ;; osx settings
-  (setq select-enable-clipboard nil)
-  (setq mac-command-modifier 'super)
-  (setq mac-option-modifier 'meta)
-  (global-set-key (kbd "s-v") 'ry/osx-paste)
-  (define-key evil-normal-state-map (kbd "s-n") 'new-frame)
-  (define-key evil-visual-state-map (kbd "s-c") 'ry/osx-copy)
-  ;; (define-key evil-normal-state-map (kbd "s-=") 'spacemacs/scale-up-font)
-  ;; (define-key evil-normal-state-map (kbd "s--") 'spacemacs/scale-down-font)
-  (global-set-key (kbd "s-=") 'spacemacs/scale-up-font)
-  (global-set-key (kbd "s--") 'spacemacs/scale-down-font)
-  ;; (define-key evil-normal-state-map (kbd "s-=") 'cnfonts-increase-fontsize)
-  ;; (define-key evil-normal-state-map (kbd "s--") 'cnfonts-decrease-fontsize)
-
-  ;; termnial settings
-  (if (display-graphic-p)
-      (ry/gui-config)
-    (Ry/terminal-config)
-    )
-
-  ;; Edebug settings
-  (with-eval-after-load "edebug"
-    (define-key edebug-mode-map "A" 'ry/elisp-add-to-watch)
-    )
-
-  ;; load custom-file if it exists
-  (when (file-exists-p custom-file)
-    (load-file custom-file))
-
-  ;; Load local config
-  (setq local-config-file "~/.emacs-local.el")
-  (when (file-exists-p local-config-file)
-    (load local-config-file))
-)
-
-(defun ry/gui-config()
-  (setq interprogram-cut-function nil)
-  (setq interprogram-paste-function nil)
-  (setq frame-title-format '(buffer-file-name "%f" ("%b"))))
-
-(defun ry/terminal-config()
-  (setq linum-format "%4d \u2502 "
-        linum-relative-format "%3s \u2502 "))
+  (setq sql-set-sqli-hook 'ry/sql-set-sqli-hook)
+  )
