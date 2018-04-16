@@ -237,8 +237,6 @@ layers configuration."
 
   (add-hook 'markdown-mode-hook 'ry/setup-markdown-mode)
 
-  ;; sql
-
   ;; outline mode
   (require 'outshine)
   (add-hook 'outline-minor-mode-hook 'outshine-hook-function)
@@ -378,7 +376,7 @@ layers configuration."
       (spacemacs/set-leader-keys-for-major-mode 'org-mode
         "id" 'ry/insert-today-date
         "is" 'ry/org-paste-image
-        "iL" 'ry/org-cliplink-osx
+        "iL" 'ry/org-insert-chrome-url-osx
         ">" 'org-demote-subtree
         "<" 'org-promote-subtree
         "yy" 'ry/org-copy-as-rtf
@@ -447,6 +445,7 @@ layers configuration."
     "bk" 'ry/sql-kill-buffer
     "r" 'ry/sql-reconnect
     "sv" 'ry/sql-show-viz
+    "o" 'outline-minor-mode
     )
   (setq sql-set-sqli-hook 'ry/sql-set-sqli-hook)
   )

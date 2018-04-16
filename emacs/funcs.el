@@ -188,6 +188,16 @@ buffer"
   (org-cliplink-insert-transformed-title (shell-command-to-string "LANG=en_US.UTF-8 pbpaste")
                                          'org-cliplink-org-mode-link-transformer))
 
+(defun ry/org-insert-chrome-url-osx ()
+  "Insert an org-mode linke with the title and url of current tab in Chrome"
+  (interactive)
+  (let ((title (substring (do-applescript "tell application \"Google Chrome\" to return title of active tab of front window") 1 -1))
+        (url (substring (do-applescript "tell application \"Google Chrome\" to return URL of active tab of front window") 1 -1)))
+    (insert (format "[[%s][%s]]" url (thread-last title
+                                       (s-replace "[" "{")
+                                       (s-replace "]" "}"))
+                    ))))
+
 (defun ry/markdown-cleanup-org-tables()
   (save-excursion
     (goto-char (point-min))
@@ -370,7 +380,8 @@ buffer"
 (defun ry/sql-mode-hook ()
   (sqlind-minor-mode 1)
   (setq-local outline-regexp "-- [*\f]+")
-  (outline-minor-mode 1)
+  ;; It's unclear why enabling outline-minor-mode doesn't update the heading fonts
+  ;; (outline-minor-mode 1)
   )
 
 (defun ry/elisp-add-to-watch (&optional region-start region-end)
@@ -464,16 +475,17 @@ buffer"
          (image-path (ry//sql-viz-image-path))
          (retcode (shell-command-on-region
                    start end
-                   (format "sqlviz --host=%s --port=%s --user=%s --save-image=%s %s"
+                   (format (concat "sqlviz --host=%s --port=%s --user=%s "
+                                   "--save-image=%s --prefix-sql=\"%s\" %s")
                            (ry//sql-connection-prop 'sql-server)
                            (ry//sql-connection-prop 'sql-port)
                            (ry//sql-connection-prop 'sql-user)
                            image-path
+                           (ry//sql-connection-prop 'sql-startup)
                            (ry//sql-connection-prop 'sql-database))))
          )
     (when (= retcode 0)
       (find-file-other-window image-path))))
-  )
 
 (defun ry/sql-set-sqli-hook ()
   (setq sql-connection-name (nth 1 (s-match "^\\*SQL: \\(.*\\)\\*$" sql-buffer))))
