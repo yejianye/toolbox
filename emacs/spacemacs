@@ -11,15 +11,16 @@
    ;; List of configuration layers to load. If it is the symbol `all' instead
    ;; of a list then all discovered layers will be installed.
    dotspacemacs-configuration-layers
-   '(ruby
+   '(csv
+     ruby
      sql
      clojure
-     windows-scripts
      (auto-completion :variables
                       auto-completion-enable-snippets-in-popup nil
                       auto-completion-private-snippets-directory "~/toolbox/emacs/snippets")
      markdown
      python
+     ipython-notebook
      emacs-lisp
      javascript
      java
@@ -317,6 +318,8 @@ layers configuration."
                 tab-width 4)
 
   (setq vc-follow-symlinks t)
+
+  (setq browse-url-generic-program "open")
   )
 
 (defun ry/global-keybindings ()
@@ -334,7 +337,14 @@ layers configuration."
     "fy" 'ry/show-and-copy-buffer-filename
     "gr" 'magit-reflog
     "gd" 'ry/git-diff
+    "gD" 'ry/github-branch-diff
+    "bp" 'ry/switch-to-prev-buffer-in-other-window
     )
+
+  (spacemacs/set-leader-keys-for-minor-mode 'outline-minor-mode
+    "<tab>" 'outshine-cycle-buffer
+    )
+
   ;; normal mode
   (define-key evil-normal-state-map "j" 'evil-next-visual-line)
   (define-key evil-normal-state-map "k" 'evil-previous-visual-line)

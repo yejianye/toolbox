@@ -404,7 +404,7 @@ buffer"
     ;; jump back to where we were
     (edebug-where)))
 
-(defun ry/sql-connect-and-bind (connection &optional new-name)
+(defun ry/sql-connect-and-bind (connection)
   (interactive
    (if sql-connection-alist
        (list (sql-read-connection "Connection: " nil '(nil))
@@ -493,3 +493,18 @@ buffer"
 (defun ry/git-diff ()
   (interactive)
   (magit-diff "HEAD"))
+
+(defun ry/github-branch-diff ()
+  (interactive)
+  (let* ((url (magit-get "remote" (magit-upstream-repository) "url"))
+         (url (thread-last url
+                (s-replace "git@github.com:" "https://github.com/")
+                (s-replace-regexp "\\.git$" "")))
+         (branch (magit-get-current-branch)))
+    (browse-url-generic (format "%s/compare/%s" url branch)))
+  )
+
+(defun ry/switch-to-prev-buffer-in-other-window ()
+  (interactive)
+  (switch-to-buffer-other-window  (other-buffer (current-buffer) 1))
+  )
