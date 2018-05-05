@@ -19,7 +19,8 @@
                       auto-completion-enable-snippets-in-popup nil
                       auto-completion-private-snippets-directory "~/toolbox/emacs/snippets")
      markdown
-     python
+     (python :variables
+             python-test-runner 'pytest)
      ipython-notebook
      emacs-lisp
      javascript
@@ -52,11 +53,12 @@
      jade-mode
      vue-mode
      sr-speedbar
-     org-cliplink
      writeroom-mode
      cnfonts
      yafolding
      outshine
+     ;; Replaced with using Apple Script to get page title
+     ;; org-cliplink
     )))
 
 (defun dotspacemacs/init ()
@@ -95,12 +97,12 @@ before layers configuration."
    ;; The leader key
    dotspacemacs-leader-key "SPC"
    ;; The leader key accessible in `emacs state' and `insert state'
-   dotspacemacs-emacs-leader-key "M-m"
+   dotspacemacs-emacs-leader-key "s-m"
    ;; Major mode leader key is a shortcut key which is the equivalent of
    ;; pressing `<leader> m`. Set it to `nil` to disable it.
    dotspacemacs-major-mode-leader-key ","
    ;; Major mode leader key accessible in `emacs state' and `insert state'
-   dotspacemacs-major-mode-emacs-leader-key "C-M-m"
+   dotspacemacs-major-mode-emacs-leader-key "s-,"
    ;; The command key used for Evil commands (ex-commands) and
    ;; Emacs commands (M-x).
    ;; By default the command key is `:' so ex-commands are executed like in Vim
@@ -155,6 +157,7 @@ before layers configuration."
    dotspacemacs-distinguish-gui-tab t
    dotspacemacs-large-file-size 100
    dotspacemacs-auto-resume-layouts nil
+   dotspacemacs-check-for-update nil
    )
   ;; User initialization goes here
   ;; List of themes, the first of the list is loaded when spacemacs starts.
@@ -339,10 +342,13 @@ layers configuration."
     "gd" 'ry/git-diff
     "gD" 'ry/github-branch-diff
     "bp" 'ry/switch-to-prev-buffer-in-other-window
+    "bl" 'ry/show-log-buffer
     )
 
   (spacemacs/set-leader-keys-for-minor-mode 'outline-minor-mode
     "<tab>" 'outshine-cycle-buffer
+    "sn" 'org-narrow-to-subtree
+    "sN" 'widen
     )
 
   ;; normal mode
@@ -445,6 +451,7 @@ layers configuration."
 
   (with-eval-after-load "anaconda-mode"
     (define-key anaconda-mode-map [remap find-tag] nil))
+  (setq ein:connect-default-notebook "8888/emacs-default.ipynb")
   )
 
 (defun ry/sql-mode-settings ()
@@ -458,4 +465,10 @@ layers configuration."
     "o" 'outline-minor-mode
     )
   (setq sql-set-sqli-hook 'ry/sql-set-sqli-hook)
+
+  ;; YAML2SQL
+  (push "*yaml2sql-output*" popwin:special-display-config)
+  (spacemacs/set-leader-keys-for-major-mode 'yaml-mode
+    "s" 'ry/yamlsql-show-sql
+    )
   )

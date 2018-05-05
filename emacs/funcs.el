@@ -50,8 +50,9 @@ and only works on MacOS."
          (style (ry/read-file-content "~/.org-clipboard.css"))
          (content-with-style (format "<style>%s</style>%s" style content)))
     (write-region content-with-style nil fname)
-    (shell-command (format "LANG=en_US.UTF-8 cat %s | textutil -stdin -format html -convert rtf -stdout | pbcopy" fname))
-    (delete-file fname))
+    (shell-command (format "LANG=en_US.UTF-8 cat %s | textutil -stdin -format html -inputencoding UTF-8 -convert rtf -stdout | pbcopy" fname))
+    (delete-file fname)
+    )
   )
 
 (defun ry/org-copy-as-markdown ()
@@ -404,7 +405,7 @@ buffer"
     ;; jump back to where we were
     (edebug-where)))
 
-(defun ry/sql-connect-and-bind (connection)
+(defun ry/sql-connect-and-bind (connection &optional new-name)
   (interactive
    (if sql-connection-alist
        (list (sql-read-connection "Connection: " nil '(nil))
@@ -507,4 +508,29 @@ buffer"
 (defun ry/switch-to-prev-buffer-in-other-window ()
   (interactive)
   (switch-to-buffer-other-window  (other-buffer (current-buffer) 1))
+  )
+
+(defun ry/log-buffer()
+  (get-buffer-create "*app-log*"))
+
+(defun ry/log (msg)
+  (let ((log-buffer (ry/log-buffer)))
+    (with-current-buffer log-buffer
+      (goto-char (point-max))
+      (insert (format "[%s] %s\n" (current-time-string) msg))
+      ))
+  )
+
+(defun ry/show-log-buffer ()
+  (interactive)
+  (switch-to-buffer-other-window (ry/log-buffer))
+  )
+
+(defun ry/yamlsql-show-sql ()
+  (interactive)
+  (let ((query-name (substring-no-properties (thing-at-point 'word))))
+    (shell-command (format "yaml2sql %s --query %s"
+                           (buffer-file-name) query-name)
+                   "*yaml2sql-output*")
+    )
   )

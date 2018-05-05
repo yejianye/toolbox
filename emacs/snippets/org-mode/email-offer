@@ -1,0 +1,20 @@
+# -*- mode: snippet -*-
+# name: email-offer
+# key: email-offer
+# --
+Hi, ${1:name}
+
+It's very nice having talked to you in the previous interviews. We thought you would be a good fit for Glow. Thus, we're making an offer to you. And here are 2 options you could choose
+
+1. Annual salary ${2:200,000} RMB + ${3:30,000} RSU
+2. Annual salary ${4:220,000} RMB + ${5:10,000} RSU
+
+Besides the salary and stocks,  we will purchase standard social insurance and benefits (五险一金) plus a high-end health insurance which covers almost all your medical treatments (不受社保范畴限制). And we provide free lunches and dinners as well.
+
+For stock shares, what we offer is RSU (Restricted Stock Unit). You will be able to vest 25% of the shares on one year cliff, and going forward you will receive 1/48 of the shares monthly. You will be able fully vested all your shares at the end of 4 years.
+
+And just want you to know, as a startup, we value individual performance seriously, and it will significantly impact future salary adjustment and stock grant. In general, we will do the adjustment annually.
+
+Please let me know if your accept the offer or not, by the end of ${6:Friday, Dec 8}. And feel free to give me a call at 18601651641 if you have any question.
+
+Thanks,
