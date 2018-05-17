@@ -171,11 +171,15 @@ current buffer's, reload dir-locals."
   (interactive)
   (let* ((is-retina (y-or-n-p "Is the screenshot taken from a retina display?"))
          (date-string (format-time-string "%Y-%m-%d-%H-%M"))
-         (filename (format "%s-%04x.png" date-string (random (expt 16 4))))
+         (random-id (random (expt 16 4)))
+         (filename (format "%s-%04x.png" date-string random-id))
          (fullpath (expand-file-name (concat ry-org-images-dir filename))))
-    (if is-retina
-        (shell-command (format "~/utils/save_screen.py --scale=0.5 --filename=%s" fullpath))
-      (shell-command (format "~/utils/save_screen.py --filename=%s" fullpath)))
+    (if (not is-retina)
+        (shell-command (format "~/utils/save_screen.py --filename=%s" fullpath))
+      (shell-command (format "~/utils/save_screen.py --scale=0.5 --filename=%s" fullpath))
+      (shell-command (format "~/utils/save_screen.py --filename=%s"
+                             (s-replace ".png" "@2x.png" fullpath)))
+      )
     (insert (format "[[file:%s]]" fullpath))
     (org-redisplay-inline-images)
     )
@@ -513,9 +517,9 @@ buffer"
 (defun ry/log-buffer()
   (get-buffer-create "*app-log*"))
 
-(defun ry/log (msg)
-  (let ((log-buffer (ry/log-buffer)))
-    (with-current-buffer log-buffer
+(defun ry/log (format-string &rest args)
+  (let ((msg (apply 'format (cons format-string args))))
+    (with-current-buffer (ry/log-buffer)
       (goto-char (point-max))
       (insert (format "[%s] %s\n" (current-time-string) msg))
       ))
@@ -523,7 +527,7 @@ buffer"
 
 (defun ry/show-log-buffer ()
   (interactive)
-  (switch-to-buffer-other-window (ry/log-buffer))
+  (switch-to-buffer (ry/log-buffer))
   )
 
 (defun ry/yamlsql-show-sql ()
@@ -533,4 +537,24 @@ buffer"
                            (buffer-file-name) query-name)
                    "*yaml2sql-output*")
     )
+  )
+
+(defun ry/yamlsql-run-sql ()
+  (interactive)
+  (let ((query-name (substring-no-properties (thing-at-point 'word))))
+    (shell-command (format "yaml2sql %s --query %s --run-sql"
+                           (buffer-file-name) query-name)
+                   "*yaml2sql-output*")
+    )
+  )
+
+(defun ry/insert-page-breaker ()
+  (interactive)
+  (insert 12)
+  )
+
+(defun ry/org-insert-sub-heading ()
+  (interactive)
+  (org-insert-heading-after-current)
+  (org-demote-subtree)
   )

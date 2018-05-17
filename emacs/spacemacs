@@ -194,6 +194,8 @@ layers configuration."
   (ry/org-mode-settings)
   (ry/python-mode-settings)
   (ry/sql-mode-settings)
+  (ry/elisp-mode-settings)
+  (ry/osx-settings)
 
   ;; Custom filetypes
   ;; (add-to-list 'auto-mode-alist '("\\.js\\'" . react-mode))
@@ -229,7 +231,6 @@ layers configuration."
     (add-to-list 'treemacs-ignored-file-predicates 'ry/treemacs-ignore-file-predicate)
     )
 
-  ;; python settings
   ;; ediff
   (with-eval-after-load "ediff"
     (ediff-setup-keymap)
@@ -249,28 +250,7 @@ layers configuration."
   (setq writeroom-extra-line-spacing 0.5)
   (setq writeroom-width 100)
 
-  ;; osx settings
-  (setq select-enable-clipboard nil)
-  (setq mac-command-modifier 'super)
-  (setq mac-option-modifier 'meta)
-  (global-set-key (kbd "s-v") 'ry/osx-paste)
-  (define-key evil-normal-state-map (kbd "s-n") 'new-frame)
-  (define-key evil-visual-state-map (kbd "s-c") 'ry/osx-copy)
-  (global-set-key (kbd "s-=") 'spacemacs/scale-up-font)
-  (global-set-key (kbd "s--") 'spacemacs/scale-down-font)
-  ;; (define-key evil-normal-state-map (kbd "s-=") 'cnfonts-increase-fontsize)
-  ;; (define-key evil-normal-state-map (kbd "s--") 'cnfonts-decrease-fontsize)
-
   ;; termnial settings
-  (if (display-graphic-p)
-      (ry/gui-config)
-    (Ry/terminal-config)
-    )
-
-  ;; Edebug settings
-  (with-eval-after-load "edebug"
-    (define-key edebug-mode-map "A" 'ry/elisp-add-to-watch)
-    )
 
   ;; load custom-file if it exists
   (when (file-exists-p custom-file)
@@ -323,6 +303,17 @@ layers configuration."
   (setq vc-follow-symlinks t)
 
   (setq browse-url-generic-program "open")
+
+  ;; Popwin
+  ;; (push '("^\\*pytest-.*\\*$" :regexp t :noselect t)
+  (push '("^\\*pytest-.*\\*$" :regexp t
+          :dedicated t :position bottom :stick t :noselect t)
+        popwin:special-display-config)
+
+  (if (display-graphic-p)
+      (ry/gui-config)
+    (ry/terminal-config)
+    )
   )
 
 (defun ry/global-keybindings ()
@@ -391,7 +382,8 @@ layers configuration."
     (progn
       (spacemacs/set-leader-keys-for-major-mode 'org-mode
         "id" 'ry/insert-today-date
-        "is" 'ry/org-paste-image
+        "ii" 'ry/org-paste-image
+        "is" 'ry/org-insert-sub-heading
         "iL" 'ry/org-insert-chrome-url-osx
         ">" 'org-demote-subtree
         "<" 'org-promote-subtree
@@ -467,8 +459,32 @@ layers configuration."
   (setq sql-set-sqli-hook 'ry/sql-set-sqli-hook)
 
   ;; YAML2SQL
-  (push "*yaml2sql-output*" popwin:special-display-config)
+  (push '("*yaml2sql-output*" :dedicated t :position bottom :stick t :noselect nil)
+        popwin:special-display-config)
   (spacemacs/set-leader-keys-for-major-mode 'yaml-mode
     "s" 'ry/yamlsql-show-sql
+    "r" 'ry/yamlsql-run-sql
     )
+  )
+
+(defun ry/elisp-mode-settings ()
+  (spacemacs/set-leader-keys-for-major-mode 'emacs-lisp-mode
+    "ip" 'ry/insert-page-breaker
+    )
+  (with-eval-after-load "edebug"
+    (define-key edebug-mode-map "A" 'ry/elisp-add-to-watch)
+    )
+  )
+
+(defun ry/osx-settings ()
+  (setq select-enable-clipboard nil)
+  (setq mac-command-modifier 'super)
+  (setq mac-option-modifier 'meta)
+  (global-set-key (kbd "s-v") 'ry/osx-paste)
+  (define-key evil-normal-state-map (kbd "s-n") 'new-frame)
+  (define-key evil-visual-state-map (kbd "s-c") 'ry/osx-copy)
+  (global-set-key (kbd "s-=") 'spacemacs/scale-up-font)
+  (global-set-key (kbd "s--") 'spacemacs/scale-down-font)
+  ;; (define-key evil-normal-state-map (kbd "s-=") 'cnfonts-increase-fontsize)
+  ;; (define-key evil-normal-state-map (kbd "s--") 'cnfonts-decrease-fontsize)
   )
