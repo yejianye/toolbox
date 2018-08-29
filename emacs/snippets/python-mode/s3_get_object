@@ -1,0 +1,12 @@
+# -*- mode: snippet -*-
+# name: s3.get_object
+# key: s3_get_object
+# --
+
+def s3_get_content(bucket, key):
+    response = self.s3.get_object(Bucket=bucket, Key=key)
+    if key.endswith('.gz'):
+        bytestream = BytesIO(response['Body'].read())
+        return GzipFile(None, 'rb', fileobj=bytestream).read().decode('utf-8')
+    else:
+        return response['Body']

@@ -415,6 +415,9 @@ buffer"
        (list (sql-read-connection "Connection: " nil '(nil))
              current-prefix-arg)
      (user-error "No SQL Connections defined")))
+  (setq sql-product
+        (-last-item (ry//sql-connection-prop 'sql-product connection))
+        )
   (let* ((cur-buf (current-buffer))
          (sqli-buf (sql-connect connection))
          (sql-startup (ry//sql-connection-prop 'sql-startup connection))
@@ -539,6 +542,12 @@ buffer"
     )
   )
 
+(defun ry/yamlsql-show-sql-all ()
+  (interactive)
+  (shell-command (format "yaml2sql %s" (buffer-file-name))
+                 "*yaml2sql-output*")
+  )
+
 (defun ry/yamlsql-run-sql ()
   (interactive)
   (let ((query-name (substring-no-properties (thing-at-point 'word))))
@@ -546,6 +555,12 @@ buffer"
                            (buffer-file-name) query-name)
                    "*yaml2sql-output*")
     )
+  )
+
+(defun ry/yamlsql-run-sql-all ()
+  (interactive)
+  (shell-command (format "yaml2sql %s --run-sql" (buffer-file-name))
+                  "*yaml2sql-output*")
   )
 
 (defun ry/insert-page-breaker ()
@@ -557,4 +572,54 @@ buffer"
   (interactive)
   (org-insert-heading-after-current)
   (org-demote-subtree)
+  )
+
+(defun ry/projectile-switch-and-search (project)
+  (let ((projectile-switch-project-action 'spacemacs/helm-project-smart-do-search))
+    (projectile-switch-project-by-name project))
+  )
+
+(defun ry/calculate-total-time-in-region (&optional region-start region-end)
+  "Sum time spent in selected region in Timesheet"
+  (interactive "r")
+  (let ((time-string (buffer-substring region-start region-end)))
+    (insert (format "\nTotal time: %s\n" (ry/calculate-total-time time-string)))
+    )
+  )
+
+(defun ry/calculate-total-time (time-string)
+  (require 's)
+  (require 'dash)
+  (thread-last time-string
+    (s-lines)
+    (--map (s-split " - " it))
+    (--map (-last-item it))
+    (-map 'ry//string-to-mins)
+    (-sum)
+    (ry//hours-and-mins)
+    )
+  )
+
+(defun ry//string-to-mins (string)
+  (let ((mins (s-match "\\([0-9]+\\) mins" string))
+        (hours (s-match "\\([0-9]+\\) hour" string)))
+    (+
+     (if mins
+         (string-to-number (-last-item mins))
+       0)
+     (if hours
+         (* 60 (string-to-number (-last-item hours)))
+       0)
+     )
+    ))
+
+(defun ry//hours-and-mins (total-mins)
+  (let ((mins (mod total-mins 60))
+        (hours (/ total-mins 60)))
+    (concat (format "%s hours" hours)
+            (if (> mins 0)
+                (format " %s mins" mins)
+              "")
+            )
+    )
   )

@@ -11,7 +11,8 @@
    ;; List of configuration layers to load. If it is the symbol `all' instead
    ;; of a list then all discovered layers will be installed.
    dotspacemacs-configuration-layers
-   '(csv
+   '(octave
+     csv
      ruby
      sql
      clojure
@@ -43,7 +44,10 @@
      itome-react
      )
    ;; A list of packages and/or extensions that will not be install and loaded.
-   dotspacemacs-excluded-packages '()
+   dotspacemacs-excluded-packages
+   '(
+     importmagic
+    )
    ;; If non-nil spacemacs will delete any orphan packages, i.e. packages that
    ;; are declared in a layer which is not a member of
    ;; the list `dotspacemacs-configuration-layers'
@@ -216,6 +220,18 @@ layers configuration."
   (with-eval-after-load "helm"
     (define-key helm-map (kbd "C-w") 'backward-kill-word)
     (define-key helm-map (kbd "C-,") 'helm-toggle-visible-mark)
+    (setq helm-source-projectile-projects-actions
+          (helm-make-actions
+           "Switch to project" (lambda (project)
+                                 (let ((projectile-completion-system 'helm))
+                                   (projectile-switch-project-by-name project)))
+           "Open Dired in project's directory `C-d'" #'dired
+           "Open project root in vc-dir or magit `M-g'" #'helm-projectile-vc
+           "Switch to Eshell `M-e'" #'helm-projectile-switch-to-eshell
+           "Grep in projects `C-s'" #'ry/projectile-switch-and-search
+           "Compile project `M-c'. With C-u, new compile command" #'helm-projectile-compile-project
+           "Remove project(s) from project list `M-D'" #'helm-projectile-remove-known-project)
+          )
   )
 
   ;; magit settings
@@ -327,6 +343,7 @@ layers configuration."
     "E" 'eval-expression
     "yi" 'yas-insert-snippet
     "yn" 'yas-new-snippet
+    "ye" 'yas/visit-snippet-file
     "pn" 'ry/projectile-add-new-project
     "fy" 'ry/show-and-copy-buffer-filename
     "gr" 'magit-reflog
@@ -391,6 +408,7 @@ layers configuration."
         "ym" 'ry/org-copy-as-markdown
         "l" 'org-open-at-point
         "<tab>" 'ry/org-cycle
+        "ic" 'ry/calculate-total-time-in-region
         )
       (evil-define-key 'normal evil-org-mode-map
         "t" 'org-todo
@@ -424,8 +442,11 @@ layers configuration."
     (spacemacs/set-leader-keys-for-major-mode 'python-mode
       "'" 'ry/python-start-or-switch-repl))
 
+  (setq flycheck-python-pylint-executable "pylint")
+  (setq flycheck-python-flake8-executable "flake8")
   (add-hook 'python-mode-hook (lambda ()
                                 (yafolding-mode 1)
+                                (setq flycheck-checker 'python-flake8)
                                 ))
   ;; It should be '-i' to keep ipython in interactive mode
   ;; But ipython would fail to boot with '-i', and currently
@@ -463,7 +484,9 @@ layers configuration."
         popwin:special-display-config)
   (spacemacs/set-leader-keys-for-major-mode 'yaml-mode
     "s" 'ry/yamlsql-show-sql
+    "S" 'ry/yamlsql-show-sql-all
     "r" 'ry/yamlsql-run-sql
+    "R" 'ry/yamlsql-run-sql-all
     )
   )
 
