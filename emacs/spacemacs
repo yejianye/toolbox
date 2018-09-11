@@ -61,6 +61,7 @@
      cnfonts
      yafolding
      outshine
+     names
      ;; Replaced with using Apple Script to get page title
      ;; org-cliplink
     )))
@@ -341,7 +342,7 @@ layers configuration."
     "ps" 'ry/rsync-project-to-remote
     "cs" 'ry/helm-code-snippets
     "E" 'eval-expression
-    "yi" 'yas-insert-snippet
+    "yi" 'ry/insert-yas
     "yn" 'yas-new-snippet
     "ye" 'yas/visit-snippet-file
     "pn" 'ry/projectile-add-new-project
@@ -351,6 +352,7 @@ layers configuration."
     "gD" 'ry/github-branch-diff
     "bp" 'ry/switch-to-prev-buffer-in-other-window
     "bl" 'ry/show-log-buffer
+    "Tw" 'writeroom-mode
     )
 
   (spacemacs/set-leader-keys-for-minor-mode 'outline-minor-mode
@@ -390,8 +392,7 @@ layers configuration."
     "oJ" 'ry/helm-org-journal
     "od" 'ry/org-goto-diary
     "on" 'ry/org-new-today-todo
-    "Tw" 'writeroom-mode
-    "yi" 'ry/insert-yas
+    "oT" 'ry/show-last-week-timesheet
     )
 
   (spacemacs|use-package-add-hook evil-org

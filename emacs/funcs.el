@@ -1,3 +1,5 @@
+(add-to-list 'load-path "~/toolbox/emacs/my-pkgs/")
+
 (defmacro ry/set-key-for-file (key filename)
   `(evil-leader/set-key ,key (lambda () (interactive)(find-file ,filename)))
   )
@@ -239,7 +241,7 @@ buffer"
 (defun ry/org-goto-journal()
   "Goto journal org file, and create headings for today if not exists"
   (interactive)
-  (let ((journal-file (concat ry-org-journal-dir (format-time-string "%Y-%m.org")))
+  (let ((journal-file (ry/journal-org-current-month))
         (today (format-time-string "* %Y-%m-%d %A"))
         (title (format-time-string "#+title: Journal - %b, %Y\n"))
         (todo "#+TODO: NEW(n) | REVIEWED(r)\n"))
@@ -579,47 +581,27 @@ buffer"
     (projectile-switch-project-by-name project))
   )
 
-(defun ry/calculate-total-time-in-region (&optional region-start region-end)
-  "Sum time spent in selected region in Timesheet"
-  (interactive "r")
-  (let ((time-string (buffer-substring region-start region-end)))
-    (insert (format "\nTotal time: %s\n" (ry/calculate-total-time time-string)))
-    )
+(defun ry/journal-org-current-month ()
+  (concat ry-org-journal-dir (format-time-string "%Y-%m.org"))
   )
 
-(defun ry/calculate-total-time (time-string)
-  (require 's)
-  (require 'dash)
-  (thread-last time-string
-    (s-lines)
-    (--map (s-split " - " it))
-    (--map (-last-item it))
-    (-map 'ry//string-to-mins)
-    (-sum)
-    (ry//hours-and-mins)
-    )
-  )
-
-(defun ry//string-to-mins (string)
-  (let ((mins (s-match "\\([0-9]+\\) mins" string))
-        (hours (s-match "\\([0-9]+\\) hour" string)))
-    (+
-     (if mins
-         (string-to-number (-last-item mins))
-       0)
-     (if hours
-         (* 60 (string-to-number (-last-item hours)))
-       0)
-     )
+(defun ry/journal-org-last-month ()
+  (let* ((days (+ (string-to-number (format-time-string "%d")) 1))
+         (date (seconds-to-time (- (float-time) (* days 86400)))))
+    (concat ry-org-journal-dir (format-time-string "%Y-%m.org" date))
     ))
 
-(defun ry//hours-and-mins (total-mins)
-  (let ((mins (mod total-mins 60))
-        (hours (/ total-mins 60)))
-    (concat (format "%s hours" hours)
-            (if (> mins 0)
-                (format " %s mins" mins)
-              "")
-            )
-    )
-  )
+(defun ry/last-week-begin ()
+  (let* ((days (+ (string-to-number (format-time-string "%w")) 6))
+         (begin-date (seconds-to-time (- (float-time) (* days 86400)))))
+    begin-date
+    (format-time-string "%Y-%m-%d %A" begin-date)
+    ))
+
+(defun ry/last-week-end ()
+  (let* ((days (string-to-number (format-time-string "%w")))
+         (end-date (seconds-to-time (- (float-time) (* days 86400)))))
+    (format-time-string "%Y-%m-%d %A" end-date)
+    ))
+
+(require 'ry-timesheet)
