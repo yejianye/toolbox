@@ -11,7 +11,9 @@
    ;; List of configuration layers to load. If it is the symbol `all' instead
    ;; of a list then all discovered layers will be installed.
    dotspacemacs-configuration-layers
-   '(octave
+   '((go :variables
+         go-tab-width 4)
+     octave
      csv
      ruby
      sql
@@ -347,6 +349,7 @@ layers configuration."
     "ye" 'yas/visit-snippet-file
     "pn" 'ry/projectile-add-new-project
     "fy" 'ry/show-and-copy-buffer-filename
+    "fY" 'ry/copy-filename-to-osx-clipboard
     "gr" 'magit-reflog
     "gd" 'ry/git-diff
     "gD" 'ry/github-branch-diff

@@ -604,4 +604,20 @@ buffer"
     (format-time-string "%Y-%m-%d %A" end-date)
     ))
 
+(defun ry//copy-to-osx-clipboard (string)
+  (shell-command (format "LANG=en_US.UTF-8 echo \"%s\" | pbcopy"
+                         string))
+  )
+
+(defun ry/copy-filename-to-osx-clipboard ()
+  (interactive)
+  (ry//copy-to-osx-clipboard (buffer-file-name))
+  )
+
+(defun ry/sum-on-region ()
+  (interactive)
+  (message (format "%s" (ry/pyfunc-on-region "rypy.elfunc" "sum")))
+  )
+
 (require 'ry-timesheet)
+(require 'ry-pyfunc)
