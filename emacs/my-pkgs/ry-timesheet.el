@@ -1,3 +1,5 @@
+(require 'ry-orgapi)
+
 (defun ry/calculate-total-time-in-region (&optional region-start region-end)
   "Sum time spent in selected region in Timesheet"
   (interactive "r")
@@ -64,30 +66,30 @@
   (get-buffer "*Timesheet*")
   )
 
+(defun ry//string-between-p (item begin end)
+  (and (or (string> item begin)
+           (string= item begin))
+       (or (string< item end)
+           (string= item end))))
+
 (defun ry//extract-timesheet (begin-date end-date org-file)
   (with-temp-buffer
     (insert-file-contents org-file)
-    (let ((items (org-element-contents (org-element-parse-buffer 'headline))))
+    (let ((items (ry/orgapi-get-children
+                  (ry/orgapi-get-root)
+                  :title
+                  (lambda (title)
+                    (ry//string-between-p title begin-date end-date)))))
       (thread-last items
-        (-filter (lambda (item)
-                   (let ((date (org-element-property :title item)))
-                     (and (or (string> date begin-date)
-                              (string= date begin-date))
-                          (or (string< date end-date)
-                              (string= date end-date))))))
-        (-map (lambda (item)
-                (--filter (string= (org-element-property :title it) "Timesheet")
-                          (org-element-contents item))))
+        (--map (ry/orgapi-get-children it :title "Timesheet"))
         (-flatten-n 1)
         (-map (lambda (item)
                 (let* ((parent (org-element-property :parent item))
-                      (date (org-element-property :title parent))
-                      (pos-begin (org-element-property :contents-begin item))
-                      (pos-end (org-element-property :contents-end item)))
+                       (date (org-element-property :title parent)))
                   (format "** %s\n%s"
                           date
-                          (buffer-substring-no-properties pos-begin pos-end)))))
-      (s-join "\n")
-      ))))
+                          (ry/orgapi-get-contents item)))))
+        (s-join "\n")
+        ))))
 
 (provide 'ry-timesheet)

@@ -4,12 +4,15 @@
   )
 
 (defun ry/orgapi-get-children (parent &optional prop-name pattern)
-  "Find children whose PROP-NAME matches PATTERN (regex)"
+  "Find children whose PROP-NAME matches PATTERN (regex). PATTERN could also be a predicate function."
   (if (and prop-name pattern)
-    (--filter (s-matches? pattern (org-element-property :title it))
-              (org-element-contents parent))
-    (org-element-contents parent))
-  )
+      (if (stringp pattern)
+          (--filter (s-matches? pattern (org-element-property prop-name it))
+                    (org-element-contents parent))
+        (--filter (funcall pattern (org-element-property prop-name it))
+                  (org-element-contents parent)))
+    (org-element-contents parent)
+  ))
 
 (defun ry/orgapi-first-child (parent &optional prop-name pattern)
   (-first-item (ry/orgapi-get-children parent prop-name pattern))
@@ -31,7 +34,10 @@
     (insert-file-contents "orgapi-test.org")
     (pp (thread-first (ry/orgapi-get-root)
           (ry/orgapi-first-child)
-          (ry/orgapi-first-child :title "Sub-heading-[0-9]-2")
+          ;; (ry/orgapi-first-child :title "Sub-heading-[0-9]-2")
+          (ry/orgapi-first-child :title
+                                 (lambda (x)
+                                   (string> x "Sub-heading")))
           (ry/orgapi-get-contents)
         ))
     )
