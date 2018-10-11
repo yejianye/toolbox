@@ -242,16 +242,16 @@ buffer"
   "Goto journal org file, and create headings for today if not exists"
   (interactive)
   (let ((journal-file (ry/journal-org-current-month))
-        (today (format-time-string "* %Y-%m-%d %A"))
+        (today-heading (format "* %s" (ry/today-string)))
         (title (format-time-string "#+title: Journal - %b, %Y\n"))
         (todo "#+TODO: NEW(n) | REVIEWED(r)\n"))
     (find-file journal-file)
     (unless (file-exists-p journal-file)
       (insert (concat title todo))
       (save-buffer))
-    (unless (ry//string-in-buffer-p today)
+    (unless (ry//string-in-buffer-p today-heading)
       (goto-char (point-max))
-      (insert (format "\n%s" today))))
+      (insert (format "\n%s\n** Todo\n** Timesheet\n" today-heading))))
   )
 
 (defun ry//org-insert-today-todo(text)
@@ -306,8 +306,8 @@ buffer"
   "Goto Diary org file, and create headings for today if not exists"
   (interactive)
   (let* ((diary-file (concat ry-org-root-dir "diary.org"))
-        (today (format-time-string "* %Y-%m-%d %A"))
-        )
+         (today (format "* %s" ry/today-string))
+         )
     (find-file diary-file)
     (widen)
     (goto-char (point-max))
@@ -603,6 +603,9 @@ buffer"
          (end-date (seconds-to-time (- (float-time) (* days 86400)))))
     (format-time-string "%Y-%m-%d %A" end-date)
     ))
+
+(defun ry/today-string ()
+  (format-time-string "%Y-%m-%d %A"))
 
 (defun ry//copy-to-osx-clipboard (string)
   (shell-command (format "LANG=en_US.UTF-8 echo \"%s\" | pbcopy"

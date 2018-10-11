@@ -1,25 +1,121 @@
 (require 'ry-orgapi)
+(require 's)
+(require 'dash)
 
-(defun ry/calculate-total-time-in-region (&optional region-start region-end)
-  "Sum time spent in selected region in Timesheet"
-  (interactive "r")
-  (let ((time-string (buffer-substring region-start region-end)))
-    (insert (format "\nTotal time: %s\n" (ry/calculate-total-time time-string)))
-    )
-  )
-
-(defun ry/calculate-total-time (time-string)
-  (require 's)
-  (require 'dash)
-  (thread-last time-string
+(defun ry/timesheet--tasks (timesheet)
+  (thread-last timesheet
     (s-lines)
-    (--map (s-split " - " it))
-    (--map (-last-item it))
-    (-map 'ry//string-to-mins)
-    (-sum)
-    (ry//hours-and-mins)
+    (--filter (s-starts-with? "- " it))))
+
+(defun ry/timesheet--since-last (timesheet)
+  (let* ((today (format-time-string "%Y-%m-%d"))
+         (last-update (thread-last timesheet
+                        (s-lines)
+                        (--first (s-starts-with? "Last update:" it))
+                        (s-replace "Last update: " "")
+                        (format "%s %s" today)
+                        (date-to-time)))
+         (time-delta (- (float-time) (float-time last-update)))
+         (norm-time-delta (if (< time-delta 0)
+                              (+ time-delta 86400)
+                            time-delta))
+         )
+    (ry//hours-and-mins (floor (/ norm-time-delta 60)))))
+
+(defun ry/timesheet--contain-time-cost? (item)
+  (let ((parts (s-split " - " item)))
+    (if (< (length parts) 2)
+        nil
+      (or
+       (s-contains? " hour" (-last-item parts))
+       (s-contains? " min" (-last-item parts))))))
+
+(defun ry/timesheet--add-entry (timesheet item)
+  (let* ((timed-item (if (ry/timesheet--contain-time-cost? item)
+                         item
+                       (s-concat item " - " (ry/timesheet--since-last timesheet))))
+         (tasks (append (ry/timesheet--tasks timesheet)
+                        (list (format "- %s\n" timed-item))))
+         (rest (thread-last timesheet
+                 (s-lines)
+                 (--filter (not (s-starts-with? "- " it)))
+                 (s-join "\n"))))
+    (s-concat (s-join "\n" tasks) "\n" rest)
     )
   )
+
+(defun ry/timesheet--update-checkpoint (timesheet)
+  (let ((last-update (format-time-string "%H:%M")))
+    (format "%s\n\nLast update: %s\n"
+            (s-join "\n" (ry/timesheet--tasks timesheet))
+            last-update)))
+
+(defun ry/timesheet--add-total-time (timesheet)
+  (let* ((tasks (ry/timesheet--tasks timesheet))
+         (total-time (thread-last tasks
+                      (--map (s-split " - " it))
+                      (--map (-last-item it))
+                      (-map 'ry//string-to-mins)
+                      (-sum)
+                      (ry//hours-and-mins)
+                      ))
+         )
+    (s-concat (s-join "\n" tasks) (format "\n\nTotal time: %s\n" total-time))))
+
+(defun ry/timesheet--today ()
+    (let ((today (float-time))
+          (yesterday (- (float-time) 86400)))
+      (if (< (string-to-number (format-time-string "%k")) 4)
+          (format-time-string "%Y-%m-%d %A" yesterday)
+        (format-time-string "%Y-%m-%d %A" today))))
+
+(defun ry/timesheet--find (&optional date)
+  (ry/org-goto-journal)
+  (let* ((root (ry/orgapi-get-root))
+         (heading (or date (ry/timesheet--today)))
+         )
+    (thread-first root
+      (ry/orgapi-first-child :title heading)
+      (ry/orgapi-first-child :title "Timesheet"))
+  ))
+
+(defun ry/timesheet-calculate-total-time (&optional date)
+  (interactive)
+  (if (use-region-p)
+      ;; Calculate total time for active region
+      (let* ((start (region-beginning))
+             (end (region-end))
+             (timesheet (buffer-substring start end)))
+        (delete-region start end)
+        (goto-char start)
+        (insert (ry/timesheet--add-total-time timesheet)))
+
+    ;; Calculate total time for today or specific date
+    (let* ((el (ry/timesheet--find date))
+           (timesheet (ry/orgapi-get-contents el))
+           )
+      (ry/orgapi-set-contents
+       el
+       (ry/timesheet--add-total-time timesheet)))))
+
+(defun ry/timesheet-add-entry (item &optional date)
+  (interactive "sEntry:")
+  (let* ((el (ry/timesheet--find date))
+         (timesheet (ry/orgapi-get-contents el)))
+       (ry/orgapi-set-contents
+        el
+        (thread-first timesheet
+          (ry/timesheet--add-entry item)
+          (ry/timesheet--update-checkpoint)))))
+
+(defun ry/timesheet-update-checkpoint (&optional date)
+  (interactive)
+  (let* ((el (ry/timesheet--find date))
+         (timesheet (ry/orgapi-get-contents el))
+         )
+    (ry/orgapi-set-contents
+     el
+     (ry/timesheet--update-checkpoint timesheet))))
 
 (defun ry//string-to-mins (string)
   (let ((mins (s-match "\\([0-9]+\\) mins" string))
@@ -37,13 +133,12 @@
 (defun ry//hours-and-mins (total-mins)
   (let ((mins (mod total-mins 60))
         (hours (/ total-mins 60)))
-    (concat (format "%s hours" hours)
-            (if (> mins 0)
-                (format " %s mins" mins)
-              "")
-            )
-    )
-  )
+    (concat (cond ((= hours 0) "")
+                  ((= hours 1) "1 hour ")
+                  (t (format "%s hours " hours)))
+            (cond ((= mins 0) "")
+                  ((= mins 1) "1 min")
+                  (t (format "%s mins" mins))))))
 
 (defun ry/show-last-week-timesheet ()
   (interactive)

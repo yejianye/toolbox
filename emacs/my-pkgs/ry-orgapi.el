@@ -26,21 +26,28 @@
   "Get contents of ITEM as string (with no properties)"
   (let ((begin (org-element-property :contents-begin item))
         (end (org-element-property :contents-end item)))
-    (buffer-substring-no-properties begin end))
-  )
+    (buffer-substring-no-properties begin end)))
+
+(defun ry/orgapi-set-contents (item contents)
+  "Set CONTENTS as content string of ITEM"
+  (let ((begin (org-element-property :contents-begin item))
+        (end (org-element-property :contents-end item)))
+    (delete-region begin end)
+    (goto-char begin)
+    (insert contents)))
 
 (defun ry//orgapi-example ()
   (with-temp-buffer
     (insert-file-contents "orgapi-test.org")
     (pp (thread-first (ry/orgapi-get-root)
           (ry/orgapi-first-child)
-          ;; (ry/orgapi-first-child :title "Sub-heading-[0-9]-2")
-          (ry/orgapi-first-child :title
-                                 (lambda (x)
-                                   (string> x "Sub-heading")))
+          (ry/orgapi-first-child :title "Sub-heading-1-1")
+          ;; (ry/orgapi-first-child :title
+          ;;                        (lambda (x)
+          ;;                          (string> x "Sub-heading")))
           (ry/orgapi-get-contents)
-        ))
-    )
-)
+          ;; (ry/orgapi-set-contents "Good day!")
+          )))
+  )
 
 (provide 'ry-orgapi)

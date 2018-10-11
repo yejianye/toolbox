@@ -396,6 +396,8 @@ layers configuration."
     "od" 'ry/org-goto-diary
     "on" 'ry/org-new-today-todo
     "oT" 'ry/show-last-week-timesheet
+    "oi" 'ry/timesheet-add-entry
+    "ou" 'ry/timesheet-update-checkpoint
     )
 
   (spacemacs|use-package-add-hook evil-org
@@ -412,7 +414,7 @@ layers configuration."
         "ym" 'ry/org-copy-as-markdown
         "l" 'org-open-at-point
         "<tab>" 'ry/org-cycle
-        "ic" 'ry/calculate-total-time-in-region
+        "ic" 'ry/timesheet-calculate-total-time
         )
       (evil-define-key 'normal evil-org-mode-map
         "t" 'org-todo
