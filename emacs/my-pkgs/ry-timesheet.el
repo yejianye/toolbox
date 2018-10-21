@@ -105,7 +105,7 @@
        (ry/orgapi-set-contents
         el
         (thread-first timesheet
-          (ry/timesheet--add-entry item)
+          (ry/timesheet--add-entry (s-capitalize item))
           (ry/timesheet--update-checkpoint)))))
 
 (defun ry/timesheet-update-checkpoint (&optional date)

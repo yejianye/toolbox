@@ -24,12 +24,14 @@
      markdown
      (python :variables
              python-test-runner 'pytest)
-     ipython-notebook
+     ;; ipython-notebook
      emacs-lisp
      javascript
      java
      html
-     ansible
+     ;; Disable ansible for breaking describe key
+     ;; https://github.com/syl20bnr/spacemacs/issues/8027
+     ;; ansible
      yaml
      org
      (syntax-checking :variables
@@ -40,10 +42,10 @@
      better-defaults
      restclient
      imenu-list
-     treemacs
+     ;; treemacs
      sql
      ;; react
-     itome-react
+     ;; itome-react
      )
    ;; A list of packages and/or extensions that will not be install and loaded.
    dotspacemacs-excluded-packages
@@ -97,7 +99,7 @@ before layers configuration."
    ;; Default font. `powerline-scale' allows to quickly tweak the mode-line
    ;; size to make separators look not too crappy.
    dotspacemacs-default-font '("Source Code Pro"
-                               :size 13
+                               :size 14
                                :weight normal
                                :width normal
                                :powerline-scale 1.1)
@@ -241,14 +243,16 @@ layers configuration."
   (setq magit-push-always-verify nil)
 
   ;; projectile settings
+  (setq projectile-indexing-method 'native)
+  (setq projectile-enable-caching t)
   (setq enable-local-variables :all)
   (add-hook 'emacs-lisp-mode-hook 'ry/auto-reload-dir-locals-hook)
 
   ;; treemacs
-  (spacemacs|use-package-add-hook treemacs
-    :post-config
-    (add-to-list 'treemacs-ignored-file-predicates 'ry/treemacs-ignore-file-predicate)
-    )
+  ;; (spacemacs|use-package-add-hook treemacs
+  ;;   :post-config
+  ;;   (add-to-list 'treemacs-ignored-file-predicates 'ry/treemacs-ignore-file-predicate)
+  ;;   )
 
   ;; ediff
   (with-eval-after-load "ediff"
@@ -269,7 +273,9 @@ layers configuration."
   (setq writeroom-extra-line-spacing 0.5)
   (setq writeroom-width 100)
 
-  ;; termnial settings
+  ;; natural title bar
+  (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+  (add-to-list 'default-frame-alist '(ns-appearance . dark))
 
   ;; load custom-file if it exists
   (when (file-exists-p custom-file)
@@ -291,16 +297,19 @@ layers configuration."
         linum-relative-format "%3s \u2502 "))
 
 (defun ry/global-settings ()
+  ;; start server
+  (server-start)
+
   ;; tags
   (setq tags-add-tables nil)
   (setq tags-revert-without-query t)
 
   ;; Fonts
-  (require 'cnfonts)
-  (cnfonts-enable)
-  (cnfonts-set-spacemacs-fallback-fonts)
-  (setq cnfonts-use-face-font-rescale t)
-  (setq solarized-scale-org-headlines nil)
+  ;; (require 'cnfonts)
+  ;; (cnfonts-enable)
+  ;; (cnfonts-set-spacemacs-fallback-fonts)
+  ;; (setq cnfonts-use-face-font-rescale t)
+  ;; (setq solarized-scale-org-headlines nil)
 
   ;; Enable auto-completion globally
   (global-company-mode)
@@ -364,6 +373,9 @@ layers configuration."
     "sN" 'widen
     )
 
+  (ry/set-key-for-file "fef" "~/toolbox/emacs/funcs.el")
+  (ry/set-key-for-file "ot" "~/Dropbox/org/tasks.org")
+
   ;; normal mode
   (define-key evil-normal-state-map "j" 'evil-next-visual-line)
   (define-key evil-normal-state-map "k" 'evil-previous-visual-line)
@@ -390,7 +402,7 @@ layers configuration."
   (setq ry-org-code-snippet-file (concat ry-org-root-dir "code-snippets.org"))
   (spacemacs/set-leader-keys
     "oc" 'org-capture
-    "oa" 'org-agenda
+    "oa" 'ry/org-filter-todo-keyword
     "oj" 'ry/org-goto-journal
     "oJ" 'ry/helm-org-journal
     "od" 'ry/org-goto-diary

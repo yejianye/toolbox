@@ -198,9 +198,9 @@ buffer"
 (defun ry/org-insert-chrome-url-osx ()
   "Insert an org-mode linke with the title and url of current tab in Chrome"
   (interactive)
-  (let ((title (substring (do-applescript "tell application \"Google Chrome\" to return title of active tab of front window") 1 -1))
-        (url (substring (do-applescript "tell application \"Google Chrome\" to return URL of active tab of front window") 1 -1)))
-    (insert (format "[[%s][%s]]" url (thread-last title
+  (let ((title (do-applescript "tell application \"Google Chrome\" to return title of active tab of front window"))
+        (url (do-applescript "tell application \"Google Chrome\" to return URL of active tab of front window")))
+    (insert (format "[[%s][%s]]" url (thread-last (substring title 1 -1)
                                        (s-replace "[" "{")
                                        (s-replace "]" "}"))
                     ))))
@@ -251,7 +251,9 @@ buffer"
       (save-buffer))
     (unless (ry//string-in-buffer-p today-heading)
       (goto-char (point-max))
-      (insert (format "\n%s\n** Todo\n** Timesheet\n" today-heading))))
+      (insert (format "\n%s\n** Todo\n** Timesheet\nLast update: %s"
+                      today-heading
+                      (format-time-string "%H:%M")))))
   )
 
 (defun ry//org-insert-today-todo(text)
@@ -259,10 +261,7 @@ buffer"
   (ry/org-goto-journal)
   (let* ((today-heading (format-time-string "* %Y-%m-%d %A"))
         (todo-heading "** Todo")
-        (todo-words (split-string text))
-        (first-word (capitalize (car todo-words)))
-        (remaining-words (cdr todo-words))
-        (todo-desc (s-join " " (cons first-word remaining-words)))
+        (todo-desc (s-capitalize text))
         )
     (goto-char (point-min))
     (search-forward today-heading)
@@ -329,10 +328,9 @@ buffer"
 
 ;; Projectile
 (defun ry/projectile-add-new-project (project-root)
-  (interactive (list (read-directory-name "Add a new project: " "/Users/ryan/source_code/")))
+  (interactive (list (read-directory-name "Add a new project: " "/Users/ryan/repos/")))
   (projectile-add-known-project project-root)
-  (projectile-switch-project-by-name project-root)
-  )
+  (projectile-switch-project-by-name project-root))
 
 ;; Python
 ;; This is copied from https://github.com/syl20bnr/spacemacs/pull/7070
