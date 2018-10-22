@@ -374,7 +374,7 @@ layers configuration."
     )
 
   (ry/set-key-for-file "fef" "~/toolbox/emacs/funcs.el")
-  (ry/set-key-for-file "ot" "~/Dropbox/org/tasks.org")
+  (ry/set-key-for-file "ot" "~/org/tasks.org")
 
   ;; normal mode
   (define-key evil-normal-state-map "j" 'evil-next-visual-line)
@@ -396,7 +396,7 @@ layers configuration."
 (defun ry/org-mode-settings()
   (setq org-startup-truncated nil)
   (setq org-export-with-sub-superscripts nil)
-  (setq ry-org-root-dir "~/Dropbox/org/")
+  (setq ry-org-root-dir "~/org/")
   (setq ry-org-images-dir (concat ry-org-root-dir "images/"))
   (setq ry-org-journal-dir (concat ry-org-root-dir "journals/"))
   (setq ry-org-code-snippet-file (concat ry-org-root-dir "code-snippets.org"))
@@ -445,11 +445,11 @@ layers configuration."
                     "|" "DONE(d)" "CANCELLED(c)")))
 
   (setq org-capture-templates
-        '(("c" "Code snippet" entry (file+headline "~/Dropbox/org/code-snippets.org" "Others")
+        '(("c" "Code snippet" entry (file+headline "~/org/code-snippets.org" "Others")
            "** %^{desc}\n#+BEGIN_SRC %^{language|python|emacs-lisp}\n%?\n#+END_SRC")
-          ("t" "Task" entry (file+headline "~/Dropbox/org/tasks.org" "Work")
+          ("t" "Task" entry (file+headline "~/org/tasks.org" "Work")
            "** %^{priority|NEXT|SOON|SOMEDAY} %?\n" :prepend t)
-          ("e" "Learn Emacs" entry (file+headline "~/Dropbox/org/tasks.org" "Learn Emacs")
+          ("e" "Learn Emacs" entry (file+headline "~/org/tasks.org" "Learn Emacs")
            "*** %^{priority|NEXT|SOON|SOMEDAY} %?\n" :prepend t)
           ))
   )
