@@ -200,9 +200,10 @@ buffer"
   (interactive)
   (let ((title (do-applescript "tell application \"Google Chrome\" to return title of active tab of front window"))
         (url (do-applescript "tell application \"Google Chrome\" to return URL of active tab of front window")))
-    (insert (format "[[%s][%s]]" url (thread-last (substring title 1 -1)
-                                       (s-replace "[" "{")
-                                       (s-replace "]" "}"))
+    (insert (format "[[%s][%s]]" (substring url 1 -1)
+                    (thread-last (substring title 1 -1)
+                      (s-replace "[" "{")
+                      (s-replace "]" "}"))
                     ))))
 
 (defun ry/markdown-cleanup-org-tables()
@@ -305,15 +306,13 @@ buffer"
   "Goto Diary org file, and create headings for today if not exists"
   (interactive)
   (let* ((diary-file (concat ry-org-root-dir "diary.org"))
-         (today (format "* %s" ry/today-string))
+         (today (format "* %s" (ry/today-string)))
          )
     (find-file diary-file)
     (widen)
     (goto-char (point-max))
     (unless (ry//string-in-buffer-p today)
-      (insert (format "\n%s" today)))
-    )
-  )
+      (insert (format "\n%s" today)))))
 
 ;; Syntax table
 (defun ry//underscore-as-word()

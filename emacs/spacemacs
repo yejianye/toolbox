@@ -271,6 +271,7 @@ layers configuration."
 
   ;; writeroom
   (setq writeroom-extra-line-spacing 0.5)
+  (setq writeroom-fullscreen-effect 'maximized)
   (setq writeroom-width 100)
 
   ;; natural title bar
@@ -375,6 +376,7 @@ layers configuration."
 
   (ry/set-key-for-file "fef" "~/toolbox/emacs/funcs.el")
   (ry/set-key-for-file "ot" "~/org/tasks.org")
+  (ry/set-key-for-file "or" "~/org/bytedance/resources.org")
 
   ;; normal mode
   (define-key evil-normal-state-map "j" 'evil-next-visual-line)
