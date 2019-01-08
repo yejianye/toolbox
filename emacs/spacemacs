@@ -18,7 +18,9 @@
      ruby
      sql
      clojure
-     (auto-completion :variables
+     (auto-completion
+      ;; :disabled-for go
+      :variables
                       auto-completion-enable-snippets-in-popup nil
                       auto-completion-private-snippets-directory "~/toolbox/emacs/snippets")
      markdown
@@ -204,7 +206,9 @@ layers configuration."
   (ry/python-mode-settings)
   (ry/sql-mode-settings)
   (ry/elisp-mode-settings)
+  (ry/go-mode-settings)
   (ry/osx-settings)
+  (ry/chinese-settings)
 
   ;; Custom filetypes
   ;; (add-to-list 'auto-mode-alist '("\\.js\\'" . react-mode))
@@ -243,7 +247,7 @@ layers configuration."
   (setq magit-push-always-verify nil)
 
   ;; projectile settings
-  (setq projectile-indexing-method 'native)
+  (setq projectile-indexing-method 'turbo-alien)
   (setq projectile-enable-caching t)
   (setq enable-local-variables :all)
   (add-hook 'emacs-lisp-mode-hook 'ry/auto-reload-dir-locals-hook)
@@ -304,13 +308,6 @@ layers configuration."
   ;; tags
   (setq tags-add-tables nil)
   (setq tags-revert-without-query t)
-
-  ;; Fonts
-  ;; (require 'cnfonts)
-  ;; (cnfonts-enable)
-  ;; (cnfonts-set-spacemacs-fallback-fonts)
-  ;; (setq cnfonts-use-face-font-rescale t)
-  ;; (setq solarized-scale-org-headlines nil)
 
   ;; Enable auto-completion globally
   (global-company-mode)
@@ -375,8 +372,9 @@ layers configuration."
     )
 
   (ry/set-key-for-file "fef" "~/toolbox/emacs/funcs.el")
-  (ry/set-key-for-file "ot" "~/org/tasks.org")
+  (ry/set-key-for-file "ot" "~/org/bytedance/tasks.org")
   (ry/set-key-for-file "or" "~/org/bytedance/resources.org")
+  (ry/set-key-for-file "of" "~/org/bytedance/follow-ups.org")
 
   ;; normal mode
   (define-key evil-normal-state-map "j" 'evil-next-visual-line)
@@ -402,6 +400,14 @@ layers configuration."
   (setq ry-org-images-dir (concat ry-org-root-dir "images/"))
   (setq ry-org-journal-dir (concat ry-org-root-dir "journals/"))
   (setq ry-org-code-snippet-file (concat ry-org-root-dir "code-snippets.org"))
+
+  (setq org-file-apps
+        '((auto-mode . emacs)
+          ("\\.mm\\'" . default)
+          ("\\.x?html?\\'" . default)
+          ("\\.pdf\\'" . default)
+          ("\\.pptx\\'" . "open %s")))
+
   (spacemacs/set-leader-keys
     "oc" 'org-capture
     "oa" 'ry/org-filter-todo-keyword
@@ -454,6 +460,7 @@ layers configuration."
           ("e" "Learn Emacs" entry (file+headline "~/org/tasks.org" "Learn Emacs")
            "*** %^{priority|NEXT|SOON|SOMEDAY} %?\n" :prepend t)
           ))
+
   )
 
 (defun ry/python-mode-settings ()
@@ -519,6 +526,17 @@ layers configuration."
     )
   )
 
+(defun ry/go-mode-settings ()
+  ;; (spacemacs|disable-company go-mode)
+  (add-hook 'go-mode-hook (lambda ()
+                            ;; (company-mode -1)
+                            ;; (eldoc-mode -1)
+                            (setq imenu-generic-expression
+                                  '(("type" "^type *\\([^ \t\n\r\f]*\\)" 1)
+                                    ("func" "^func *\\([^{\n\r]*\\)" 1)))
+                            ))
+  )
+
 (defun ry/osx-settings ()
   (setq select-enable-clipboard nil)
   (setq mac-command-modifier 'super)
@@ -530,4 +548,27 @@ layers configuration."
   (global-set-key (kbd "s--") 'spacemacs/scale-down-font)
   ;; (define-key evil-normal-state-map (kbd "s-=") 'cnfonts-increase-fontsize)
   ;; (define-key evil-normal-state-map (kbd "s--") 'cnfonts-decrease-fontsize)
+  )
+
+(defun ry/chinese-settings ()
+  ;; Chinese Fonts
+  ;; (require 'cnfonts)
+  ;; (cnfonts-enable)
+  ;; (cnfonts-set-spacemacs-fallback-fonts)
+  ;; (setq cnfonts-use-face-font-rescale t)
+  ;; (setq solarized-scale-org-headlines nil)
+  (dolist (charset '(kana han cjk-misc bopomofo))
+    (set-fontset-font (frame-parameter nil 'font)
+                      charset (font-spec :family "Hiragino Sans GB"))
+    (setq face-font-rescale-alist '(("Hiragino Sans GB" . 1.0))))
+
+  ;; Allow styling for Chinese characters without space
+  ;; Run before (require 'org)
+  ;; https://emacs-china.org/t/org-mode/597
+  (setq org-emphasis-regexp-components
+        (list (concat " \t('\"{"            "[:nonascii:]")
+              (concat "- \t.,:!?;'\")}\\["  "[:nonascii:]")
+              " \t\r\n,\"'"
+              "."
+              1))
   )

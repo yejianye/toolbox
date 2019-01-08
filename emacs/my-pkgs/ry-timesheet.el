@@ -99,7 +99,7 @@
        (ry/timesheet--add-total-time timesheet)))))
 
 (defun ry/timesheet-add-entry (item &optional date)
-  (interactive "sEntry:")
+  (interactive "sEntry: ")
   (let* ((el (ry/timesheet--find date))
          (timesheet (ry/orgapi-get-contents el)))
        (ry/orgapi-set-contents
