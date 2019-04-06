@@ -12,7 +12,8 @@
    ;; of a list then all discovered layers will be installed.
    dotspacemacs-configuration-layers
    '((go :variables
-         go-tab-width 4)
+         go-tab-width 4
+         go-use-golangci-lint t)
      octave
      csv
      ruby
@@ -48,6 +49,8 @@
      sql
      ;; react
      ;; itome-react
+     (chinese :variables
+              chinese-enable-fcitx t)
      )
    ;; A list of packages and/or extensions that will not be install and loaded.
    dotspacemacs-excluded-packages
@@ -64,7 +67,7 @@
      vue-mode
      sr-speedbar
      writeroom-mode
-     cnfonts
+     ;; cnfonts
      yafolding
      outshine
      names
@@ -371,10 +374,12 @@ layers configuration."
     "sN" 'widen
     )
 
-  (ry/set-key-for-file "fef" "~/toolbox/emacs/funcs.el")
-  (ry/set-key-for-file "ot" "~/org/bytedance/tasks.org")
-  (ry/set-key-for-file "or" "~/org/bytedance/resources.org")
-  (ry/set-key-for-file "of" "~/org/bytedance/follow-ups.org")
+  (ry/set-key-for-file
+   "fef" "~/toolbox/emacs/funcs.el"
+   "ot" "~/org/bytedance/tasks.org"
+   "or" "~/org/bytedance/recruiting.org"
+   "ol" "~/org/bytedance/resources.org"
+   "op" "~/org/tasks.org")
 
   ;; normal mode
   (define-key evil-normal-state-map "j" 'evil-next-visual-line)
@@ -400,6 +405,8 @@ layers configuration."
   (setq ry-org-images-dir (concat ry-org-root-dir "images/"))
   (setq ry-org-journal-dir (concat ry-org-root-dir "journals/"))
   (setq ry-org-code-snippet-file (concat ry-org-root-dir "code-snippets.org"))
+
+  (setq org-agenda-files '("~/org/bytedance/tasks.org"))
 
   (setq org-file-apps
         '((auto-mode . emacs)
@@ -435,9 +442,12 @@ layers configuration."
         "l" 'org-open-at-point
         "<tab>" 'ry/org-cycle
         "ic" 'ry/timesheet-calculate-total-time
+        "St" 'ry/org-schedule-tomorrow
+        "Sw" 'ry/org-schedule-next-week
         )
       (evil-define-key 'normal evil-org-mode-map
         "t" 'org-todo
+        ",B" (kbd "viWs*")
         )
       )
     )
@@ -460,7 +470,6 @@ layers configuration."
           ("e" "Learn Emacs" entry (file+headline "~/org/tasks.org" "Learn Emacs")
            "*** %^{priority|NEXT|SOON|SOMEDAY} %?\n" :prepend t)
           ))
-
   )
 
 (defun ry/python-mode-settings ()
@@ -544,23 +553,20 @@ layers configuration."
   (global-set-key (kbd "s-v") 'ry/osx-paste)
   (define-key evil-normal-state-map (kbd "s-n") 'new-frame)
   (define-key evil-visual-state-map (kbd "s-c") 'ry/osx-copy)
-  (global-set-key (kbd "s-=") 'spacemacs/scale-up-font)
-  (global-set-key (kbd "s--") 'spacemacs/scale-down-font)
-  ;; (define-key evil-normal-state-map (kbd "s-=") 'cnfonts-increase-fontsize)
-  ;; (define-key evil-normal-state-map (kbd "s--") 'cnfonts-decrease-fontsize)
+  (global-set-key (kbd "s-=") 'ry-cnfonts/scale-up)
+  (global-set-key (kbd "s--") 'ry-cnfonts/scale-down)
+  ;; (global-set-key (kbd "s-=") 'spacemacs/scale-up-font)
+  ;; (global-set-key (kbd "s--") 'spacemacs/scale-down-font)
   )
 
 (defun ry/chinese-settings ()
-  ;; Chinese Fonts
-  ;; (require 'cnfonts)
-  ;; (cnfonts-enable)
-  ;; (cnfonts-set-spacemacs-fallback-fonts)
-  ;; (setq cnfonts-use-face-font-rescale t)
-  ;; (setq solarized-scale-org-headlines nil)
-  (dolist (charset '(kana han cjk-misc bopomofo))
-    (set-fontset-font (frame-parameter nil 'font)
-                      charset (font-spec :family "Hiragino Sans GB"))
-    (setq face-font-rescale-alist '(("Hiragino Sans GB" . 1.0))))
+  ;; Original CN font settings
+  ;; (dolist (charset '(kana han cjk-misc bopomofo))
+  ;;   (set-fontset-font (frame-parameter nil 'font)
+  ;;                     charset (font-spec :family "Hiragino Sans GB")))
+  ;; (setq face-font-rescale-alist '(("Hiragino Sans GB" . 1.0)))
+
+  (ry-cnfonts/setup)
 
   ;; Allow styling for Chinese characters without space
   ;; Run before (require 'org)

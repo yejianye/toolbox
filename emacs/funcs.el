@@ -1,8 +1,14 @@
+;;; -*- lexical-binding: t -*-
+
 (add-to-list 'load-path "~/toolbox/emacs/my-pkgs/")
 
-(defmacro ry/set-key-for-file (key filename)
-  `(evil-leader/set-key ,key (lambda () (interactive)(find-file ,filename)))
-  )
+(defun ry//set-key-for-file (key filename)
+  (evil-leader/set-key key (lambda () (interactive)(find-file filename))))
+
+(defun ry/set-key-for-file (key filename &rest shortcuts)
+  (while key
+    (ry//set-key-for-file key filename)
+    (setq key (pop shortcuts) filename (pop shortcuts))))
 
 (defun ry/insert-today-date()
   (interactive)
@@ -167,7 +173,7 @@ current buffer's, reload dir-locals."
       (kill-region (region-beginning) (region-end))
       (evil-normal-state)
       )
-    (insert clipboard)))
+    (insert (s-replace "\r" ""  clipboard))))
 
 (defun ry/org-paste-image()
   (interactive)
@@ -588,6 +594,14 @@ buffer"
     (concat ry-org-journal-dir (format-time-string "%Y-%m.org" date))
     ))
 
+(defun ry/org-schedule-tomorrow ()
+  (interactive)
+  (org-schedule nil "+1d"))
+
+(defun ry/org-schedule-next-week ()
+  (interactive)
+  (org-schedule nil "+7d"))
+
 (defun ry/last-week-begin ()
   (let* ((days (+ (string-to-number (format-time-string "%w")) 6))
          (begin-date (seconds-to-time (- (float-time) (* days 86400)))))
@@ -621,3 +635,4 @@ buffer"
 
 (require 'ry-timesheet)
 (require 'ry-pyfunc)
+(require 'ry-cnfonts)
