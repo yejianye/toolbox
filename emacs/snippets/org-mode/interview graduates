@@ -1,0 +1,30 @@
+# -*- mode: snippet -*-
+# name: interview graduates
+# key: interviewg
+# --
+
+Project experience
+------------------
+
+Behavior question
+-----------------
+除了课程外，有没有自学过什么技术？特别是服务端的一些组件？
+感兴趣的领域，如何自学？
+看哪些书、公众号或是博客？学到的知识有没有总结或是实践？
+
+Coding question
+---------------
+A 胜 B 一局的概率是 P，A 先胜 N 局的概率
+
+地铁问题，设计地铁换乘的算法
+Line A: 1 -> 2 -> 3 -> 4 -> 5
+Line B: 6 -> 2 -> 7 -> 5
+
+Input:
+metro_map = [
+  [1, 2, 3, 4, 5]
+  [6, 2, 7, 5]
+]
+start = 1, end = 5
+
+Expected result: 1, 2, 7, 5

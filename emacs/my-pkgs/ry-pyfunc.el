@@ -1,8 +1,13 @@
+(defvar ry/python-executable "python"
+  "Python executable used in ry-pyfunc")
+
 (defun ry/pyfunc (module func-name &rest args)
     (with-temp-buffer
-      (insert (json-encode args))
+      (if args
+        (insert (json-encode args))
+        (insert "[]"))
       (call-process-region (point-min) (point-max)
-                           "python"
+                           ry/python-executable
                            t t nil
                            "-mrypy.emacs" module func-name)
       (json-read-from-string (buffer-string))

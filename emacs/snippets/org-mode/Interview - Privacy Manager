@@ -1,0 +1,23 @@
+# -*- mode: snippet -*-
+# name: Interview - Privacy Manager
+# key: interview-privacy-manager
+# --
+
+Questions
+----------------------------
+# Could you do a brief introduction of your previous work?
+
+# From your experience related to privacy protection, could you elaborate one of your most challenging projects, including the backgroud, the goal, your tasks and the result?
+
+# What’s the difference of security and privacy? What’s the relationship? Should they be placed in the same organization?
+
+# What are the key technologies needed for privacy? Is there a real use case for those technologies?
+
+# For social apps like TikTok or Instagram, what type of information should be considered as PI?
+
+# If you’re a privacy manager, and be responsible for creating data mapping for TikTok to meet GDPR compliance. What are the steps you will take?
+
+# How should the responsibilities be split between privacy engineering team and product engineering team when enforcing privacy policies?
+
+Evaluation
+----------

@@ -1,0 +1,35 @@
+# -*- mode: snippet -*-
+# name: Interview Round 2 - EN Engineer
+# key: Interview2en
+# --
+Working Experience
+----------------------------
+# Could you do a brief introduction of your previous work?
+
+# Could you elaborate one of your most challenging projects, including the backgroud, the goal, your tasks and the result?
+
+Behavior Questions
+----------------------------
+# Is there a time that you started a project proactively? 
+
+# Do you have any experience working with remote team? How do you handle the communication?
+
+System Design
+-----------------------
+# Design backend for following/follower feature in Tiktok
+
+Functionality:
+User Profile Page
+- Show a "follow" button if the vistor hasn't followed me yet. Otherwise, it will show a "unfollow" button.
+- Show "# of followers" and "# of followings". When clicked, go to follower/following list page
+
+Follower list page (Following list page is similar)
+- Show a list of my followers ordered by time. People who followed me more recently will be shown on the top. 
+- For each follower `X`, display basic info such as nickname, profile image etc. And also show a "follow" or "unfollow" button depending on whether the visitor has followed `X`.
+- If the list is long, the visitor could scroll down the page, and more followers would be loaded incrementally.
+
+Q&A
+------------
+
+Evaluation
+----------

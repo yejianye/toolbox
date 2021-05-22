@@ -1,0 +1,14 @@
+# -*- mode: snippet -*-
+# name: meeting notes
+# key: meeting
+# --
+会议目标 | Goal
+-
+事实 | Facts
+-
+问题 | Questions
+-
+决定 | Decisions
+-
+下一步行动 | Action Items
+- [ ] 

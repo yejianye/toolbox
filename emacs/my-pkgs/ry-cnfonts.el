@@ -27,7 +27,6 @@
     (setq ry-cnfonts-current-level
           (min (max 0 level) max-level)))
   (let ((font-size (aref ry-cnfonts-size-mapping ry-cnfonts-current-level)))
-    (message (format "font size: %s" font-size))
     (spacemacs//set-monospaced-font
      ry-cnfonts-en-font
      ry-cnfonts-cn-font

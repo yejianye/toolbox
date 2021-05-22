@@ -1,4 +1,4 @@
-;;; -*- lexical-binding: t -*-
+;; -*- lexical-binding: t -*-
 
 (add-to-list 'load-path "~/toolbox/emacs/my-pkgs/")
 
@@ -130,7 +130,6 @@ current buffer's, reload dir-locals."
 
 (defun ry/helm-code-snippets ()
   (interactive)
-  (require 'helm-org)
   (let ((helm-org-headings--nofilename t)
         )
     (helm :sources (ry/helm-source-code-snippets (list ry-org-code-snippet-file))
@@ -139,7 +138,6 @@ current buffer's, reload dir-locals."
 
 (defun ry/org-filter-todo-keyword ()
   (interactive)
-  (require 'helm-org)
   (org-show-todo-tree '(4))
   )
 
@@ -164,17 +162,6 @@ current buffer's, reload dir-locals."
   (evil-normal-state)
   )
 
-(defun ry/osx-paste()
-  "Paste from OS X system pasteboard via `pbpaste' to point."
-  (interactive)
-  (let ((clipboard (shell-command-to-string "LANG=en_US.UTF-8 pbpaste"))
-        )
-    (when (eq evil-state 'visual)
-      (kill-region (region-beginning) (region-end))
-      (evil-normal-state)
-      )
-    (insert (s-replace "\r" ""  clipboard))))
-
 (defun ry/org-paste-image()
   (interactive)
   (let* ((is-retina (y-or-n-p "Is the screenshot taken from a retina display?"))
@@ -193,24 +180,34 @@ current buffer's, reload dir-locals."
     )
   )
 
-(defun ry/org-cliplink-osx ()
-  "Takes a URL from the OSX clipboard and inserts an org-mode link
-with the title of a page found by the URL into the current
-buffer"
-  (interactive)
-  (org-cliplink-insert-transformed-title (shell-command-to-string "LANG=en_US.UTF-8 pbpaste")
-                                         'org-cliplink-org-mode-link-transformer))
-
 (defun ry/org-insert-chrome-url-osx ()
-  "Insert an org-mode linke with the title and url of current tab in Chrome"
+  "Insert an org-mode link with the title and url of current tab in Chrome"
   (interactive)
-  (let ((title (do-applescript "tell application \"Google Chrome\" to return title of active tab of front window"))
-        (url (do-applescript "tell application \"Google Chrome\" to return URL of active tab of front window")))
-    (insert (format "[[%s][%s]]" (substring url 1 -1)
-                    (thread-last (substring title 1 -1)
-                      (s-replace "[" "{")
-                      (s-replace "]" "}"))
-                    ))))
+  (insert (format "[[%s][%s]]" (ry/osx-chrome-url)
+                  (thread-last (ry/osx-chrome-title)
+                    (s-replace "[" "{")
+                    (s-replace "]" "}"))
+                  ))
+  )
+
+(defun ry/org-hide-other-subtrees ()
+  "Show next entry, keeping other entries closed.
+   Source: https://stackoverflow.com/questions/25161792/emacs-org-mode-how-can-i-fold-everything-but-the-current-headline
+  "
+  (interactive)
+  (let ((buf-pos (point)))
+    (if (save-excursion (end-of-line) (outline-invisible-p))
+        (progn (org-show-entry) (show-children))
+      (outline-back-to-heading)
+      (unless (and (bolp) (org-on-heading-p))
+        (org-up-heading-safe)
+        (hide-subtree)
+        (error "Boundary reached"))
+      (org-overview)
+      (org-reveal t)
+      (org-show-entry)
+      (show-children)
+      (goto-char buf-pos))))
 
 (defun ry/markdown-cleanup-org-tables()
   (save-excursion
@@ -251,16 +248,16 @@ buffer"
   (let ((journal-file (ry/journal-org-current-month))
         (today-heading (format "* %s" (ry/today-string)))
         (title (format-time-string "#+title: Journal - %b, %Y\n"))
-        (todo "#+TODO: NEW(n) | REVIEWED(r)\n"))
+        (todo "#+TODO: NEW(n) | REVIEWED(r)\n")
+        (settings "# -*- eval: (toggle-word-wrap -1); -*-\n")
+        )
     (find-file journal-file)
     (unless (file-exists-p journal-file)
-      (insert (concat title todo))
+      (insert (concat settings title todo))
       (save-buffer))
     (unless (ry//string-in-buffer-p today-heading)
       (goto-char (point-max))
-      (insert (format "\n%s\n** Todo\n** Timesheet\nLast update: %s"
-                      today-heading
-                      (format-time-string "%H:%M")))))
+      (insert (format "\n%s\n** Todo\n" today-heading))))
   )
 
 (defun ry//org-insert-today-todo(text)
@@ -284,6 +281,18 @@ buffer"
     )
   )
 
+(defun ry/org-agenda-column-view()
+  "View agenda column view"
+  (interactive)
+  (org-agenda-list)
+  (org-agenda-columns)
+  )
+
+(defun ry/org-clock-in-history()
+  "Show recent clocking history and select a task to clock in"
+  (interactive)
+  (org-clock-in '(4)))
+
 (defun ry/org-new-today-todo()
   "Quick shortcut to add todo item in Today's journal"
   (interactive)
@@ -297,28 +306,70 @@ buffer"
   (org-cycle)
   )
 
-(defun ry/helm-org-journal ()
-  (interactive)
-  (require 'helm-org)
-  (let ((journal-files (file-expand-wildcards (format "%s/*.org" ry-org-journal-dir)))
-        )
-    (helm :sources (helm-source-org-headings-for-files journal-files)
-          :candidate-number-limit 99999
-          :buffer "*helm journal*"))
+(defun ry/helm-org-insert-headings (&optional arg)
+  "Insert selected heading into current position"
+  (interactive "P")
+  (let ((helm-org-headings-actions
+         '(("Insert link to this headings" . helm-org-insert-link-to-heading-at-marker))))
+    (ry/helm-org-headings-in-org-directory)))
+
+(defun ry/helm-org-headings-in-org-directory (&optional arg)
+  "Select headings from all org files in =org-directory="
+  (interactive "P")
+  (helm :sources (helm-org-build-sources (ry/org-files org-directory) nil arg)
+        :truncate-lines helm-org-truncate-lines
+        :buffer "*helm org headings*")
   )
 
+(defun ry/org-find-backlinks ()
+  "Find backlinks of current heading"
+  (interactive)
+  (let* ((heading (-last-item (org-get-outline-path t)))
+         (filepath (file-relative-name (buffer-file-name) org-directory))
+          (link-search-exp (format "%s::*%s]" filepath heading))
+          (matched-files
+           (ry/grep-files-in-directory link-search-exp org-directory "*.org" t))
+          (heading-search-exp
+           (format "(link \"%s\")" heading)))
+      (if matched-files
+          (org-ql-search matched-files heading-search-exp)
+        (message "No back links found"))))
+
+
+;; This is a backlink search version leverage org-rifle
+;; I'm not going to use it since I could figure how to search a whole phrase
+;; the result buffer of org-rifle is superior than org-ql, but the API is really bad
+;;
+;; (defun ry/org-find-backlinks-v2 ()
+;;   (let ((buffers-collected (ry//files-to-buffers (ry/org-files org-directory)))
+;;         (result-buffer (helm-org-rifle--occur-prepare-results-buffer)))
+;;     (helm-org-rifle-occur-process-input "Organization structure"
+;;                                         buffers-collected
+;;                                         result-buffer))
+;; (defun ry//files-to-buffers (files)
+;;   (append (cl-loop for file in files
+;;                    collect (-if-let (buffer (org-find-base-buffer-visiting file))
+;;                                buffer
+;;                              (find-file-noselect file)))
+;;           nil))
+
 ;; Diary
+
+;; ry/org-goto-diary is not used now. Date headings are created monthly so it
+;; doesn't require much efforts to handle it manually. And since I'm continuously
+;; adjust the structure of diary.org. It's more flexible to keep it manually
+;; at this point.
 (defun ry/org-goto-diary()
-  "Goto Diary org file, and create headings for today if not exists"
+  "Goto Diary org file, and create headings for this month if not exists"
   (interactive)
   (let* ((diary-file (concat ry-org-root-dir "diary.org"))
-         (today (format "* %s" (ry/today-string)))
+         (month (format "* %s" (ry/month-string)))
          )
     (find-file diary-file)
     (widen)
     (goto-char (point-max))
-    (unless (ry//string-in-buffer-p today)
-      (insert (format "\n%s" today)))))
+    (unless (ry//string-in-buffer-p month)
+      (insert (format "\n%s" month)))))
 
 ;; Syntax table
 (defun ry//underscore-as-word()
@@ -575,7 +626,7 @@ buffer"
 
 (defun ry/org-insert-sub-heading ()
   (interactive)
-  (org-insert-heading-after-current)
+  (org-insert-heading)
   (org-demote-subtree)
   )
 
@@ -618,6 +669,9 @@ buffer"
 (defun ry/today-string ()
   (format-time-string "%Y-%m-%d %A"))
 
+(defun ry/month-string ()
+  (format-time-string "%Y-%m"))
+
 (defun ry//copy-to-osx-clipboard (string)
   (shell-command (format "LANG=en_US.UTF-8 echo \"%s\" | pbcopy"
                          string))
@@ -633,6 +687,66 @@ buffer"
   (message (format "%s" (ry/pyfunc-on-region "rypy.elfunc" "sum")))
   )
 
+(defun ry/org-new-interview ()
+  "Create an interview template via current interview page in Chrome"
+  (interactive)
+  (insert (format "* %s - %s\nLink: %s\n\n" (ry/today-string) 
+                  (-first-item (s-split " - " (ry/osx-chrome-title)))
+                  (ry/osx-chrome-url)))
+  (yas-insert-snippet))
+
+(defun ry/org-files (dir)
+  (append
+    (ry/pyfunc "rypy.elfunc" "filter_files" (expand-file-name dir) '("org"))
+    nil))
+
+(cl-defun ry/grep-files-in-directory (pattern directory &optional
+                                              (filename-pattern "*")
+                                              (fixed-string nil))
+  "Find files that matches PATTERN in DIRECTORY"
+  (let* ((grep-command (format "find -L %s -name '%s' | xargs grep -l%s '%s'"
+                               directory filename-pattern
+                               (or (and fixed-string "F") "") pattern))
+         (grep-result (s-trim (shell-command-to-string grep-command))))
+    (if (s-blank? grep-result)
+        nil
+      (s-split "\n" grep-result))))
+;; Test Case
+;; (ry/grep-files-in-directory "index.org::*Organization structure]"
+;;                             org-directory "*.org" t)
+
+(defun ry/table-count-unplanned-tasks (l)
+  (length (-filter (apply-partially 's-ends-with-p "*") l)))
+
+(defun ry/table-count-unplanned-hours (tname thour)
+  "Count number of hours spending on unplanned tasks"
+  (let* ((unplanned (-map (lambda (x) (if (s-ends-with? "*" x) 1 0)) tname))
+         (thour (-map 'string-to-number thour))
+         (unplanned-hours (mapcar* '* unplanned thour)))
+    (apply '+ unplanned-hours)))
+
+(defun ry/find-checkbox-in-current-buffer ()
+  "Find unticked checkbox in current buffer"
+  (interactive)
+  (org-occur "- \\[ \\]"))
+
+(defun ry/test-function ()
+  "Test function specified in `ry-testing-function'"
+  (interactive)
+  (call-interactively ry-testing-function))
+
+(defun ry/test-set-function (command-name)
+  (interactive "C")
+  (setq ry-testing-function command-name))
+
+(require 'helm-org)
+(require 'org-tempo)
+(require 'ry-orgtable)
+(require 'ry-orgtext)
+(require 'ry-osx)
 (require 'ry-timesheet)
 (require 'ry-pyfunc)
 (require 'ry-cnfonts)
+(require 'org-ql)
+(require 'org-ql-search)
+;; (require 'helm-org-ql)
