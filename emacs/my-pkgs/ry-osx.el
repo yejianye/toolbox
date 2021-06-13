@@ -1,27 +1,30 @@
-(defun ry/osx-chrome-url ()
-   (do-applescript "tell application \"Google Chrome\" to return URL of active tab of front window")
-  )
-
-(defun ry/osx-chrome-title ()
-   (do-applescript "tell application \"Google Chrome\" to return title of active tab of front window")
-  )
-
 ;; There's a difference between emacs-plus and emacs-mac in `do-applescript`
 ;; emacs-mac will wrap the result with a pair of double-quote. For
 ;; `ry/osx-chrome-title` and `ry/osx-chrome-url`, the following implementation
 ;; needs be used instead.
 ;;
+;; emacs-mac version
+(defun ry/osx-chrome-url ()
+  (substring
+   (do-applescript "tell application \"Google Chrome\" to return URL of active tab of front window")
+   1 -1)
+  )
+
+(defun ry/osx-chrome-title ()
+  (substring
+   (do-applescript "tell application \"Google Chrome\" to return title of active tab of front window")
+   1 -1)
+  )
+;;
+;; emacs-plus version
 ;; (defun ry/osx-chrome-url ()
-;;   (substring
-;;    (do-applescript "tell application \"Google Chrome\" to return URL of active tab of front window")
-;;    1 -1)
+;;   (do-applescript "tell application \"Google Chrome\" to return URL of active tab of front window")
 ;;   )
 ;;
 ;; (defun ry/osx-chrome-title ()
-;;   (substring
-;;    (do-applescript "tell application \"Google Chrome\" to return title of active tab of front window")
-;;    1 -1)
+;;   (do-applescript "tell application \"Google Chrome\" to return title of active tab of front window")
 ;;   )
+
 
 (defun ry/osx-paste()
   "Paste from OS X system pasteboard via `pbpaste' to point."

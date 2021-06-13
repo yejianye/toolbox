@@ -27,7 +27,9 @@
                       auto-completion-private-snippets-directory "~/toolbox/emacs/snippets")
      markdown
      (python :variables
-             python-test-runner 'pytest)
+             python-test-runner 'pytest
+             python-backend 'lsp
+             python-lsp-server 'pyls)
      emacs-lisp
      javascript
      java
@@ -149,7 +151,7 @@ before layers configuration."
    ;; If non nil the frame is maximized when Emacs starts up.
    ;; Takes effect only if `dotspacemacs-fullscreen-at-startup' is nil.
    ;; (Emacs 24.4+ only)
-   dotspacemacs-maximized-at-startup t
+   dotspacemacs-maximized-at-startup nil
    ;; A value from the range (0..100), in increasing opacity, which describes
    ;; the transparency level of a frame when it's active or selected.
    ;; Transparency can be toggled through `toggle-transparency'.
@@ -220,6 +222,7 @@ layers configuration."
   (ry/global-settings)
   (ry/global-keybindings)
   (ry/file-shortcuts)
+  (ry/lsp-mode-settings)
   (ry/org-mode-settings)
   (ry/python-mode-settings)
   (ry/sql-mode-settings)
@@ -383,6 +386,8 @@ layers configuration."
   (spacemacs/toggle-smartparens-globally-off)
   (remove-hook 'prog-mode-hook 'smartparens-mode)
 
+  ;; Do not show line-continue symbol
+  (fringe-mode '(1 . 1))
   ;; Treat underscore as part of the word
   (ry/add-hook-underscore-as-word '(prog-mode-hook yaml-mode-hook))
 
@@ -414,12 +419,11 @@ layers configuration."
    "ot" "~/org/bytedance/tasks.org"
    "ow" "~/org/bytedance/weekly-report.org"
    "or" "~/org/bytedance/recruiting.org"
-   "ol" "~/org/bytedance/resources.org"
    "os" "~/org/bytedance/security.org"
+   "om" "~/org/bytedance/regular-meetings.org"
    "op" "~/org/tasks.org"
    "o1" "~/org/bytedance/one-on-one/others.org"
    "od" "~/org/diary.org"
-   "om" "~/org/organize-my-life.org"
    "ob" "~/org/vault/bookmark-notes.org"
    "oo" "~/org/okrs.org")
   )
@@ -509,6 +513,7 @@ layers configuration."
     "oA" 'ry/org-agenda-column-view
     "oj" 'ry/org-goto-journal
     "oh" 'ry/helm-org-headings-in-org-directory
+    "ol" 'ry/helm-org-search-links
     "o/" 'helm-org-rifle-org-directory
     "on" 'ry/org-new-today-todo
     ;; "oT" 'ry/show-last-week-timesheet
@@ -542,12 +547,16 @@ layers configuration."
         "o[" 'ry/find-checkbox-in-current-buffer
         "tiR" 'ry/orgtable-insert-row-after
         )
-      (evil-define-key 'normal evil-org-mode-map
+      (ry/declare-prefix-for-mode 'org-mode `(
+                                              ("mo" . "user bindings")
+                                              ))
+
+      (evil-define-key 'normal org-mode-map
         "t" 'org-todo
         ",B" (kbd "^v$hs*")
         )
 
-      (evil-define-key 'visual evil-org-mode-map
+      (evil-define-key 'visual org-mode-map
         (kbd "s-b") 'ry/org-toggle-bold
         (kbd "s-i") 'ry/org-toggle-italic
         (kbd "s-s") 'ry/org-toggle-strikethrough
@@ -555,10 +564,10 @@ layers configuration."
 
       (define-key org-mode-map (kbd "s-l") 'ry/org-insert-chrome-url-osx)
       (define-key org-mode-map (kbd "s-C-i") 'ry/helm-org-insert-headings)
-      (define-key org-mode-map (kbd "s-h") 'org-insert-heading)
+      (define-key org-mode-map (kbd "s-e") 'org-insert-heading)
       (define-key org-mode-map (kbd "s-s") 'ry/org-insert-sub-heading)
       (define-key org-mode-map (kbd "s-<return>") 'org-meta-return)
-      (evil-define-key nil evil-org-mode-map
+      (evil-define-key nil org-mode-map
         (kbd "<s-left>") 'org-metaleft
         (kbd "<s-right>") 'org-metaright
         )
@@ -595,10 +604,7 @@ layers configuration."
             (lambda ()
               (toggle-word-wrap 1)
               (org-indent-mode 1)
-              (push '("[ ]" . "☐") prettify-symbols-alist)
-              (push '("[X]" . "☑" ) prettify-symbols-alist)
-              (push '("[-]" . "⊟" ) prettify-symbols-alist)
-              (prettify-symbols-mode)
+              (ry/reload-prettify-symbols)
               )
             )
 
@@ -626,6 +632,7 @@ layers configuration."
      '(org-checkbox-done-text ((t (:foreground "#71696A" :strike-through t))))
      '(org-checkbox ((t (:background "#002b36" :foreground "#839496" :box nil)))))
     )
+  (spacemacs/load-default-theme)
 
   ;; BULLET LIST
   (setq org-superstar-item-bullet-alist
@@ -638,6 +645,12 @@ layers configuration."
   (setq org-hide-emphasis-markers t)
   )
 
+(defun ry/lsp-mode-settings ()
+  ;; Got error if this value is set t
+  (setq lsp-python-ms-parse-dot-env-enabled nil)
+  (setq lsp-auto-guess-root t)
+  )
+
 (defun ry/python-mode-settings ()
   (spacemacs|use-package-add-hook python
     :post-config
@@ -646,6 +659,7 @@ layers configuration."
 
   (setq flycheck-python-pylint-executable "pylint")
   (setq flycheck-python-flake8-executable "flake8")
+
   (add-hook 'python-mode-hook (lambda ()
                                 (yafolding-mode 1)
                                 ;; (setq flycheck-checker 'python-flake8)
@@ -653,7 +667,9 @@ layers configuration."
   ;; It should be '-i' to keep ipython in interactive mode
   ;; But ipython would fail to boot with '-i', and currently
   ;; I have no idea why it happens.
-  (setq python-shell-interpreter-args "-i --simple-prompt --profile=emacs")
+  ;; (setq python-shell-interpreter-args "-i --simple-prompt --profile=emacs")
+  (setq python-shell-interpreter-args "-i")
+  (setq python-shell-interpreter "python")
   (setq-default python-indent 4)
   ;; (with-eval-after-load "python"
   ;;   (modify-syntax-entry ?_ "w" python-mode-syntax-table)

@@ -41,7 +41,7 @@
     (insert-file-contents "orgapi-test.org")
     (pp (thread-first (ry/orgapi-get-root)
           (ry/orgapi-first-child)
-          (ry/orgapi-first-child :title "Sub-heading-1-1")
+          (ry/orgapi-first-child :title "Sub-heading-1-1a")
           ;; (ry/orgapi-first-child :title
           ;;                        (lambda (x)
           ;;                          (string> x "Sub-heading")))

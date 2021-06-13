@@ -281,6 +281,29 @@ current buffer's, reload dir-locals."
     )
   )
 
+(defun ry//org-insert-instant-note(text)
+  "Insert an instant note in Today's journal"
+  (ry/org-goto-journal)
+  (let* ((today-heading (format-time-string "* %Y-%m-%d %A"))
+         (note-heading "** Instant Notes")
+         (note-ending "===NOTE END===")
+         (note-text (s-replace "//" "\n" text))
+         )
+    (goto-char (point-min))
+    (search-forward today-heading)
+    (if (ry//string-in-buffer-p note-ending (point))
+        (progn
+          (search-forward note-ending)
+          (replace-match (format "%s\n%s" note-text note-ending) t)
+          )
+      (progn
+        (insert (format "\n%s" note-heading))
+        (insert (format "\n%s" note-text)))
+        (insert (format "\n%s" note-ending))
+        )
+      )
+    )
+
 (defun ry/org-agenda-column-view()
   "View agenda column view"
   (interactive)
@@ -304,21 +327,6 @@ current buffer's, reload dir-locals."
   (interactive)
   (org-back-to-heading)
   (org-cycle)
-  )
-
-(defun ry/helm-org-insert-headings (&optional arg)
-  "Insert selected heading into current position"
-  (interactive "P")
-  (let ((helm-org-headings-actions
-         '(("Insert link to this headings" . helm-org-insert-link-to-heading-at-marker))))
-    (ry/helm-org-headings-in-org-directory)))
-
-(defun ry/helm-org-headings-in-org-directory (&optional arg)
-  "Select headings from all org files in =org-directory="
-  (interactive "P")
-  (helm :sources (helm-org-build-sources (ry/org-files org-directory) nil arg)
-        :truncate-lines helm-org-truncate-lines
-        :buffer "*helm org headings*")
   )
 
 (defun ry/org-find-backlinks ()
@@ -690,7 +698,7 @@ current buffer's, reload dir-locals."
 (defun ry/org-new-interview ()
   "Create an interview template via current interview page in Chrome"
   (interactive)
-  (insert (format "* %s - %s\nLink: %s\n\n" (ry/today-string) 
+  (insert (format "* %s - %s\nLink: %s\n\n" (ry/today-string)
                   (-first-item (s-split " - " (ry/osx-chrome-title)))
                   (ry/osx-chrome-url)))
   (yas-insert-snippet))
@@ -739,6 +747,24 @@ current buffer's, reload dir-locals."
   (interactive "C")
   (setq ry-testing-function command-name))
 
+(defun ry/reload-prettify-symbols ()
+  (interactive)
+  (setq prettify-symbols-alist
+        '(("[ ]" . "☐")
+          ("[X]" . "☑")
+          ("[-]" . "⊟")
+          ("=>" .  "➔")
+          ))
+  (prettify-symbols-mode 1)
+  )
+
+(defun ry/declare-prefix-for-mode (mode prefix-list)
+  "Declare a list of prefix PREFIX-LIST. MODE is the mode in which this prefix command should be added. PREFIX-LIST is a list with each element containing a key sequence and a name"
+  (dolist (prefix prefix-list)
+    (spacemacs/declare-prefix-for-mode 'org-mode (car prefix) (cdr prefix)))
+ )
+
+
 (require 'helm-org)
 (require 'org-tempo)
 (require 'ry-orgtable)
@@ -747,6 +773,7 @@ current buffer's, reload dir-locals."
 (require 'ry-timesheet)
 (require 'ry-pyfunc)
 (require 'ry-cnfonts)
+(require 'ry-search)
 (require 'org-ql)
 (require 'org-ql-search)
 ;; (require 'helm-org-ql)
