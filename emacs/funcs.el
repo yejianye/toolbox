@@ -241,69 +241,6 @@ current buffer's, reload dir-locals."
     (search-forward str nil t))
   )
 
-;; Journal
-(defun ry/org-goto-journal()
-  "Goto journal org file, and create headings for today if not exists"
-  (interactive)
-  (let ((journal-file (ry/journal-org-current-month))
-        (today-heading (format "* %s" (ry/today-string)))
-        (title (format-time-string "#+title: Journal - %b, %Y\n"))
-        (todo "#+TODO: NEW(n) | REVIEWED(r)\n")
-        (settings "# -*- eval: (toggle-word-wrap -1); -*-\n")
-        )
-    (find-file journal-file)
-    (unless (file-exists-p journal-file)
-      (insert (concat settings title todo))
-      (save-buffer))
-    (unless (ry//string-in-buffer-p today-heading)
-      (goto-char (point-max))
-      (insert (format "\n%s\n** Todo\n" today-heading))))
-  )
-
-(defun ry//org-insert-today-todo(text)
-  "Insert a todo item in Today's journal"
-  (ry/org-goto-journal)
-  (let* ((today-heading (format-time-string "* %Y-%m-%d %A"))
-        (todo-heading "** Todo")
-        (todo-desc (s-capitalize text))
-        )
-    (goto-char (point-min))
-    (search-forward today-heading)
-    (if (ry//string-in-buffer-p todo-heading (point))
-      (progn
-        (search-forward todo-heading)
-        (insert (format "\n- [ ] %s" todo-desc))
-        )
-      (progn
-       (insert (format "\n%s" todo-heading))
-       (insert (format "\n- [ ] %s" todo-desc)))
-      )
-    )
-  )
-
-(defun ry//org-insert-instant-note(text)
-  "Insert an instant note in Today's journal"
-  (ry/org-goto-journal)
-  (let* ((today-heading (format-time-string "* %Y-%m-%d %A"))
-         (note-heading "** Instant Notes")
-         (note-ending "===NOTE END===")
-         (note-text (s-replace "//" "\n" text))
-         )
-    (goto-char (point-min))
-    (search-forward today-heading)
-    (if (ry//string-in-buffer-p note-ending (point))
-        (progn
-          (search-forward note-ending)
-          (replace-match (format "%s\n%s" note-text note-ending) t)
-          )
-      (progn
-        (insert (format "\n%s" note-heading))
-        (insert (format "\n%s" note-text)))
-        (insert (format "\n%s" note-ending))
-        )
-      )
-    )
-
 (defun ry/org-agenda-column-view()
   "View agenda column view"
   (interactive)
@@ -315,12 +252,6 @@ current buffer's, reload dir-locals."
   "Show recent clocking history and select a task to clock in"
   (interactive)
   (org-clock-in '(4)))
-
-(defun ry/org-new-today-todo()
-  "Quick shortcut to add todo item in Today's journal"
-  (interactive)
-  (ry//org-insert-today-todo (read-string "Todo:"))
-  )
 
 (defun ry/org-cycle()
   "Cycle visibility at anywhere inside a subtree"
@@ -664,7 +595,6 @@ current buffer's, reload dir-locals."
 (defun ry/last-week-begin ()
   (let* ((days (+ (string-to-number (format-time-string "%w")) 6))
          (begin-date (seconds-to-time (- (float-time) (* days 86400)))))
-    begin-date
     (format-time-string "%Y-%m-%d %A" begin-date)
     ))
 
@@ -679,6 +609,18 @@ current buffer's, reload dir-locals."
 
 (defun ry/month-string ()
   (format-time-string "%Y-%m"))
+
+(defun ry/copy-org-protocol-to-osx-clipboard ()
+  (interactive)
+  (let ((link (ry//org-protocol-url-for-file (buffer-file-name))))
+    (ry//copy-to-osx-clipboard link)
+    (message (format "%s copied to clipboard."
+                     (s-replace "%" "%%" link))))
+  )
+
+(defun ry//org-protocol-url-for-file (fname)
+  (format "org-protocol://open-source?url=http://home-dir/%s"
+          (s-replace " " "%20" (file-relative-name fname "/Users/ryan"))))
 
 (defun ry//copy-to-osx-clipboard (string)
   (shell-command (format "LANG=en_US.UTF-8 echo \"%s\" | pbcopy"
@@ -767,13 +709,14 @@ current buffer's, reload dir-locals."
 
 (require 'helm-org)
 (require 'org-tempo)
+(require 'org-ql)
+(require 'org-ql-search)
 (require 'ry-orgtable)
 (require 'ry-orgtext)
+(require 'ry-org-journal)
 (require 'ry-osx)
 (require 'ry-timesheet)
 (require 'ry-pyfunc)
 (require 'ry-cnfonts)
 (require 'ry-search)
-(require 'org-ql)
-(require 'org-ql-search)
 ;; (require 'helm-org-ql)

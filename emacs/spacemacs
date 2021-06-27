@@ -79,11 +79,14 @@
      yafolding
      names
      org-ql
+     helm-org-ql
      ;; outshine
      ;; cnfonts
      ;; Replaced with using Apple Script to get page title
      ;; org-cliplink
-    )))
+     )
+   dotspacemacs-scratch-buffer-persistent t
+   ))
 
 (defun dotspacemacs/init ()
   "Initialization function.
@@ -443,6 +446,7 @@ layers configuration."
     "pn" 'ry/projectile-add-new-project
     "fy" 'ry/show-and-copy-buffer-filename
     "fY" 'ry/copy-filename-to-osx-clipboard
+    "fl" 'ry/copy-org-protocol-to-osx-clipboard
     "gr" 'magit-reflog
     "gd" 'ry/git-diff
     "gD" 'ry/github-branch-diff
@@ -545,6 +549,7 @@ layers configuration."
         "so" 'ry/org-hide-other-subtrees
         "oc" 'org-columns
         "o[" 'ry/find-checkbox-in-current-buffer
+        "ol" 'org-store-link
         "tiR" 'ry/orgtable-insert-row-after
         )
       (ry/declare-prefix-for-mode 'org-mode `(
@@ -591,6 +596,12 @@ layers configuration."
           ;; ("e" "Learn Emacs" entry (file+headline "~/org/tasks.org" "Learn Emacs")
           ;;  "*** %^{priority|NEXT|SOON|SOMEDAY} %?\n" :prepend t)
           ))
+
+  ;; org-protocol
+  (setq org-protocol-project-alist
+        '(("home directory"
+           :base-url "http://home-dir/"
+           :working-directory "/Users/ryan/")))
 
   ;; org-ql
   (setq org-ql-search-directories-files-recursive t)
@@ -711,10 +722,19 @@ layers configuration."
 (defun ry/elisp-mode-settings ()
   (spacemacs/set-leader-keys-for-major-mode 'emacs-lisp-mode
     "ip" 'ry/insert-page-breaker
+    "dt" 'trace-function
+    "dT" 'untrace-function
     )
   (with-eval-after-load "edebug"
     (define-key edebug-mode-map "A" 'ry/elisp-add-to-watch)
     )
+  ;; Show fringe only in edebug mode because I'd like to see the line indicator icon during debug.
+  ;; The code below is copied from https://emacs.stackexchange.com/questions/720/can-i-toggle-fringe-mode-when-entering-exiting-edebug
+  (add-hook 'edebug-mode-hook
+            (lambda ()
+              (set-fringe-mode
+               (set (make-local-variable 'fringe-mode)
+                    (if edebug-mode '(nil . 0) 0)))))
   )
 
 (defun ry/go-mode-settings ()
