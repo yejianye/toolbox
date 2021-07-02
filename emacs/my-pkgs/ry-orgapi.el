@@ -30,52 +30,77 @@
         (buffer-substring-no-properties begin end)
       "")))
 
-(defun ry/orgapi-set-contents (item contents)
+(defun ry/orgapi-set-contents (item contents &optional refresh)
   "Set CONTENTS as content string of ITEM"
-  (let ((begin (org-element-property :contents-begin item))
-        (end (org-element-property :contents-end item)))
-    (delete-region begin end)
+  (let* ( ;; if contents is empty, :contents-begin would be nil.
+        ;; In that case, :end is the end of headline which should be the beginning of contents
+        (begin (or (org-element-property :contents-begin item)
+                   (org-element-property :end item)))
+        (end (or (org-element-property :contents-end item) begin)))
+    (when (< begin end)
+      (delete-region begin end))
     (goto-char begin)
     (insert (if (s-ends-with? "\n" contents)
                 contents
               (format "%s\n" contents)))
-    contents))
+    (when refresh
+      (ry//orgapi-refresh-item item))
+    ))
 
-(defun ry/orgapi-prepend-contents (item contents)
+(defun ry/orgapi-prepend-contents (item contents &optional refresh)
   "Prepend CONTENTS to ITEM"
   (let ((current-contents (ry/orgapi-get-contents item))
         )
     (ry/orgapi-set-contents item
-                            (format "%s\n%s" contents current-contents)))
+                            (format "%s\n%s" contents current-contents)
+                            refresh))
   )
 
-(defun ry/orgapi-append-contents (item contents)
+(defun ry/orgapi-append-contents (item contents &optional refresh )
   "Append CONTENTS to ITEM"
   (let ((current-contents (ry/orgapi-get-contents item))
         )
     (ry/orgapi-set-contents item
-                            (format "%s%s" current-contents contents)))
+                            (format "%s%s" current-contents contents)
+                            refresh))
   )
 
-(defun ry/orgapi-insert-child (item heading contents)
-  "Insert a child under ITEM with HEADING and CONTENTS"
+(defun ry/orgapi-insert-child (item heading &optional contents)
+  "Insert a child under ITEM with HEADING and CONTENTS.
+Return newly created child node.
+"
   (let* ((level (org-element-property :level item))
-        (heading (format "%s %s" (s-repeat (1+ level) "*") heading))
-        )
-    (ry/orgapi-append-contents item (format "%s\n%s" heading (or contents "")))
-  ))
+         (child-contents (format "%s %s\n%s"
+                                 (s-repeat (1+ level) "*")
+                                 heading
+                                 (or contents "")
+                                 ))
+         (item (ry/orgapi-append-contents item child-contents t))
+         )
+    (ry/orgapi-first-child item :title heading)
+    ))
 
-;; (defun ry/orgapi-tset-child (item heading)
-;;   "Insert a child under ITEM with HEADING if no such child exists.
-;; Return the newly created child or existing child with HEADING."
-;;   (let ((child (ry/orgapi-first-child item :title heading))
-;;         (new-child (org-element-create 'headline (list :title heading)))
-;;         )
-;;     (or child
-;;         (progn
-;;           (org-element-adopt-elements item new-child)
-;;           new-child
-;;           ))))
+(defun ry/orgapi-tset-child (item heading &optional contents)
+  "Insert a child under ITEM with HEADING if no such child exists.
+Return the newly created child or existing child with HEADING."
+  (let ((child (ry/orgapi-first-child item :title heading))
+        )
+    (or child
+        (ry/orgapi-insert-child item heading contents))
+    ))
+
+(defun ry//orgapi-refresh-item (item)
+  (let ((headline-path
+         (cl-loop for cur = item then parent
+                  for parent = (org-element-property :parent cur)
+                  while (eq (org-element-type cur) 'headline)
+                  collect (org-element-property :title cur)
+                  )))
+    (--reduce-r-from (ry/orgapi-first-child acc :title it)
+                     (ry/orgapi-get-root)
+                     headline-path)
+    ))
+
 
 (defun ry//orgapi-example ()
   (with-temp-buffer
@@ -96,6 +121,6 @@
     ;; (buffer-string)
     )
   )
-(ry//orgapi-example)
+;; (ry//orgapi-example)
 
 (provide 'ry-orgapi)

@@ -39,21 +39,10 @@
 (defun ry//org-insert-today-todo(text)
   "Insert a todo item in Today's journal"
   (ry/org-goto-journal)
-  (let* ((today-heading (format-time-string "* %Y-%m-%d %A"))
-        (todo-heading "** Todo")
-        (todo-desc (s-capitalize text))
-        )
-    (goto-char (point-min))
-    (search-forward today-heading)
-    (if (ry//string-in-buffer-p todo-heading (point))
-      (progn
-        (search-forward todo-heading)
-        (insert (format "\n- [ ] %s" todo-desc))
-        )
-      (progn
-       (insert (format "\n%s" todo-heading))
-       (insert (format "\n- [ ] %s" todo-desc)))
-      )
+  (let* ((today-node (ry//today-journal-node))
+         (todo-node (ry/orgapi-tset-child today-node "Todo")))
+    (ry/orgapi-append-contents todo-node
+                               (format "- [ ] %s" (s-capitalize text)))
     )
   )
 
@@ -64,22 +53,23 @@
   "Get Today's Journal Org Node"
   (ry/orgapi-first-child (ry/orgapi-get-root) :title (ry//today-heading-string)))
 
-;; (defun ry//org-insert-instant-note(text)
-;;   "Insert an instant note in Today's journal"
-;;   (ry/org-goto-journal)
-;;   (let* ((today-node (ry//today-journal-node))
-;;          (inst-node (ry/orgapi-tset-child today-node "Instant Notes")))
-;;     (ry/orgapi-append-contents inst-node text))
-;;   )
-
 (defun ry//org-insert-instant-note(text)
   "Insert an instant note in Today's journal"
   (ry/org-goto-journal)
   (let* ((today-node (ry//today-journal-node))
-         (inst-node (ry/orgapi-first-child today-node :title "Instant Notes")))
-    (if inst-node
-        (ry/orgapi-append-contents inst-node text)
-      (ry/orgapi-insert-child today-node "Instant Notes" text)))
+         (inst-node (ry/orgapi-tset-child today-node "Instant Notes")))
+    (ry/orgapi-append-contents inst-node text)
+    )
   )
+
+;; (defun ry//org-insert-instant-note(text)
+;;   "Insert an instant note in Today's journal"
+;;   (ry/org-goto-journal)
+;;   (let* ((today-node (ry//today-journal-node))
+;;          (inst-node (ry/orgapi-first-child today-node :title "Instant Notes")))
+;;     (if inst-node
+;;         (ry/orgapi-append-contents inst-node text)
+;;       (ry/orgapi-insert-child today-node "Instant Notes" text)))
+;;   )
 
 (provide 'ry-org-journal)

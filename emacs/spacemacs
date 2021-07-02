@@ -428,7 +428,8 @@ layers configuration."
    "o1" "~/org/bytedance/one-on-one/others.org"
    "od" "~/org/diary.org"
    "ob" "~/org/vault/bookmark-notes.org"
-   "oo" "~/org/okrs.org")
+   "oo" "~/org/okrs.org"
+   "oe" "~/org/topics/emacs.org")
   )
 
 (defun ry/global-keybindings ()
