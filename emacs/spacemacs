@@ -700,16 +700,7 @@ layers configuration."
     "r" 'ry/sql-reconnect
     "sv" 'ry/sql-show-viz
     "o" 'outline-minor-mode)
-  (setq sql-set-sqli-hook 'ry/sql-set-sqli-hook)
-
-  ;; YAML2SQL
-  (push '("*yaml2sql-output*" :dedicated t :position bottom :stick t :noselect nil)
-        popwin:special-display-config)
-  (spacemacs/set-leader-keys-for-major-mode 'yaml-mode
-    "s" 'ry/yamlsql-show-sql
-    "S" 'ry/yamlsql-show-sql-all
-    "r" 'ry/yamlsql-run-sql
-    "R" 'ry/yamlsql-run-sql-all))
+  (setq sql-set-sqli-hook 'ry/sql-set-sqli-hook))
 
 (defun ry/elisp-mode-settings ()
   (spacemacs/set-leader-keys-for-major-mode 'emacs-lisp-mode

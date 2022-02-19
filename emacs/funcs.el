@@ -282,30 +282,6 @@ current buffer's, reload dir-locals."
   (interactive)
   (switch-to-buffer (ry/log-buffer)))
 
-(defun ry/yamlsql-show-sql ()
-  (interactive)
-  (let ((query-name (substring-no-properties (thing-at-point 'word))))
-    (shell-command (format "yaml2sql %s --query %s"
-                           (buffer-file-name) query-name)
-                   "*yaml2sql-output*")))
-
-(defun ry/yamlsql-show-sql-all ()
-  (interactive)
-  (shell-command (format "yaml2sql %s" (buffer-file-name))
-                 "*yaml2sql-output*"))
-
-(defun ry/yamlsql-run-sql ()
-  (interactive)
-  (let ((query-name (substring-no-properties (thing-at-point 'word))))
-    (shell-command (format "yaml2sql %s --query %s --run-sql"
-                           (buffer-file-name) query-name)
-                   "*yaml2sql-output*")))
-
-(defun ry/yamlsql-run-sql-all ()
-  (interactive)
-  (shell-command (format "yaml2sql %s --run-sql" (buffer-file-name))
-                 "*yaml2sql-output*"))
-
 (defun ry/insert-page-breaker ()
   (interactive)
   (insert 12))
