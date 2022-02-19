@@ -19,7 +19,9 @@
      csv
      ruby
      sql
-     clojure
+     (clojure :variables
+              clojure-enable-linters 'clj-kondo
+              clojure-backend 'lsp)
      (auto-completion
       ;; :disabled-for go
       :variables
@@ -31,6 +33,7 @@
              python-backend 'lsp
              python-lsp-server 'pyls)
      emacs-lisp
+     parinfer
      javascript
      java
      html
@@ -47,9 +50,8 @@
      helpful
      (chinese :variables
               chinese-enable-fcitx t
-              chinese-enable-youdao-dict t
-              )
-     lsp
+              chinese-enable-youdao-dict t)
+     lsp)
      ;; ipython-notebook
      ;; Disable ansible for breaking describe key
      ;; https://github.com/syl20bnr/spacemacs/issues/8027
@@ -57,15 +59,12 @@
      ;; treemacs
      ;; react
      ;; itome-react
-     )
    ;; A list of packages and/or extensions that will not be install and loaded.
    dotspacemacs-excluded-packages
    '(
      importmagic
-     org-ref
      org-brain
-     company-tern
-    )
+     company-tern)
    ;; If non-nil spacemacs will delete any orphan packages, i.e. packages that
    ;; are declared in a layer which is not a member of
    ;; the list `dotspacemacs-configuration-layers'
@@ -79,14 +78,12 @@
      yafolding
      names
      org-ql
-     helm-org-ql
+     helm-org-ql)
      ;; outshine
      ;; cnfonts
      ;; Replaced with using Apple Script to get page title
      ;; org-cliplink
-     )
-   dotspacemacs-scratch-buffer-persistent t
-   ))
+   dotspacemacs-scratch-buffer-persistent t))
 
 (defun dotspacemacs/init ()
   "Initialization function.
@@ -110,7 +107,7 @@ before layers configuration."
    ;; t if you always want to see the changelog at startup
    dotspacemacs-always-show-changelog nil
    ;; List of items to show in the startup buffer. If nil it is disabled.
-   ;; Possible values are: `recents' `bookmarks' `projects'."
+   ;; Possible values are: `recents' `bookmarks' `projects'.
    dotspacemacs-startup-lists '((recents . 5) (projects . 7))
    ;; If non nil the cursor color matches the state color.
    dotspacemacs-colorize-cursor-according-to-state t
@@ -149,7 +146,7 @@ before layers configuration."
    ;; (Emacs 24.4+ only)
    dotspacemacs-fullscreen-at-startup nil
    ;; If non nil `spacemacs/toggle-fullscreen' will not use native fullscreen.
-   ;; Use to disable fullscreen animations in OSX."
+   ;; Use to disable fullscreen animations in OSX.
    dotspacemacs-fullscreen-use-non-native t
    ;; If non nil the frame is maximized when Emacs starts up.
    ;; Takes effect only if `dotspacemacs-fullscreen-at-startup' is nil.
@@ -184,18 +181,16 @@ before layers configuration."
    dotspacemacs-distinguish-gui-tab t
    dotspacemacs-large-file-size 100
    dotspacemacs-auto-resume-layouts nil
-   dotspacemacs-check-for-update nil
-   )
+   dotspacemacs-check-for-update nil)
   ;; User initialization goes here
   ;; List of themes, the first of the list is loaded when spacemacs starts.
   ;; Press <SPC> T n to cycle to the next theme in the list (works great
   ;; with 2 themes variants, one dark and one light)
   (setq dotspacemacs-themes '(solarized-light
-                              solarized-dark))
+                              solarized-dark)))
   ;; Other choices
   ;; (setq dotspacemacs-themes '(solarized-gruvbox-light
   ;;                             solarized-gruvbox-dark))
-  )
 
 (defun dotspacemacs/user-init ()
   "Initialization function for user code.
@@ -207,15 +202,16 @@ before packages are loaded. If you are unsure, you should try in setting them in
 
   ;; Set the Emacs customization file path. Must be done here in user-init.
   ;; Add China mirror for ELPA
-  (setq configuration-layer-elpa-archives
-      '(("melpa-cn" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
-        ("org-cn"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/org/")
-        ("gnu-cn"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")))
+  ;; (setq configuration-layer-elpa-archives
+  ;;     '(("melpa-cn" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
+  ;;       ("org-cn"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/org/")
+  ;;       ("gnu-cn"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")))
   ;; turn off "Package cl deprecated" warning
+  (setq org-roam-v2-ack t)
+
   (setq byte-compile-warnings '(cl-functions))
   ;; Load custom file
-  (setq custom-file "~/.emacs-custom.el")
-  )
+  (setq custom-file "~/.emacs-custom.el"))
 
 (defun dotspacemacs/user-config ()
   "Configuration function.
@@ -228,6 +224,7 @@ layers configuration."
   (ry/lsp-mode-settings)
   (ry/org-mode-settings)
   (ry/python-mode-settings)
+  (ry/clojure-mode-settings)
   (ry/sql-mode-settings)
   (ry/elisp-mode-settings)
   (ry/go-mode-settings)
@@ -237,28 +234,19 @@ layers configuration."
   ;; Custom filetypes
   ;; (add-to-list 'auto-mode-alist '("\\.js\\'" . react-mode))
 
+  ;; Snippet mode
+  (spacemacs|use-package-add-hook yasnippet
+    :post-config
+    (spacemacs/set-leader-keys-for-major-mode 'snippet-mode
+      "," 'yas-load-snippet-buffer-and-close))
+
   ;; Artist mode
   (with-eval-after-load "artist"
-    (define-key artist-mode-map [(down-mouse-3)] 'artist-mouse-choose-operation)
-  )
+    (define-key artist-mode-map [(down-mouse-3)] 'artist-mouse-choose-operation))
 
   ;; shell keybindings
   (with-eval-after-load "comint"
-    (define-key comint-mode-map (kbd "C-u") 'backward-kill-sentence)
-  )
-
-  ;; table.el
-  ;; (add-hook 'table-cell-map-hook
-  ;;    (lambda ()
-  ;;      (define-key table-cell-map (kbd "C-h") 'table-narrow-cell)
-  ;;      (define-key table-cell-map (kbd "C-l") 'table-widen-cell)
-  ;;      (define-key table-cell-map (kbd "C-k") 'table-shorten-cell)
-  ;;      (define-key table-cell-map (kbd "C-l") 'table-heighten-cell)
-  ;;      (define-key table-cell-map (kbd "C-=") 'table-insert-column)
-  ;;      (define-key table-cell-map (kbd "C--") 'table-delete-column)
-  ;;      (define-key table-cell-map (kbd "s-=") 'table-insert-row)
-  ;;      (define-key table-cell-map (kbd "s--") 'table-delete-row)
-  ;;       ))
+    (define-key comint-mode-map (kbd "C-u") 'backward-kill-sentence))
 
   ;; helm settings
   (setq helm-M-x-fuzzy-match t
@@ -276,9 +264,7 @@ layers configuration."
            "Switch to Eshell `M-e'" #'helm-projectile-switch-to-eshell
            "Grep in projects `C-s'" #'ry/projectile-switch-and-search
            "Compile project `M-c'. With C-u, new compile command" #'helm-projectile-compile-project
-           "Remove project(s) from project list `M-D'" #'helm-projectile-remove-known-project)
-          )
-  )
+           "Remove project(s) from project list `M-D'" #'helm-projectile-remove-known-project)))
   (with-eval-after-load "helm-org"
     (defun helm-org-insert-link-to-heading-at-marker (marker)
       "Insert link to heading at MARKER position."
@@ -291,8 +277,7 @@ layers configuration."
               (file-name (buffer-file-name)))
           (with-helm-current-buffer
             (org-insert-link
-             file-name (concat "file:" file-name "::*" heading-name) heading-name)))))
-    )
+             file-name (concat "file:" file-name "::*" heading-name) heading-name))))))
 
   ;; magit settings
   (setq magit-push-always-verify nil)
@@ -314,8 +299,7 @@ layers configuration."
   ;; ediff
   (with-eval-after-load "ediff"
     (ediff-setup-keymap)
-    (define-key ediff-mode-map " " nil)
-    )
+    (define-key ediff-mode-map " " nil))
 
   ;; markdown
   (setq markdown-open-command "~/utils/mark.sh")
@@ -327,6 +311,12 @@ layers configuration."
   ;; (add-hook 'outline-minor-mode-hook 'outshine-hook-function)
 
   ;; writeroom
+  (setq writeroom-global-effects '(;; writeroom-set-fullscreen
+                                   writeroom-set-alpha
+                                   writeroom-set-menu-bar-lines
+                                   writeroom-set-tool-bar-lines
+                                   writeroom-set-vertical-scroll-bars
+                                   writeroom-set-bottom-divider-width))
   (setq writeroom-extra-line-spacing 0.5)
   (setq writeroom-fullscreen-effect 'maximized)
   (setq writeroom-width 100)
@@ -343,8 +333,8 @@ layers configuration."
   ;; Load local config
   (setq local-config-file "~/.emacs-local.el")
   (when (file-exists-p local-config-file)
-    (load local-config-file))
-)
+    (load local-config-file)))
+
 
 (defun ry/gui-config()
   (setq interprogram-cut-function nil)
@@ -387,7 +377,7 @@ layers configuration."
 
   ;; Disable smartparens
   (spacemacs/toggle-smartparens-globally-off)
-  (remove-hook 'prog-mode-hook 'smartparens-mode)
+  (add-hook 'emacs-lisp-mode-hook (lambda () (smartparens-mode -1)))
 
   ;; Do not show line-continue symbol
   (fringe-mode '(1 . 1))
@@ -412,14 +402,12 @@ layers configuration."
 
   (if (display-graphic-p)
       (ry/gui-config)
-    (ry/terminal-config)
-    )
-  )
+    (ry/terminal-config)))
 
 (defun ry/file-shortcuts ()
   (ry/set-key-for-file
    "fef" "~/toolbox/emacs/funcs.el"
-   "ot" "~/org/bytedance/tasks.org"
+   "ot" "~/org/thinking.org"
    "ow" "~/org/bytedance/weekly-report.org"
    "or" "~/org/bytedance/recruiting.org"
    "os" "~/org/bytedance/security.org"
@@ -429,8 +417,7 @@ layers configuration."
    "od" "~/org/diary.org"
    "ob" "~/org/vault/bookmark-notes.org"
    "oo" "~/org/okrs.org"
-   "oe" "~/org/topics/emacs.org")
-  )
+   "oe" "~/org/topics/emacs.org"))
 
 (defun ry/global-keybindings ()
   (spacemacs/set-leader-keys
@@ -456,22 +443,21 @@ layers configuration."
     "Tw" 'writeroom-mode
     "oy" 'youdao-dictionary-search-at-point-tooltip
     "oft" 'ry/test-function
-    "ofT" 'ry/test-set-function
-    )
+    "ofT" 'ry/test-set-function)
 
   (spacemacs/set-leader-keys-for-minor-mode 'outline-minor-mode
     "<tab>" 'outshine-cycle-buffer
     "sn" 'org-narrow-to-subtree
-    "sN" 'widen
-    )
+    "sN" 'widen)
 
   ;; normal mode
   (define-key evil-normal-state-map "j" 'evil-next-visual-line)
   (define-key evil-normal-state-map "k" 'evil-previous-visual-line)
   (define-key evil-normal-state-map ";w" 'subword-forward)
   (define-key evil-normal-state-map ";b" 'subword-backward)
-  (define-key evil-normal-state-map (kbd "C-j") (kbd "jjjjj"))
-  (define-key evil-normal-state-map (kbd "C-k") (kbd "kkkkk"))
+  (define-key evil-normal-state-map (kbd "C-j") (kbd "5j"))
+  (define-key evil-normal-state-map (kbd "C-k") (kbd "5k"))
+  (define-key evil-normal-state-map (kbd "s-p") 'lazy-helm/helm-recentf)
 
   ;; insert mode
   (define-key evil-insert-state-map (kbd "C-v") 'evil-paste-after)
@@ -484,14 +470,13 @@ layers configuration."
   ;; all modes
   (global-set-key (kbd "C-h f") #'helpful-callable)
   (global-set-key (kbd "C-h v") #'helpful-variable)
-  (global-set-key (kbd "C-h k") #'helpful-key)
-  )
+  (global-set-key (kbd "C-h k") #'helpful-key))
 
 (defun ry/org-mode-settings()
   (setq org-startup-folded 'fold)
   (setq org-startup-truncated nil)
   (setq org-export-with-sub-superscripts nil)
-  (setq ry-org-root-dir "~/org/")
+  (setq ry-org-root-dir (file-truename "~/org/"))
   (setq ry-org-images-dir (concat ry-org-root-dir "images/"))
   (setq ry-org-journal-dir (concat ry-org-root-dir "journals/"))
   (setq ry-org-code-snippet-file (concat ry-org-root-dir "code-snippets.org"))
@@ -508,8 +493,7 @@ layers configuration."
           ("\\.x?html?\\'" . default)
           ("\\.pdf\\'" . default)
           ("\\.pptx\\'" . "open %s")
-          ("\\.xlsx\\'" . "open %s")
-          ))
+          ("\\.xlsx\\'" . "open %s")))
 
   (spacemacs/set-leader-keys
     "oc" 'org-capture
@@ -517,86 +501,73 @@ layers configuration."
     "oa" 'org-agenda-list
     "oA" 'ry/org-agenda-column-view
     "oj" 'ry/org-goto-journal
-    "oh" 'ry/helm-org-headings-in-org-directory
+    "oh" 'ry/helm-org-entries
+    "oH" 'ry/helm-org-headings-in-org-directory
     "ol" 'ry/helm-org-search-links
     "o/" 'helm-org-rifle-org-directory
     "on" 'ry/org-new-today-todo
     ;; "oT" 'ry/show-last-week-timesheet
     "oi" 'ry/timesheet-add-entry
-    "ou" 'ry/timesheet-update-checkpoint
-    )
+    "ou" 'ry/timesheet-update-checkpoint)
 
   (spacemacs|use-package-add-hook evil-org
     :post-config
     (progn
       (spacemacs/set-leader-keys-for-major-mode 'org-mode
         "id" 'ry/insert-today-date
+        "ie" 'ry/orgentry-index-entry
         "ii" 'ry/org-paste-image
         "is" 'ry/org-insert-sub-heading
-        "iL" 'ry/org-insert-chrome-url-osx
+        "iL" 'ry/org-cliplink-osx
+        "if" 'ry/org-insert-file-link
         "in" 'ry/org-new-interview
         "io" 'ry/helm-org-insert-headings
+        "im" 'ry/insert-meeting-notes-from-clipboard
         "bl" 'ry/org-find-backlinks
         ">" 'org-demote-subtree
         "<" 'org-promote-subtree
         "yy" 'ry/org-copy-as-rtf
         "ym" 'ry/org-copy-as-markdown
         "l" 'org-open-at-point
+        "k" 'org-previous-visible-heading
+        "j" 'org-next-visible-heading
         "<tab>" 'ry/org-cycle
         "ic" 'ry/timesheet-calculate-total-time
         "St" 'ry/org-schedule-tomorrow
         "Sw" 'ry/org-schedule-next-week
         "yl" 'org-store-link
         "so" 'ry/org-hide-other-subtrees
-        "oc" 'org-columns
+        "oc" 'org-columns-toggle-or-columns-quit
         "o[" 'ry/find-checkbox-in-current-buffer
-        "ol" 'org-store-link
-        "tiR" 'ry/orgtable-insert-row-after
-        )
-      (ry/declare-prefix-for-mode 'org-mode `(
-                                              ("mo" . "user bindings")
-                                              ))
+        "tiR" 'ry/orgtable-insert-row-after)
+      (ry/declare-prefix-for-mode 'org-mode `(("mo" . "user bindings")))
 
       (evil-define-key 'normal org-mode-map
         "t" 'org-todo
-        ",B" (kbd "^v$hs*")
-        )
+        ",B" 'ry/org-toggle-bold-line)
 
       (evil-define-key 'visual org-mode-map
         (kbd "s-b") 'ry/org-toggle-bold
         (kbd "s-i") 'ry/org-toggle-italic
         (kbd "s-s") 'ry/org-toggle-strikethrough
-        )
+        (kbd "s-k") 'ry/org-add-link-on-region)
 
-      (define-key org-mode-map (kbd "s-l") 'ry/org-insert-chrome-url-osx)
+      (define-key org-mode-map (kbd "s-l") 'ry/org-insert-browser-url-osx)
       (define-key org-mode-map (kbd "s-C-i") 'ry/helm-org-insert-headings)
       (define-key org-mode-map (kbd "s-e") 'org-insert-heading)
       (define-key org-mode-map (kbd "s-s") 'ry/org-insert-sub-heading)
       (define-key org-mode-map (kbd "s-<return>") 'org-meta-return)
       (evil-define-key nil org-mode-map
         (kbd "<s-left>") 'org-metaleft
-        (kbd "<s-right>") 'org-metaright
-        )
+        (kbd "<s-right>") 'org-metaright)
 
-      (spacemacs/toggle-mode-line-org-clock-on)
-      )
-    )
+      (spacemacs/toggle-mode-line-org-clock-on)))
 
   (setq org-todo-keywords
         '((sequence "WIP(w)" "NEXT(n)" "SOON(s)" "SOMEDAY(o)" "WAITING(W)" "DELEGATE(e)"
                     "|" "DONE(d)" "CANCELLED(c)")))
 
-  (setq org-capture-templates
-        '(
-          ("p" "Problems" item (file+headline "~/org/tasks.org" "Problems to be solved")
-           "- [ ] %u %?\n" :prepend t)
-          ("i" "Ideas" item (file+headline "~/org/tasks.org" "Random Ideas")
-           "- [ ] %u %?\n" :prepend t)
-          ;; ("c" "Code snippet" entry (file+headline "~/org/code-snippets.org" "Others")
-          ;;  "** %^{desc}\n#+BEGIN_SRC %^{language|python|emacs-lisp}\n%?\n#+END_SRC")
-          ;; ("e" "Learn Emacs" entry (file+headline "~/org/tasks.org" "Learn Emacs")
-          ;;  "*** %^{priority|NEXT|SOON|SOMEDAY} %?\n" :prepend t)
-          ))
+  (ry/org-capture-templates)
 
   ;; org-protocol
   (setq org-protocol-project-alist
@@ -607,8 +578,28 @@ layers configuration."
   ;; org-ql
   (setq org-ql-search-directories-files-recursive t)
 
-  (ry/org-mode-look-and-feel)
-  )
+  ;; org entry
+  (setq org-id-link-to-org-use-id 'use-existing)
+  (setq org-id-locations-file-relative 't)
+  (setq org-id-locations-file (concat ry-org-root-dir ".org-id-locations"))
+  (setq helm-org-entry-category-list '("project" "thinking" "meeting" "default"))
+  (add-hook 'org-mode-hook
+            (lambda ()
+              (add-hook 'before-save-hook 'ry/orgentry-index-buffer nil t)
+              (add-hook 'after-save-hook 'ry/orgentry-db-sync nil t)))
+
+  (ry/org-mode-look-and-feel))
+
+(defun ry/org-capture-templates ()
+  (setq org-capture-templates
+        '(
+          ("p" "Problems" item (file+headline "~/org/tasks.org" "Problems to be solved")
+           "- [ ] %u %?\n" :prepend t)
+          ("i" "Ideas" item (file+headline "~/org/tasks.org" "Random Ideas")
+           "- [ ] %u %?\n" :prepend t)
+          ("m" "Meeting Topic" item (file+headline "~/org/bytedance/regular-meetings.org" "Topic Inbox")
+           "- [ ] %u %?\n" :prepend t)
+          ("a" "Article Notes" entry (file+headline "~/org/vault/bookmark-notes.org" "Articles") (function ry/org-capture-webpage-template) :prepend t))))
 
 (defun ry/org-mode-look-and-feel ()
   ;; CHECKBOX
@@ -616,9 +607,7 @@ layers configuration."
             (lambda ()
               (toggle-word-wrap 1)
               (org-indent-mode 1)
-              (ry/reload-prettify-symbols)
-              )
-            )
+              (ry/reload-prettify-symbols)))
 
   ;; Strikethrough checkbox
   ;; https://jft.home.blog/2019/07/17/use-unicode-symbol-to-display-org-mode-checkboxes/
@@ -635,15 +624,17 @@ layers configuration."
   (with-eval-after-load "solarized-light-theme"
     (custom-theme-set-faces
      'solarized-light
+     ;; '(org-node-id-text ((t (:foreground "#fdf6e3"))))
      '(org-checkbox-done-text ((t (:foreground "#96A1A1" :strike-through t))))
-     '(org-checkbox ((t (:background "#fdf6e3" :foreground "#657b83" :box nil)))))
-    )
+     '(org-checkbox ((t (:background "#fdf6e3" :foreground "#657b83" :box nil))))
+     '(sp-show-pair-match-face ((t (:background "Antiquewhite3" :inherit show-paren-match))))
+     '(sp-show-pair-match-content-face ((t (:background "#eee8d5"))))))
   (with-eval-after-load "solarized-dark-theme"
     (custom-theme-set-faces
      'solarized-dark
+     ;; '(org-node-id-text ((t (:foreground "#002b36"))))
      '(org-checkbox-done-text ((t (:foreground "#71696A" :strike-through t))))
-     '(org-checkbox ((t (:background "#002b36" :foreground "#839496" :box nil)))))
-    )
+     '(org-checkbox ((t (:background "#002b36" :foreground "#839496" :box nil))))))
   (spacemacs/load-default-theme)
 
   ;; BULLET LIST
@@ -654,14 +645,19 @@ layers configuration."
   (setq org-list-demote-modify-bullet '(("-" . "+") ("+" . "*") ("*" . "-")))
 
   ;; OTHERS
-  (setq org-hide-emphasis-markers t)
-  )
+  (setq org-hide-emphasis-markers t))
 
 (defun ry/lsp-mode-settings ()
   ;; Got error if this value is set t
   (setq lsp-python-ms-parse-dot-env-enabled nil)
-  (setq lsp-auto-guess-root t)
-  )
+  (setq lsp-auto-guess-root t))
+
+(defun ry/clojure-mode-settings ()
+  (add-hook 'clojure-mode-hook
+            (lambda ()
+              (smartparens-mode -1)
+              (lsp-ui-sideline-mode -1))
+            100))
 
 (defun ry/python-mode-settings ()
   (spacemacs|use-package-add-hook python
@@ -673,9 +669,8 @@ layers configuration."
   (setq flycheck-python-flake8-executable "flake8")
 
   (add-hook 'python-mode-hook (lambda ()
-                                (yafolding-mode 1)
+                                (yafolding-mode 1)))
                                 ;; (setq flycheck-checker 'python-flake8)
-                                ))
   ;; It should be '-i' to keep ipython in interactive mode
   ;; But ipython would fail to boot with '-i', and currently
   ;; I have no idea why it happens.
@@ -694,8 +689,7 @@ layers configuration."
 
   (with-eval-after-load "anaconda-mode"
     (define-key anaconda-mode-map [remap find-tag] nil))
-  (setq ein:connect-default-notebook "8888/emacs-default.ipynb")
-  )
+  (setq ein:connect-default-notebook "8888/emacs-default.ipynb"))
 
 (defun ry/sql-mode-settings ()
   (add-hook 'sql-mode-hook 'ry/sql-mode-hook)
@@ -705,8 +699,7 @@ layers configuration."
     "bk" 'ry/sql-kill-buffer
     "r" 'ry/sql-reconnect
     "sv" 'ry/sql-show-viz
-    "o" 'outline-minor-mode
-    )
+    "o" 'outline-minor-mode)
   (setq sql-set-sqli-hook 'ry/sql-set-sqli-hook)
 
   ;; YAML2SQL
@@ -716,27 +709,28 @@ layers configuration."
     "s" 'ry/yamlsql-show-sql
     "S" 'ry/yamlsql-show-sql-all
     "r" 'ry/yamlsql-run-sql
-    "R" 'ry/yamlsql-run-sql-all
-    )
-  )
+    "R" 'ry/yamlsql-run-sql-all))
 
 (defun ry/elisp-mode-settings ()
   (spacemacs/set-leader-keys-for-major-mode 'emacs-lisp-mode
     "ip" 'ry/insert-page-breaker
     "dt" 'trace-function
     "dT" 'untrace-function
-    )
+    "rw" 'ry/delete-whitespace-lines)
+  (spacemacs/set-leader-keys-for-major-mode 'edebug-eval-mode
+    "u" 'edebug-update-eval-list
+    "d" 'edebug-delete-eval-item)
+
   (with-eval-after-load "edebug"
     (define-key edebug-mode-map "A" 'ry/elisp-add-to-watch)
-    )
+    (advice-add 'edebug-create-eval-buffer :override #'ry/edebug-create-eval-buffer))
   ;; Show fringe only in edebug mode because I'd like to see the line indicator icon during debug.
   ;; The code below is copied from https://emacs.stackexchange.com/questions/720/can-i-toggle-fringe-mode-when-entering-exiting-edebug
   (add-hook 'edebug-mode-hook
             (lambda ()
               (set-fringe-mode
                (set (make-local-variable 'fringe-mode)
-                    (if edebug-mode '(nil . 0) 0)))))
-  )
+                    (if edebug-mode '(nil . 0) 0))))))
 
 (defun ry/go-mode-settings ()
   ;; (spacemacs|disable-company go-mode)
@@ -745,9 +739,7 @@ layers configuration."
                             ;; (eldoc-mode -1)
                             (setq imenu-generic-expression
                                   '(("type" "^type *\\([^ \t\n\r\f]*\\)" 1)
-                                    ("func" "^func *\\([^{\n\r]*\\)" 1)))
-                            ))
-  )
+                                    ("func" "^func *\\([^{\n\r]*\\)" 1))))))
 
 (defun ry/osx-settings ()
   (setq select-enable-clipboard nil)
@@ -757,10 +749,9 @@ layers configuration."
   (define-key evil-normal-state-map (kbd "s-n") 'make-frame)
   (define-key evil-visual-state-map (kbd "s-c") 'ry/osx-copy)
   (global-set-key (kbd "s-=") 'ry-cnfonts/scale-up)
-  (global-set-key (kbd "s--") 'ry-cnfonts/scale-down)
+  (global-set-key (kbd "s--") 'ry-cnfonts/scale-down))
   ;; (global-set-key (kbd "s-=") 'spacemacs/scale-up-font)
   ;; (global-set-key (kbd "s--") 'spacemacs/scale-down-font)
-  )
 
 (defun ry/chinese-settings ()
   ;; Original CN font settings
@@ -779,5 +770,4 @@ layers configuration."
               (concat "- \t.,:!?;'\")}\\["  "[:nonascii:]")
               " \t\r\n,\"'"
               "."
-              1))
-  )
+              1)))

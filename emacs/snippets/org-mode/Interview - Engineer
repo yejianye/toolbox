@@ -1,0 +1,111 @@
+# -*- mode: snippet -*-
+# name: Interview - Engineer
+# key: interview-eng
+# --
+Resume:
+
+// Introduce key projects (5-10 mins)
+// Project Details（20~30 mins）
+// System Design/Coding（30 mins）
+// Management (10 mins)
+
+Overview
+----------------------------
+# Introduce key projects you've worked
+// when, project scale, your role, responsiblity, outcome and achievements
+
+Project Details
+---------------
+Which project are you most pround of? Why? (most successful)
+// How does the candidate define "success"? (Vision and pattern)
+// What is the candidate good at?
+
+What do you enjoy the most in the project?
+// Candidate's like and preference
+
+Management
+----------
+# Team responsibilities, size, composition
+// how many years of managment experience?
+
+# Give me an example of you making a hard decision for the team?
+// Have gut to make hard decisions, as well as the process of making decisions
+// How do the candidate communicate the decision
+
+# Give me an example of you leading the team to make a breakthrough?
+// The ability to win
+
+# How do you spent your time? How do you prioritize your work?
+
+Coding
+--------------
+# Fill a shape
+Input:
+0000
+0110
+0101
+1101
+
+fill(2, 2, m)
+Output:
+0000
+0000
+0001
+0001
+# Difficulty: Easy
+
+# Palindrome Number
+# Example：12301 -> 12321
+# Difficulty: Medium
+
+
+# Expression Calculation
+# 1. Plus/Subtraction
+# 2. Multiple/Divide
+# 3. Parentheses
+# Difficulty: Medium -> Hard
+
+System Design
+-------------
+# Design backend for following/follower feature in Tiktok
+Functionality:
+User Profile Page
+- Show a "follow" button if the vistor hasn't followed me yet. Otherwise, it will show a "unfollow" button.
+- Show "# of followers" and "# of followings". When clicked, go to follower/following list page
+
+Follower list page (Following list page is similar)
+- Show a list of my followers ordered by time. People who followed me more recently will be shown on the top.
+- For each follower `X`, display basic info such as nickname, profile image etc. And also show a "follow" or "unfollow" button depending on whether the visitor has followed `X`.
+- If the list is long, the visitor could scroll down the page, and more followers would be loaded incrementally.
+
+// Storage design
+// Data consistency
+// Handle pagination：
+// Cache design：
+// Handle influencer(large key and hot key)
+
+# Every product has its Privacy Policy, describing what information the app collects from users and for what purpose. How do you design a system to ensure what the app does complies with its Privacy Policy.
+
+Example clause in Privacy Policy:
+The app collects user's mobile phone number for the purpose of account registration and login.
+
+// [[file:interviews/questions.org::*Privacy Policy Validation][Problem: Privacy Policy Validation]]
+
+# Account Removal
+# According to GDPR, users should have "the right to be forgotten". It means the user can request all of their personal information to be removed from our systems. So the product requriement is to implement "delete my acount" feature in the app. As a technical owner of the feature, how would you design and implement the feature?
+
+// [[file:interviews/questions.org::*Account removal][Problem: Account removal]]
+
+Career Development
+------------------
+What's your strength and weakness?
+// Describe how you used your strength in work?
+
+What's your plan for the career development?
+
+Evaluation
+----------
+Analytical skill：
+Technical skill：
+Communication：
+Management：

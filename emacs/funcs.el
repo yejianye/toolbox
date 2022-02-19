@@ -39,56 +39,6 @@
   (evil-insert-state)
   (helm-yas-complete))
 
-(defun ry/read-file-content (filename)
-  (when (file-exists-p filename)
-    (with-temp-buffer
-        (insert-file-contents filename)
-        (buffer-string)))
-  )
-
-(defun ry/org-copy-as-rtf ()
-  "Copy current region as rich text to clipboard.
-This function makes use of command-line utility: pbcopy, textutil
-and only works on MacOS."
-  (interactive)
-  (let* ((beg (region-beginning))
-         (end (region-end))
-         (content (org-export-string-as (buffer-substring beg end) 'html t))
-         (fname (make-temp-file "org-clipboard"))
-         (style (ry/read-file-content "~/.org-clipboard.css"))
-         (content-with-style (format "<style>%s</style>%s" style content)))
-    (write-region content-with-style nil fname)
-    (shell-command (format "LANG=en_US.UTF-8 cat %s | textutil -stdin -format html -inputencoding UTF-8 -convert rtf -stdout | pbcopy" fname))
-    (delete-file fname)
-    )
-  )
-
-(defun ry/org-copy-as-markdown ()
-  "Copy current region as markdown to clipboard.
-It only works in Mac OS "
-  (interactive)
-  (require 'ox-md)
-  (let* ((beg (region-beginning))
-         (end (region-end))
-         (region-string (format "#+OPTIONS: toc:nil\n%s" (buffer-substring beg end)))
-         (content (org-export-string-as region-string 'md t))
-         (fname (make-temp-file "org-clipboard")))
-    (write-region content nil fname)
-    (shell-command (format "LANG=en_US.UTF-8 cat %s | pbcopy" fname))
-    (delete-file fname))
-  )
-
-(defun ry/rsync-project-to-remote ()
-  (interactive)
-  (if (boundp 'sync-remote-dir)
-      (save-window-excursion
-        (message (format "Sync project with %s!" sync-remote-dir))
-        (async-shell-command (format "rsync -av --delete --exclude='terraform.tfstate' --exclude='/.git' --filter=':- .gitignore' '%s' '%s'" (projectile-project-root) sync-remote-dir))
-        )
-    (message "sync-remote-dir undefined!")
-    )
-  )
-
 ;; The following snippets for reloading dir locals are copied from stackoverflow
 ;; link: http://emacs.stackexchange.com/questions/13080/reloading-directory-local-variables
 (defun ry/reload-dir-locals-for-current-buffer ()
@@ -114,53 +64,9 @@ current buffer's, reload dir-locals."
     (add-hook (make-variable-buffer-local 'after-save-hook)
               'ry/reload-dir-locals-for-all-buffer-in-this-project)))
 
-;; Code snippets
-(cl-defun ry/helm-source-code-snippets (filenames)
-  (helm-build-sync-source "Code snippets"
-    :candidates (helm-org-get-candidates filenames)
-    :action '(("View code snippet" . ry/helm-org-view-code-snippet)
-              )))
-
-(defun ry/helm-org-view-code-snippet (marker)
-  (switch-to-buffer-other-window (marker-buffer marker))
-  (hide-sublevels 1)
-  (goto-char (marker-position marker))
-  (org-show-context)
-  (org-show-entry))
-
-(defun ry/helm-code-snippets ()
-  (interactive)
-  (let ((helm-org-headings--nofilename t)
-        )
-    (helm :sources (ry/helm-source-code-snippets (list ry-org-code-snippet-file))
-          :candidate-number-limit 99999
-          :buffer "*helm code snippets*")))
-
 (defun ry/org-filter-todo-keyword ()
   (interactive)
-  (org-show-todo-tree '(4))
-  )
-
-(defun ry//transform-evernote-link(note-link)
-  (require 's)
-  (s-replace "www.evernote.com" "app.yinxiang.com" note-link)
-  )
-
-(defun ry/paste-evernote-link()
-  (interactive)
-  (let ((note-link (shell-command-to-string "LANG=en_US.UTF-8 pbpaste"))
-        )
-    (insert (ry//transform-evernote-link note-link))
-  ))
-
-
-(defun ry/osx-copy()
-  "Copy region to OS X system pasteboard."
-  (interactive)
-  (shell-command-on-region
-   (region-beginning) (region-end) "LANG=en_US.UTF-8 pbcopy")
-  (evil-normal-state)
-  )
+  (org-show-todo-tree '(4)))
 
 (defun ry/org-paste-image()
   (interactive)
@@ -173,22 +79,9 @@ current buffer's, reload dir-locals."
         (shell-command (format "~/utils/save_screen.py --filename=%s" fullpath))
       (shell-command (format "~/utils/save_screen.py --scale=0.5 --filename=%s" fullpath))
       (shell-command (format "~/utils/save_screen.py --filename=%s"
-                             (s-replace ".png" "@2x.png" fullpath)))
-      )
+                             (s-replace ".png" "@2x.png" fullpath))))
     (insert (format "[[file:%s]]" fullpath))
-    (org-redisplay-inline-images)
-    )
-  )
-
-(defun ry/org-insert-chrome-url-osx ()
-  "Insert an org-mode link with the title and url of current tab in Chrome"
-  (interactive)
-  (insert (format "[[%s][%s]]" (ry/osx-chrome-url)
-                  (thread-last (ry/osx-chrome-title)
-                    (s-replace "[" "{")
-                    (s-replace "]" "}"))
-                  ))
-  )
+    (org-redisplay-inline-images)))
 
 (defun ry/org-hide-other-subtrees ()
   "Show next entry, keeping other entries closed.
@@ -213,40 +106,28 @@ current buffer's, reload dir-locals."
   (save-excursion
     (goto-char (point-min))
     (while (search-forward-regexp "^|-" nil t)
-      (replace-string "-+-" "-|-" nil (point) (line-end-position)))
-    ))
+      (replace-string "-+-" "-|-" nil (point) (line-end-position)))))
 
 (defun ry/markdown-convert-to-org-tables()
   (save-excursion
     (goto-char (point-min))
     (while (search-forward-regexp "^|-" nil t)
-      (replace-string "-|-" "-+-" nil (point) (line-end-position)))
-    ))
+      (replace-string "-|-" "-+-" nil (point) (line-end-position)))))
 
 (defun ry/setup-markdown-mode()
-  (ry/markdown-orgtbl-mode)
-  )
+  (ry/markdown-orgtbl-mode))
 
 (defun ry/markdown-orgtbl-mode()
   (require 'org)
   (orgtbl-mode)
   (add-hook (make-variable-buffer-local 'first-change-hook) 'ry/markdown-convert-to-org-tables)
-  (add-hook (make-variable-buffer-local 'before-save-hook) 'ry/markdown-cleanup-org-tables)
-  )
-
-(defun ry//string-in-buffer-p(str &optional start)
-  (save-excursion
-    (widen)
-    (goto-char (or start (point-min)))
-    (search-forward str nil t))
-  )
+  (add-hook (make-variable-buffer-local 'before-save-hook) 'ry/markdown-cleanup-org-tables))
 
 (defun ry/org-agenda-column-view()
   "View agenda column view"
   (interactive)
   (org-agenda-list)
-  (org-agenda-columns)
-  )
+  (org-agenda-columns))
 
 (defun ry/org-clock-in-history()
   "Show recent clocking history and select a task to clock in"
@@ -257,23 +138,21 @@ current buffer's, reload dir-locals."
   "Cycle visibility at anywhere inside a subtree"
   (interactive)
   (org-back-to-heading)
-  (org-cycle)
-  )
+  (org-cycle))
 
 (defun ry/org-find-backlinks ()
   "Find backlinks of current heading"
   (interactive)
   (let* ((heading (-last-item (org-get-outline-path t)))
          (filepath (file-relative-name (buffer-file-name) org-directory))
-          (link-search-exp (format "%s::*%s]" filepath heading))
-          (matched-files
-           (ry/grep-files-in-directory link-search-exp org-directory "*.org" t))
-          (heading-search-exp
-           (format "(link \"%s\")" heading)))
+         (link-search-exp (format "%s::*%s]" filepath heading))
+         (matched-files
+          (ry/grep-files-in-directory link-search-exp org-directory "*.org" t))
+         (heading-search-exp
+          (format "(link \"%s\")" heading)))
       (if matched-files
           (org-ql-search matched-files heading-search-exp)
         (message "No back links found"))))
-
 
 ;; This is a backlink search version leverage org-rifle
 ;; I'm not going to use it since I could figure how to search a whole phrase
@@ -302,8 +181,7 @@ current buffer's, reload dir-locals."
   "Goto Diary org file, and create headings for this month if not exists"
   (interactive)
   (let* ((diary-file (concat ry-org-root-dir "diary.org"))
-         (month (format "* %s" (ry/month-string)))
-         )
+         (month (format "* %s" (ry/month-string))))
     (find-file diary-file)
     (widen)
     (goto-char (point-max))
@@ -312,14 +190,12 @@ current buffer's, reload dir-locals."
 
 ;; Syntax table
 (defun ry//underscore-as-word()
-  (modify-syntax-entry ?_ "w")
-  )
+  (modify-syntax-entry ?_ "w"))
 
 (defun ry/add-hook-underscore-as-word (hook-list)
   (mapcar (lambda (mode-hook)
             (add-hook mode-hook 'ry//underscore-as-word))
-          hook-list)
-  )
+          hook-list))
 
 ;; Projectile
 (defun ry/projectile-add-new-project (project-root)
@@ -351,15 +227,12 @@ current buffer's, reload dir-locals."
 
 (defun ry/treemacs-ignore-file-predicate (relpath abspath)
   "Custom file ignores for treemacs"
-  (s-matches? "^.*\.pyc$" relpath)
-  )
+  (s-matches? "^.*\.pyc$" relpath))
 
 (defun ry/writeroom-font-size ()
   (if (bound-and-true-p writeroom-mode)
       (cnfonts-increase-fontsize)
-    (cnfonts-decrease-fontsize)
-    )
-  )
+    (cnfonts-decrease-fontsize)))
 
 (defun ry/show-and-copy-buffer-filename ()
   "Show and copy the full path to the current file in the minibuffer."
@@ -369,36 +242,15 @@ current buffer's, reload dir-locals."
     (if file-name
         (progn
           (kill-new file-name)
-          (message file-name)
-          )
+          (message file-name))
       (error "Buffer not visiting a file"))))
 
 (defun ry/sql-mode-hook ()
   (sqlind-minor-mode 1)
-  (setq-local outline-regexp "-- [*\f]+")
+  (setq-local outline-regexp "-- [*\f]+"))
   ;; It's unclear why enabling outline-minor-mode doesn't update the heading fonts
   ;; (outline-minor-mode 1)
-  )
 
-(defun ry/elisp-add-to-watch (&optional region-start region-end)
-  "Add the current variable to the *EDebug* window"
-  (interactive "r")
-  (require 'eldoc)
-  (let ((statement
-         (if (and region-start region-end (use-region-p))
-             (buffer-substring region-start region-end)
-           (symbol-name (eldoc-current-symbol)))))
-    ;; open eval buffer
-    (edebug-visit-eval-list)
-    ;; jump to the end of it and add a newline
-    (goto-char (point-max))
-    (newline)
-    ;; insert the variable
-    (insert statement)
-    ;; update the list
-    (edebug-update-eval-list)
-    ;; jump back to where we were
-    (edebug-where)))
 
 (defun ry/git-diff ()
   (interactive)
@@ -411,13 +263,11 @@ current buffer's, reload dir-locals."
                 (s-replace "git@github.com:" "https://github.com/")
                 (s-replace-regexp "\\.git$" "")))
          (branch (magit-get-current-branch)))
-    (browse-url-generic (format "%s/compare/%s" url branch)))
-  )
+    (browse-url-generic (format "%s/compare/%s" url branch))))
 
 (defun ry/switch-to-prev-buffer-in-other-window ()
   (interactive)
-  (switch-to-buffer-other-window  (other-buffer (current-buffer) 1))
-  )
+  (switch-to-buffer-other-window  (other-buffer (current-buffer) 1)))
 
 (defun ry/log-buffer()
   (get-buffer-create "*app-log*"))
@@ -426,70 +276,48 @@ current buffer's, reload dir-locals."
   (let ((msg (apply 'format (cons format-string args))))
     (with-current-buffer (ry/log-buffer)
       (goto-char (point-max))
-      (insert (format "[%s] %s\n" (current-time-string) msg))
-      ))
-  )
+      (insert (format "[%s] %s\n" (current-time-string) msg)))))
 
 (defun ry/show-log-buffer ()
   (interactive)
-  (switch-to-buffer (ry/log-buffer))
-  )
+  (switch-to-buffer (ry/log-buffer)))
 
 (defun ry/yamlsql-show-sql ()
   (interactive)
   (let ((query-name (substring-no-properties (thing-at-point 'word))))
     (shell-command (format "yaml2sql %s --query %s"
                            (buffer-file-name) query-name)
-                   "*yaml2sql-output*")
-    )
-  )
+                   "*yaml2sql-output*")))
 
 (defun ry/yamlsql-show-sql-all ()
   (interactive)
   (shell-command (format "yaml2sql %s" (buffer-file-name))
-                 "*yaml2sql-output*")
-  )
+                 "*yaml2sql-output*"))
 
 (defun ry/yamlsql-run-sql ()
   (interactive)
   (let ((query-name (substring-no-properties (thing-at-point 'word))))
     (shell-command (format "yaml2sql %s --query %s --run-sql"
                            (buffer-file-name) query-name)
-                   "*yaml2sql-output*")
-    )
-  )
+                   "*yaml2sql-output*")))
 
 (defun ry/yamlsql-run-sql-all ()
   (interactive)
   (shell-command (format "yaml2sql %s --run-sql" (buffer-file-name))
-                  "*yaml2sql-output*")
-  )
+                 "*yaml2sql-output*"))
 
 (defun ry/insert-page-breaker ()
   (interactive)
-  (insert 12)
-  )
+  (insert 12))
 
 (defun ry/org-insert-sub-heading ()
   (interactive)
   (org-insert-heading)
-  (org-demote-subtree)
-  )
+  (org-demote-subtree))
 
 (defun ry/projectile-switch-and-search (project)
   (let ((projectile-switch-project-action 'spacemacs/helm-project-smart-do-search))
-    (projectile-switch-project-by-name project))
-  )
-
-(defun ry/journal-org-current-month ()
-  (concat ry-org-journal-dir (format-time-string "%Y-%m.org"))
-  )
-
-(defun ry/journal-org-last-month ()
-  (let* ((days (+ (string-to-number (format-time-string "%d")) 1))
-         (date (seconds-to-time (- (float-time) (* days 86400)))))
-    (concat ry-org-journal-dir (format-time-string "%Y-%m.org" date))
-    ))
+    (projectile-switch-project-by-name project)))
 
 (defun ry/org-schedule-tomorrow ()
   (interactive)
@@ -499,57 +327,22 @@ current buffer's, reload dir-locals."
   (interactive)
   (org-schedule nil "+7d"))
 
-(defun ry/last-week-begin ()
-  (let* ((days (+ (string-to-number (format-time-string "%w")) 6))
-         (begin-date (seconds-to-time (- (float-time) (* days 86400)))))
-    (format-time-string "%Y-%m-%d %A" begin-date)
-    ))
-
-(defun ry/last-week-end ()
-  (let* ((days (string-to-number (format-time-string "%w")))
-         (end-date (seconds-to-time (- (float-time) (* days 86400)))))
-    (format-time-string "%Y-%m-%d %A" end-date)
-    ))
-
 (defun ry/today-string ()
   (format-time-string "%Y-%m-%d %A"))
 
 (defun ry/month-string ()
   (format-time-string "%Y-%m"))
 
-(defun ry/copy-org-protocol-to-osx-clipboard ()
-  (interactive)
-  (let ((link (ry//org-protocol-url-for-file (buffer-file-name))))
-    (ry//copy-to-osx-clipboard link)
-    (message (format "%s copied to clipboard."
-                     (s-replace "%" "%%" link))))
-  )
-
-(defun ry//org-protocol-url-for-file (fname)
-  (format "org-protocol://open-source?url=http://home-dir/%s"
-          (s-replace " " "%20" (file-relative-name fname "/Users/ryan"))))
-
-(defun ry//copy-to-osx-clipboard (string)
-  (shell-command (format "LANG=en_US.UTF-8 echo \"%s\" | pbcopy"
-                         string))
-  )
-
-(defun ry/copy-filename-to-osx-clipboard ()
-  (interactive)
-  (ry//copy-to-osx-clipboard (buffer-file-name))
-  )
-
 (defun ry/sum-on-region ()
   (interactive)
-  (message (format "%s" (ry/pyfunc-on-region "rypy.elfunc" "sum")))
-  )
+  (message (format "%s" (ry/pyfunc-on-region "rypy.elfunc" "sum"))))
 
 (defun ry/org-new-interview ()
   "Create an interview template via current interview page in Chrome"
   (interactive)
   (insert (format "* %s - %s\nLink: %s\n\n" (ry/today-string)
-                  (-first-item (s-split " - " (ry/osx-chrome-title)))
-                  (ry/osx-chrome-url)))
+                  (-first-item (s-split " - " (ry/osx-browser-title)))
+                  (ry/osx-browser-url)))
   (yas-insert-snippet))
 
 (defun ry/org-files (dir)
@@ -587,15 +380,6 @@ current buffer's, reload dir-locals."
   (interactive)
   (org-occur "- \\[ \\]"))
 
-(defun ry/test-function ()
-  "Test function specified in `ry-testing-function'"
-  (interactive)
-  (call-interactively ry-testing-function))
-
-(defun ry/test-set-function (command-name)
-  (interactive "C")
-  (setq ry-testing-function command-name))
-
 (defun ry/reload-prettify-symbols ()
   (interactive)
   (setq prettify-symbols-alist
@@ -603,23 +387,64 @@ current buffer's, reload dir-locals."
           ("[X]" . "☑")
           ("[-]" . "⊟")
           ("=>" .  "➔")
-          ))
-  (prettify-symbols-mode 1)
-  )
+          ("(+)" .  "✔")
+          ("(-)" .  "✘")))
+  (prettify-symbols-mode 1))
 
 (defun ry/declare-prefix-for-mode (mode prefix-list)
   "Declare a list of prefix PREFIX-LIST. MODE is the mode in which this prefix command should be added. PREFIX-LIST is a list with each element containing a key sequence and a name"
   (dolist (prefix prefix-list)
-    (spacemacs/declare-prefix-for-mode 'org-mode (car prefix) (cdr prefix)))
- )
+    (spacemacs/declare-prefix-for-mode 'org-mode (car prefix) (cdr prefix))))
 
+(defun ry/org-add-link-on-region ()
+  (interactive)
+  (let ((desc (buffer-substring (region-beginning) (region-end)))
+        (link (read-string "Link:")))
+    (delete-region (region-beginning) (region-end))
+    (insert (format "[[%s][%s]]" link desc))))
+
+(defun ry//org-desc-from-filepath (fpath)
+  "Generate link description from filepath"
+  (-last-item (s-split "/" fpath)))
+
+(defun ry/org-insert-file-link ()
+  "Insert a file link with description as filename"
+  (interactive)
+  (let* ((fpath (org-link-complete-file))
+         (fname (ry//org-desc-from-filepath fpath)))
+    (insert (format "[[%s][%s]]" fpath fname))))
+
+(defun ry/insert-meeting-notes-from-clipboard ()
+  "Paste meeting notes from clipboard. First line as node title.
+   Rest content as node body."
+  (interactive)
+  (find-file (concat org-directory "/bytedance/regular-meetings.org"))
+  (let* ((lines (s-split "\n" (ry//clipboard-content)))
+         (title (s-replace-regexp "^#* *" (format-time-string "%Y-%m-%d ") (-first-item lines)))
+         (content (s-join "\n" (-drop 1 lines)))
+         (meeting-root (ry/orgapi-get-node-by-heading "Adhoc Meetings")))
+    (ry/orgapi-insert-child meeting-root title content)))
+
+(defun ry/org-capture-webpage-template ()
+  "Content template for taking notes for a specific web page"
+  (format "** %s\n%s" (ry/osx-org-link-from-current-webpage) "%?"))
+
+(defun ry/delete-whitespace-lines ()
+  "Remove lines that only contains whitespace"
+  (interactive)
+  (let ((evil-ex-current-buffer (current-buffer)))
+    (save-excursion
+      (evil-ex-execute "g/^ +$/d"))))
 
 (require 'helm-org)
 (require 'org-tempo)
 (require 'org-ql)
 (require 'org-ql-search)
+(require 'ry-core)
+(require 'ry-orgentry)
 (require 'ry-orgtable)
 (require 'ry-orgtext)
+(require 'ry-orglark)
 (require 'ry-org-journal)
 (require 'ry-osx)
 (require 'ry-timesheet)
@@ -627,4 +452,6 @@ current buffer's, reload dir-locals."
 (require 'ry-cnfonts)
 (require 'ry-search)
 (require 'ry-sql)
+(require 'ry-elisp)
+;; (require 'ry-archived)
 ;; (require 'helm-org-ql)

@@ -8,11 +8,17 @@
         (insert "[]"))
       (call-process-region (point-min) (point-max)
                            ry/python-executable
-                           t t nil
+                           t (list (current-buffer) nil) nil
                            "-mrypy.emacs" module func-name)
-      (json-read-from-string (buffer-string))
+      (let* ((json-object-type 'hash-table)
+            (result (json-read-from-string (buffer-string))))
+        (if (= (gethash "rc" result) 0)
+            (gethash "data" result)
+          (progn
+            (message (gethash "data" result))
+            (error (format "Failed to call Python function %s.%s" module func-name))))
       )
-    )
+    ))
 
 (defun ry//use-rect-p ()
   (let ((coord (-first-item (extract-rectangle-bounds (region-beginning) (region-end)))))

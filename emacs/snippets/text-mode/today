@@ -1,6 +1,5 @@
-# -*- mode: snippet; require-final-newline: nil -*-
+# -*- mode: snippet -*-
 # name: today
 # key: today
-# binding: direct-keybinding
 # --
 `(format-time-string "%Y-%m-%d %A")`

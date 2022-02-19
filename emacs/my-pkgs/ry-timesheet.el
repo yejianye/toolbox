@@ -2,6 +2,18 @@
 (require 's)
 (require 'dash)
 
+(defun ry/last-week-begin ()
+  (let* ((days (+ (string-to-number (format-time-string "%w")) 6))
+         (begin-date (seconds-to-time (- (float-time) (* days 86400)))))
+    (format-time-string "%Y-%m-%d %A" begin-date)
+    ))
+
+(defun ry/last-week-end ()
+  (let* ((days (string-to-number (format-time-string "%w")))
+         (end-date (seconds-to-time (- (float-time) (* days 86400)))))
+    (format-time-string "%Y-%m-%d %A" end-date)
+    ))
+
 (defun ry/timesheet--tasks (timesheet)
   (thread-last timesheet
     (s-lines)
