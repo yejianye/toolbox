@@ -76,9 +76,9 @@ current buffer's, reload dir-locals."
          (filename (format "%s-%04x.png" date-string random-id))
          (fullpath (expand-file-name (concat ry-org-images-dir filename))))
     (if (not is-retina)
-        (shell-command (format "~/utils/save_screen.py --filename=%s" fullpath))
-      (shell-command (format "~/utils/save_screen.py --scale=0.5 --filename=%s" fullpath))
-      (shell-command (format "~/utils/save_screen.py --filename=%s"
+        (shell-command (format "~/utils/save_screen.py --filename='%s'" fullpath))
+      (shell-command (format "~/utils/save_screen.py --scale=0.5 --filename='%s'" fullpath))
+      (shell-command (format "~/utils/save_screen.py --filename='%s'"
                              (s-replace ".png" "@2x.png" fullpath))))
     (insert (format "[[file:%s]]" fullpath))
     (org-redisplay-inline-images)))
@@ -185,7 +185,7 @@ current buffer's, reload dir-locals."
     (find-file diary-file)
     (widen)
     (goto-char (point-max))
-    (unless (ry//string-in-buffer-p month)
+    (unless (ryc//string-in-buffer-p month)
       (insert (format "\n%s" month)))))
 
 ;; Syntax table
@@ -361,7 +361,7 @@ current buffer's, reload dir-locals."
   (setq prettify-symbols-alist
         '(("[ ]" . "☐")
           ("[X]" . "☑")
-          ("[-]" . "⊟")
+          ;; ("[-]" . "⊟")
           ("=>" .  "➔")
           ("(+)" .  "✔")
           ("(-)" .  "✘")))
@@ -403,7 +403,7 @@ current buffer's, reload dir-locals."
 
 (defun ry/org-capture-webpage-template ()
   "Content template for taking notes for a specific web page"
-  (format "** %s\n%s" (ry/osx-org-link-from-current-webpage) "%?"))
+  (format "** %s\nLink: %s\n%s" (ry/osx-browser-title) (ry/osx-org-link-from-current-webpage) "%?"))
 
 (defun ry/delete-whitespace-lines ()
   "Remove lines that only contains whitespace"
@@ -417,6 +417,7 @@ current buffer's, reload dir-locals."
 (require 'org-ql)
 (require 'org-ql-search)
 (require 'ry-core)
+(require 'ry-org)
 (require 'ry-orgentry)
 (require 'ry-orgtable)
 (require 'ry-orgtext)
@@ -429,5 +430,6 @@ current buffer's, reload dir-locals."
 (require 'ry-search)
 (require 'ry-sql)
 (require 'ry-elisp)
+(require 'ry-emoji)
 ;; (require 'ry-archived)
 ;; (require 'helm-org-ql)

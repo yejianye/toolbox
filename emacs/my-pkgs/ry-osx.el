@@ -7,7 +7,7 @@
 ;; needs be used instead.
 ;;
 ;; emacs-mac version
-(setq default-browser 'safari)
+(setq default-browser 'chrome)
 
 (setq browser-url-applescript
   '(chrome "tell application \"Google Chrome\" to return URL of active tab of front window"
@@ -62,7 +62,7 @@ and only works on MacOS."
          (end (region-end))
          (content (org-export-string-as (buffer-substring beg end) 'html t))
          (fname (make-temp-file "org-clipboard"))
-         (style (ry/read-file-content "~/.org-clipboard.css"))
+         (style (ryc/read-file-content "~/.org-clipboard.css"))
          (content-with-style (format "<style>%s</style>%s" style content)))
     (write-region content-with-style nil fname)
     (shell-command (format "LANG=en_US.UTF-8 cat %s | textutil -stdin -format html -inputencoding UTF-8 -convert rtf -stdout | pbcopy" fname))

@@ -31,7 +31,7 @@
      (python :variables
              python-test-runner 'pytest
              python-backend 'lsp
-             python-lsp-server 'pyls)
+             python-lsp-server 'mspyls)
      emacs-lisp
      parinfer
      javascript
@@ -64,7 +64,12 @@
    '(
      importmagic
      org-brain
-     company-tern)
+     company-tern
+     ;; lsp-python-ms
+     gitattributes-mode
+     gitconfig-mode
+     gitignore-mode
+     helm-gitignore)
    ;; If non-nil spacemacs will delete any orphan packages, i.e. packages that
    ;; are declared in a layer which is not a member of
    ;; the list `dotspacemacs-configuration-layers'
@@ -201,15 +206,19 @@ before packages are loaded. If you are unsure, you should try in setting them in
 `dotspacemacs/user-config' first."
 
   ;; Set the Emacs customization file path. Must be done here in user-init.
+  ;; (setq configuration-layer-elpa-archives
+  ;;     '(("gnu" . "https://elpa.gnu.org/packages/")
+  ;;       ("nongnu" . "https://elpa.nongnu.org/nongnu/")))
+
   ;; Add China mirror for ELPA
   ;; (setq configuration-layer-elpa-archives
   ;;     '(("melpa-cn" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
   ;;       ("org-cn"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/org/")
   ;;       ("gnu-cn"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")))
   ;; turn off "Package cl deprecated" warning
-  (setq org-roam-v2-ack t)
-
   (setq byte-compile-warnings '(cl-functions))
+  ;;
+  (setq native-comp-async-report-warnings-errors 'silent)
   ;; Load custom file
   (setq custom-file "~/.emacs-custom.el"))
 
@@ -468,14 +477,25 @@ layers configuration."
   (define-key evil-insert-state-map (kbd "C-e") 'end-of-line)
 
   ;; all modes
-  (global-set-key (kbd "C-h f") #'helpful-callable)
-  (global-set-key (kbd "C-h v") #'helpful-variable)
-  (global-set-key (kbd "C-h k") #'helpful-key))
+  (global-set-key (kbd "C-h f") 'helpful-callable)
+  (global-set-key (kbd "C-h v") 'helpful-variable)
+  (global-set-key (kbd "C-h k") 'helpful-key)
+  (global-set-key (kbd "C-s-h") 'ry/helm-org-entries)
+
+  ;; helm
+  (define-key helm-buffer-map (kbd "C-o") 'helm-buffer-switch-other-window)
+  (define-key helm-find-files-map (kbd "C-o") 'helm-ff-run-switch-other-window)
+  (define-key helm-generic-files-map (kbd "C-o") 'helm-ff-run-switch-other-window))
+  ;; Binding keys to projectile key map doesn't work (dont't know why)
+  ;; (define-key helm-projectile-find-file-map (kbd "C-o") 'helm-ff-run-switch-other-window))
+
+
 
 (defun ry/org-mode-settings()
   (setq org-startup-folded 'fold)
   (setq org-startup-truncated nil)
   (setq org-export-with-sub-superscripts nil)
+  (setq org-archive-file-header-format "#+STARTUP: overview\nArchived from [[file:%s]]\n")
   (setq ry-org-root-dir (file-truename "~/org/"))
   (setq ry-org-images-dir (concat ry-org-root-dir "images/"))
   (setq ry-org-journal-dir (concat ry-org-root-dir "journals/"))
@@ -489,6 +509,7 @@ layers configuration."
 
   (setq org-file-apps
         '((auto-mode . emacs)
+          ("\\.org_archive\\'" . emacs)
           ("\\.mm\\'" . default)
           ("\\.x?html?\\'" . default)
           ("\\.pdf\\'" . default)
@@ -505,10 +526,10 @@ layers configuration."
     "oH" 'ry/helm-org-headings-in-org-directory
     "ol" 'ry/helm-org-search-links
     "o/" 'helm-org-rifle-org-directory
-    "on" 'ry/org-new-today-todo
+    "on" 'ry/org-new-today-todo)
     ;; "oT" 'ry/show-last-week-timesheet
-    "oi" 'ry/timesheet-add-entry
-    "ou" 'ry/timesheet-update-checkpoint)
+    ;; "oi" 'ry/timesheet-add-entry
+    ;; "ou" 'ry/timesheet-update-checkpoint)
 
   (spacemacs|use-package-add-hook evil-org
     :post-config
@@ -526,6 +547,7 @@ layers configuration."
         "bl" 'ry/org-find-backlinks
         ">" 'org-demote-subtree
         "<" 'org-promote-subtree
+        "ss" 'org-show-subtree
         "yy" 'ry/org-copy-as-rtf
         "ym" 'ry/org-copy-as-markdown
         "l" 'org-open-at-point
@@ -537,14 +559,33 @@ layers configuration."
         "Sw" 'ry/org-schedule-next-week
         "yl" 'org-store-link
         "so" 'ry/org-hide-other-subtrees
-        "oc" 'org-columns-toggle-or-columns-quit
+        "oc" 'org-columns
         "o[" 'ry/find-checkbox-in-current-buffer
+        "mt" 'ry/move-to-today-todo
+        "mT" 'ry/copy-to-today-todo
+        "ms" 'ry/move-to-someday-todo
+        "mS" 'ry/copy-to-someday-todo
+        "sa" 'ry/org-smart-archive
         "tiR" 'ry/orgtable-insert-row-after)
       (ry/declare-prefix-for-mode 'org-mode `(("mo" . "user bindings")))
 
       (evil-define-key 'normal org-mode-map
         "t" 'org-todo
         ",B" 'ry/org-toggle-bold-line)
+
+      (evil-define-key 'insert org-mode-map
+        ;; indent current line
+        (kbd "<tab>")
+        (make-cmd
+         (cond
+          ((org-at-item-p) (evil-org-> (line-beginning-position) (line-end-position)))
+          (t (org-cycle))))
+        ;; unindent current line
+        (kbd "<S-tab>")
+        (make-cmd
+         (cond
+          ((org-at-item-p) (evil-org-< (line-beginning-position) (line-end-position)))
+          (t (org-cycle)))))
 
       (evil-define-key 'visual org-mode-map
         (kbd "s-b") 'ry/org-toggle-bold
@@ -554,6 +595,7 @@ layers configuration."
 
       (define-key org-mode-map (kbd "s-l") 'ry/org-insert-browser-url-osx)
       (define-key org-mode-map (kbd "s-C-i") 'ry/helm-org-insert-headings)
+      (define-key org-mode-map (kbd "s-C-e") 'ry/helm-emoji)
       (define-key org-mode-map (kbd "s-e") 'org-insert-heading)
       (define-key org-mode-map (kbd "s-s") 'ry/org-insert-sub-heading)
       (define-key org-mode-map (kbd "s-<return>") 'org-meta-return)
@@ -582,7 +624,7 @@ layers configuration."
   (setq org-id-link-to-org-use-id 'use-existing)
   (setq org-id-locations-file-relative 't)
   (setq org-id-locations-file (concat ry-org-root-dir ".org-id-locations"))
-  (setq helm-org-entry-category-list '("project" "thinking" "meeting" "default"))
+  (setq helm-org-entry-category-list '("project" "thinking" "meeting" "one-on-one" "default"))
   (add-hook 'org-mode-hook
             (lambda ()
               (add-hook 'before-save-hook 'ry/orgentry-index-buffer nil t)
@@ -652,7 +694,21 @@ layers configuration."
   (setq lsp-python-ms-parse-dot-env-enabled nil)
   (setq lsp-auto-guess-root t))
 
+(defun ry/cider-eval-buffer ()
+  "Same as cider-eval-buffer but save buffer first"
+  (interactive)
+  (save-buffer)
+  (cider-eval-buffer))
+
 (defun ry/clojure-mode-settings ()
+  (spacemacs|use-package-add-hook cider
+    :post-config
+    (message "spacemacs|use-package-add-hook clojure/cider")
+    (spacemacs/set-leader-keys-for-major-mode 'clojure-mode
+      "ec" 'cider-eval-list-at-point
+      "eb" 'ry/cider-eval-buffer
+      "di" 'cider-inspect-last-result))
+
   (add-hook 'clojure-mode-hook
             (lambda ()
               (smartparens-mode -1)

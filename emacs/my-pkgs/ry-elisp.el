@@ -23,4 +23,12 @@
   (pop-to-buffer edebug-eval-buffer)
   (edebug-eval-mode))
 
+(defun ry/test-function ()
+  (interactive)
+  (call-interactively ry-testing-function))
+
+(defun ry/test-set-function (command-name)
+  (interactive "C")
+  (setq ry-testing-function command-name))
+
 (provide 'ry-elisp)

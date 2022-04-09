@@ -12,13 +12,13 @@
   (let ((journal-file (ry/journal-org-current-month))
         (today-heading (format "* %s" (ry/today-string)))
         (title (format-time-string "#+title: Journal - %b, %Y\n"))
-        (todo "#+TODO: NEW(n) | REVIEWED(r)\n")
+        (property "#+TODO: NEW(n) | REVIEWED(r)\n#+INDEX-ENTRIES: level:2 !heading:Todo\n")
         (settings "# -*- eval: (toggle-word-wrap -1); -*-\n"))
     (find-file journal-file)
     (unless (file-exists-p journal-file)
-      (insert (concat settings title todo))
+      (insert (concat settings title property))
       (save-buffer))
-    (unless (ry//string-in-buffer-p today-heading)
+    (unless (ryc//string-in-buffer-p today-heading)
       (goto-char (point-max))
       (insert (format "\n%s\n** Todo\n%s"
                       today-heading
@@ -28,6 +28,35 @@
   "Quick shortcut to add todo item in Today's journal"
   (interactive)
   (ry//org-insert-today-todo (read-string "Todo:")))
+
+(defun ry/move-to-someday-todo(&optional copy)
+  (interactive)
+  (let ((todo (ry//get-current-todo))
+        (old-buffer (current-buffer)))
+    (unless copy
+      (kill-whole-line))
+    (ry//org-insert-todo-someday todo)
+    (switch-to-buffer old-buffer)))
+
+(defun ry/copy-to-someday-todo()
+  (interactive)
+  (ry/move-to-someday-todo t))
+
+(defun ry/move-to-today-todo(&optional copy)
+  (interactive)
+  (let ((todo (s-replace-regexp "^\\[[0-9-]+\\] *" "" (ry//get-current-todo)))
+        (old-buffer (current-buffer)))
+    (unless copy
+      (kill-whole-line))
+    (ry//org-insert-today-todo todo)
+    (switch-to-buffer old-buffer)))
+
+(defun ry/copy-to-today-todo()
+  (interactive)
+  (ry/move-to-today-todo t))
+
+(defun ry//get-current-todo()
+  (s-replace-regexp "- \\(\\[ \\]\\)? *" "" (ryc/current-line-content)))
 
 (defun ry//org-insert-todo-someday (todo)
   "Add todo item to someday list"

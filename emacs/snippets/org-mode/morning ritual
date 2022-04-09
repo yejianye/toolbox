@@ -1,0 +1,10 @@
+# key: zmr
+# name: morning ritual
+# --
+
+** `(format-time-string "%Y-%m-%d %A")`
+*昨天有哪些方面做得不错？哪些方面不如人意？*
+$0
+*今天最重要的事情是什么？*
+
+*随想*
