@@ -18,18 +18,26 @@
        (32   . 38.5)])
 
 (setq ry-cnfonts-default-level 4
-      ;; ry-cnfonts-current-level 4
       ry-cnfonts-en-font "Source Code Pro"
-      ry-cnfonts-cn-font "Hiragino Sans GB")
+      ry-cnfonts-cn-font "PingFang SC")
+
+(defun ry/set-monospaced-font (english-size chinese-size)
+  (set-face-attribute 'default nil :font
+                      (format   "%s:pixelsize=%d" ry-cnfonts-en-font english-size))
+  (set-face-attribute 'fixed-pitch nil :font
+                      (format   "%s:pixelsize=%d"  ry-cnfonts-en-font english-size))
+  (set-face-attribute 'variable-pitch nil :font
+                      (format   "%s:pixelsize=%d" ry-cnfonts-cn-font chinese-size))
+  (dolist (charset '(kana han cjk-misc bopomofo))
+    (set-fontset-font (frame-parameter nil 'font) charset
+                      (format "-*-%s-*-*-*-*-%d-*-*-*-*-*-*-*" ry-cnfonts-cn-font chinese-size))))
 
 (defun ry-cnfonts//set-level (level)
   (let ((max-level (- (length ry-cnfonts-size-mapping) 1)))
     (setq ry-cnfonts-current-level
           (min (max 0 level) max-level)))
   (let ((font-size (aref ry-cnfonts-size-mapping ry-cnfonts-current-level)))
-    (spacemacs//set-monospaced-font
-     ry-cnfonts-en-font
-     ry-cnfonts-cn-font
+    (ry/set-monospaced-font
      (car font-size) (cdr font-size))))
 
 (defun ry-cnfonts/scale-up ()
