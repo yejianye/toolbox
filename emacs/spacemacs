@@ -1084,24 +1084,6 @@ layers configuration."
      '(sp-show-pair-match-face ((t (:background "Antiquewhite3" :inherit show-paren-match))))
      '(sp-show-pair-match-content-face ((t (:background "#eeeeee")))))
 
-        ;; (with-eval-after-load "solarized-light-theme"
-        ;;   (custom-theme-set-faces
-        ;;    'solarized-light
-        ;;    ;; '(org-node-id-text ((t (:foreground "#fdf6e3"))))
-        ;;    '(org-checkbox-done-text ((t (:foreground "#96A1A1" :strike-through t))))
-        ;;    '(org-checkbox ((t (:background "#fdf6e3" :foreground "#657b83" :box nil))))
-        ;;    '(sp-show-pair-match-face ((t (:background "Antiquewhite3" :inherit show-paren-match))))
-        ;;    '(sp-show-pair-match-content-face ((t (:background "#eee8d5"))))))
-        ;; (with-eval-after-load "solarized-dark-theme"
-        ;;   (custom-theme-set-faces
-        ;;    'solarized-dark
-        ;;    ;; '(org-node-id-text ((t (:foreground "#002b36"))))
-        ;;    '(org-checkbox-done-text ((t (:foreground "#71696A" :strike-through t))))
-        ;;    '(org-checkbox ((t (:background "#002b36" :foreground "#839496" :box nil))))))
-        ;; (spacemacs/load-default-theme)
-
-        ;; BULLET LIST
-        ;; (setq org-superstar-headline-bullets-list '(?◉ ?⊚ ?○ ?○ ?○ ?○))
     (setq org-superstar-headline-bullets-list '(?❖ ?◉ ?• ?◦ ?◦ ?◦ ?◦))
     (setq org-superstar-item-bullet-alist
           '((?* . ?□)
