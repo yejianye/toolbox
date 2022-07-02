@@ -2,6 +2,15 @@
 
 (add-to-list 'load-path "~/toolbox/emacs/my-pkgs/")
 
+(defun ry/show-parens-mode ()
+  "Enable show-smartparens-mode while disable smartparanes-mode"
+  ;; We'd like to turn on show-smartparens-mode but turn off smartparens-mode
+  ;; show-smartparens-mode won't take effect if smartparens-mode is off when changing the setting
+  (interactive)
+  (smartparens-mode 1)
+  (show-smartparens-mode 1)
+  (smartparens-mode -1))
+
 (defun ry//set-key-for-file (key filename)
   (evil-leader/set-key key (lambda () (interactive)(find-file filename))))
 
@@ -12,8 +21,7 @@
 
 (defun ry/insert-today-date()
   (interactive)
-  (insert (calendar-date-string (calendar-current-date) nil
-                                nil)))
+  (insert (ry/today-string)))
 
 (defun ry/backspace-whitespace-to-tab-stop ()
   "Delete whitespace backwards to the next tab-stop, otherwise delete one character."
@@ -289,7 +297,7 @@ current buffer's, reload dir-locals."
 (defun ry/org-insert-sub-heading ()
   (interactive)
   (org-insert-heading)
-  (org-demote-subtree))
+  (org-demote))
 
 (defun ry/projectile-switch-and-search (project)
   (let ((projectile-switch-project-action 'spacemacs/helm-project-smart-do-search))
@@ -367,10 +375,17 @@ current buffer's, reload dir-locals."
           ("(-)" .  "✘")))
   (prettify-symbols-mode 1))
 
-(defun ry/declare-prefix-for-mode (mode prefix-list)
-  "Declare a list of prefix PREFIX-LIST. MODE is the mode in which this prefix command should be added. PREFIX-LIST is a list with each element containing a key sequence and a name"
-  (dolist (prefix prefix-list)
-    (spacemacs/declare-prefix-for-mode 'org-mode (car prefix) (cdr prefix))))
+(defun ry/declare-prefix-for-mode (mode key name &rest more)
+  "Declare a list of prefix PREFIX-LIST for major mode MODE. PREFIX-LIST is a list with each element containing a key sequence and a name"
+  (while key
+    (spacemacs/declare-prefix-for-mode mode key name)
+    (setq key (pop more) name (pop more))))
+
+(defun ry/declare-prefix-for-minor-mode (mode key name &rest more)
+  "Declare a list of prefix PREFIX-LIST for minor mode MODE. PREFIX-LIST is a list with each element containing a key sequence and a name"
+  (while key
+    (spacemacs/declare-prefix-for-minor-mode mode key name)
+    (setq key (pop more) name (pop more))))
 
 (defun ry/org-add-link-on-region ()
   (interactive)
@@ -399,7 +414,7 @@ current buffer's, reload dir-locals."
          (title (s-replace-regexp "^#* *" (format-time-string "%Y-%m-%d ") (-first-item lines)))
          (content (s-join "\n" (-drop 1 lines)))
          (meeting-root (ry/orgapi-get-node-by-heading "Adhoc Meetings")))
-    (ry/orgapi-insert-child meeting-root title content)))
+    (ry/orgapi-insert-child meeting-root title content t)))
 
 (defun ry/org-capture-webpage-template ()
   "Content template for taking notes for a specific web page"
@@ -431,5 +446,7 @@ current buffer's, reload dir-locals."
 (require 'ry-sql)
 (require 'ry-elisp)
 (require 'ry-emoji)
+(require 'ry-http)
+(require 'ry-clj)
 ;; (require 'ry-archived)
 ;; (require 'helm-org-ql)

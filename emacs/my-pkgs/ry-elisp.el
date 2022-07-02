@@ -24,11 +24,24 @@
   (edebug-eval-mode))
 
 (defun ry/test-function ()
+  "Run function set by `ry/test-set-function'"
   (interactive)
   (call-interactively ry-testing-function))
 
-(defun ry/test-set-function (command-name)
-  (interactive "C")
-  (setq ry-testing-function command-name))
+(defun ry/test-set-function ()
+  "Set function at point as current testing function, which can be executed with `ry/test-function'"
+  (interactive)
+  (let ((command-name (symbol-at-point)))
+    (message "Set %s as current testing function" command-name)
+    (setq ry-testing-function command-name)))
+
+(defmacro ry/log-time (name &rest body)
+  "Print out time elapsed to execute FORM. NAME is used to help interpretation.
+This macro returns same value as BODY."
+  `(let* ((start-time (current-time))
+          (result (progn ,@body))
+          (time-spent (* 1000 (float-time (time-since start-time)))))
+     (message "%s: time spent %dms" ,name time-spent)
+     result))
 
 (provide 'ry-elisp)

@@ -3,7 +3,6 @@
 
 (defvar helm-org-heading-history nil)
 (defvar helm-org-search-links-history nil)
-(defvar helm-org-entry-category-list '("default"))
 
 (defmacro ry/helm-run-action (action)
   `(lambda ()
@@ -64,29 +63,22 @@
 
 ;; Org Search Links
 (defun ry/search-link-action-open (cdd)
-  (browse-url cdd))
+  (browse-url (plist-get cdd :link)))
 
-(defun ry/search-link-run-copy ()
-  (interactive)
-  (with-helm-alive-p
-    (helm-exit-and-execute-action 'ry/search-link-action-copy)))
+(defun ry/search-link-action-insert (cdd)
+  (insert (format "[[%s][%s]]" (plist-get cdd :link) (plist-get cdd :title))))
 
 (defun ry/search-link-action-copy (cdd)
-  (ry//copy-to-osx-clipboard cdd))
+  (ry//copy-to-osx-clipboard (plist-get cdd :link)))
 
 (defun ry/search-link (term)
-  (setq ry-search-link-response nil)
-  (request "http://localhost:3000/search-link"
-    :params (list (cons "term" term))
-    :parser 'json-read
-    :sync t
-    :complete (cl-function
-               (lambda (&key response &allow-other-keys)
-                 (setq ry-search-link-response (request-response-data response)))))
-  (ryc/al-get 'data ry-search-link-response))
+  (ry/log-time "[search-link] Time spent in HTTP request"
+    (->
+      (ry/http-get "http://localhost:3000/search-link" (list :term term :limit 100))
+      (ryc/plist-path '(:data :data)))))
 
 (defun ry//helm-org-search-links--candidates ()
-  (--map (cons (ryc/al-get 'desc it) (ryc/al-get 'link it))
+  (--map (cons (plist-get it :desc) it)
          (ry/search-link helm-pattern)))
 
 (defun ry//helm-org-search-links--no-sort (candidates _source)
@@ -102,10 +94,12 @@
             :requires-pattern 3
             :match-dynamic t
             :keymap (ry/helm-make-keymap
-                      (kbd "s-c") (ry/helm-run-action 'ry/search-link-action-copy))
+                      (kbd "s-c") (ry/helm-run-action 'ry/search-link-action-copy)
+                      (kbd "s-i") (ry/helm-run-action 'ry/search-link-action-insert))
             :action (helm-make-actions
                       "Open link" 'ry/search-link-action-open
-                      "Copy link" 'ry/search-link-action-copy))
+                      "Copy link" 'ry/search-link-action-copy
+                      "Insert link" 'ry/search-link-action-insert))
           ;; Todo need add insert link action
         :buffer "*helm org search links*")))
 
@@ -113,43 +107,43 @@
 
 ;; Org Indexed Entries
 (defun ry//helm-org-entry-all-candidates ()
-  (ryc/vector-to-list (ry/orgentry-select nil "time_modified")))
+  (ryc/vector-to-list
+    (ryc/plist-path (ry/http-get "http://localhost:3000/org-entry-all") '(:data :data))))
 
-(defun ry//helm-org-entry-make-source (entries category)
+(defun ry//helm-org-entry-make-source (entries category &optional default-insert-link)
   (let ((filtered-entries (->> entries
-                            (-filter (fn (e) (string= (gethash "category" e) category)))
-                            (-map 'ry//helm-org-entry-build-item))))
+                            (-filter (fn (e) (string= (plist-get e :category) category)))
+                            (-map 'ry//helm-org-entry-build-item)))
+        (default-action (helm-make-actions
+                            "Go to entry" 'ry//helm-org-entry-goto
+                            "Insert entry link" 'ry//helm-org-entry-insert-link)))
     (helm-build-sync-source category
-      :candidates filtered-entries
-      :candidate-number-limit 20
-      :keymap (ry/helm-make-keymap
-                (kbd "s-i") (ry/helm-run-action 'ry//helm-org-entry-insert-link))
-      :action (helm-make-actions
-               "Go to entry" 'ry//helm-org-entry-goto
-               "Insert entry link" 'ry//helm-org-entry-insert-link))))
+     :candidates filtered-entries
+     :candidate-number-limit 20
+     :keymap (ry/helm-make-keymap
+               (kbd "s-i") (ry/helm-run-action 'ry//helm-org-entry-insert-link))
+     :action (if default-insert-link 'ry//helm-org-entry-insert-link default-action))))
 
 (defun ry//helm-org-entry-build-item (entry)
-  (let* ((id (gethash "id" entry))
-         (headlines (gethash "headlines" entry))
-         (last-modified (thread-last (gethash "time_modified" entry)
+  (let* ((id (plist-get entry :id))
+         (headlines (plist-get entry :headlines))
+         (last-modified (thread-last (plist-get entry :time_modified)
                          (s-split " ")
                          (-first-item)))
          (display-item (concat
                         (propertize last-modified 'face font-lock-comment-face)
                         "  "
-                        headlines)))
-    (cons display-item (format "[[id:%s]]" id))))
+                        headlines))
+         (link (ry//helm-org-entry-build-link entry)))
+    (cons display-item link)))
 
 (defun ry//helm-org-entry-build-link (entry)
-  (let ((id (gethash "id" entry))
-        (headline (thread-last (gethash "headlines" entry)
+  (let ((id (plist-get entry :id))
+        (headline (thread-last (plist-get entry :headlines)
                     (s-split "/")
                     (-last-item)
-                    (s-trim)))
-        (last-modified (thread-last (gethash "time_modified" entry)
-                         (s-split " ")
-                         (-first-item))))
-    (format "[[id:%s][%s | %s]]" id last-modified headline)))
+                    (s-trim))))
+    (format "[[id:%s][%s]]" id headline)))
 
 (defun ry//helm-org-entry-goto (link)
   (org-open-link-from-string link))
@@ -157,16 +151,21 @@
 (defun ry//helm-org-entry-insert-link (link)
   (insert link))
 
-(defun ry/helm-org-entries ()
+(defun ry/helm-org-entries (&optional default-insert-link)
   "Select headings from all indexed entries"
   (interactive)
   (let* ((entries (ry//helm-org-entry-all-candidates))
          (categories (->> entries
-                          (-map (fn (e) (gethash "category" e)))
+                          (-map (fn (e) (plist-get e :category)))
                           (-distinct)
                           (-sort 'string<)))
-         (sources (--map (ry//helm-org-entry-make-source entries it) categories)))
+         (sources (--map (ry//helm-org-entry-make-source entries it default-insert-link) categories)))
     (helm :sources sources
           :buffer "*helm org entries*")))
+
+(defun ry/helm-org-entries-insert-link ()
+  "Insert link from all indexed entries"
+  (interactive)
+  (ry/helm-org-entries t))
 
 (provide 'ry-search)

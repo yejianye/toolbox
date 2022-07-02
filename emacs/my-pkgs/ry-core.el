@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t -*-
 ;; Core and Fudamental functions that makes elisp programming easier
 
 ;; Alist
@@ -5,10 +6,29 @@
   "Get value for KEY in ALIST"
   (cdr (assoc key alist)))
 
-;; list
+;; Plist
+(defun ryc/plist-path (plist path)
+  "Like JSON path. Get value from PLIST following a list of keys
+E.g. (ryc/plist-path '(:a (:b 1) :c 2) '(:a :b)) => 1"
+  (--reduce-from (plist-get acc it) plist path))
+
+;; list conversion
 (defun ryc/vector-to-list (vec)
   "Convert vector to list"
   (append vec nil))
+
+(defun ryc/plist-to-alist (plist)
+  "Convert plist to alist"
+  (let ((plist (-clone plist))
+        (alist '())
+        key val)
+    (while plist
+      (setq key (pop plist)
+            val (pop plist))
+      (when (keywordp key)
+        (setq key (substring (symbol-name key) 1)))
+      (push (cons key val) alist))
+    alist))
 
 ;; Buffers and Texts
 (defun ryc/read-file-content (filename)
@@ -64,6 +84,13 @@
   "create a lambda function for a command"
   `(lambda () (interactive)
      ,@body))
+
+(defmacro with-hook (mode-hook func-name &rest body)
+  `(progn
+    (defalias ,func-name
+      (function
+        (lambda () ,@body)))
+    (add-hook ,mode-hook ,func-name)))
 
 (provide 'ry-core)
 

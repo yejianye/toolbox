@@ -7,9 +7,30 @@ Otherwise, move it to the same topic-level heading in archvied file.
 
 For example, a heading with path `Heading 1/Sub-heading 2` will move to `Heading 1` in archvied file"
   (interactive)
-  (let* ((org-archive-location (if (> (org-current-level) 1)
-                                   (format "%%s%s::* %s" ry/org-archive-file-suffix (first (org-get-outline-path)))
-                                 (format "%s::" ry/org-smart-archive-file))))
+  (let* ((archive-file (format "%%s%s" ry/org-archive-file-suffix))
+         (org-archive-location (if (> (org-current-level) 1)
+                                   (format "%s::* %s" archive-file (first (org-get-outline-path)))
+                                 (format "%s::" archive-file))))
     (org-archive-subtree)))
+
+(defun ry/org-capture (template-key note)
+  "Create a note based via org-capture based on TEMPLATE-KEY with content NOTE"
+  (org-capture nil template-key)
+  (insert note)
+  (org-capture-finalize))
+
+(defun ry/org-bold-lines-to-headings ()
+  (interactive)
+  (org-previous-visible-heading 1)
+  (let* ((level (org-current-level))
+         (stars (s-repeat (+ level 1) "*")))
+    (->> (ry/org-get-content)
+        (s-split "\n")
+        (--map (s-replace-regexp
+                "^\\*\\(.*\\)\\*$"
+                (format "%s \\1" stars)
+                it))
+        (s-join "\n")
+        (ry/org-set-current-content))))
 
 (provide 'ry-org)

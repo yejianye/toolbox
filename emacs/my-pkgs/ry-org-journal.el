@@ -1,3 +1,10 @@
+(defvar ry/org-journal-add-todo nil
+  "Add Todo section in daily journal")
+
+(defvar ry/reminder-lists '("Inbox" "work" "life" "prod"))
+(defvar ry/reminder-due-dates '("N/A" "today" "tomorrow" "this weekend"))
+(defvar ry/reminder-default-list "Inbox")
+
 (defun ry/journal-org-current-month ()
   (concat ry-org-journal-dir (format-time-string "%Y-%m.org")))
 
@@ -20,9 +27,9 @@
       (save-buffer))
     (unless (ryc//string-in-buffer-p today-heading)
       (goto-char (point-max))
-      (insert (format "\n%s\n** Todo\n%s"
-                      today-heading
-                      (ry//org-todos-from-previous-day))))))
+      (insert (format "\n%s\n" today-heading))
+      (when ry/org-journal-add-todo
+        (insert (format "** Todo\n%s" (ry//org-todos-from-previous-day)))))))
 
 (defun ry/org-new-today-todo()
   "Quick shortcut to add todo item in Today's journal"
@@ -54,6 +61,25 @@
 (defun ry/copy-to-today-todo()
   (interactive)
   (ry/move-to-today-todo t))
+
+(defun ry//send-todo-to-reminder-app (content todo-list due-date)
+  "Send todo to Reminder.app"
+  (->
+    (ry/http-post "http://localhost:3000/reminder/add"
+                  (list :todo content
+                        :list todo-list
+                        :due-date due-date))
+    (plist-get :data)
+    (plist-get :message)
+    (message)))
+
+(defun ry/send-current-line-to-reminder-app ()
+  (interactive)
+  (let* ((todo-content (ry//get-current-todo))
+         (todo-list (completing-read "Choose list:" ry/reminder-lists))
+         (due-date (completing-read "Choose due date:" ry/reminder-due-dates))
+         (due-date (if (string= due-date "N/A") nil due-date)))
+    (ry//send-todo-to-reminder-app todo-content todo-list due-date)))
 
 (defun ry//get-current-todo()
   (s-replace-regexp "- \\(\\[ \\]\\)? *" "" (ryc/current-line-content)))

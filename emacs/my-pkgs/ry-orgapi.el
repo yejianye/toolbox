@@ -9,11 +9,15 @@
       (cadr result))))
 
 (defun ry/org-get-content ()
-  "Get body content of current entry (without property drawer)"
+  "Get body content of current entry"
   (let* ((ele (org-element-at-point))
          (begin (org-element-property :contents-begin ele))
          (end (org-element-property :contents-end ele)))
     (buffer-substring-no-properties begin end)))
+
+(defun ry/org-set-current-content (contents)
+  "Set body content of current entry"
+  (ry/orgapi-set-contents (org-element-at-point) contents))
 
 
 ;; Low-level API
@@ -91,13 +95,18 @@
 (defun ry/orgapi-append-contents (item contents &optional refresh)
   "Append CONTENTS to ITEM"
   (let ((current-contents (ry/orgapi-get-contents item)))
-        
     (ry/orgapi-set-contents item
                             (format "%s%s" current-contents contents)
                             refresh)))
-  
 
-(defun ry/orgapi-insert-child (item heading &optional contents)
+(defun ry/orgapi-prepend-contents (item contents &optional refresh)
+  "Append CONTENTS to ITEM"
+  (let ((current-contents (ry/orgapi-get-contents item)))
+    (ry/orgapi-set-contents item
+                            (format "%s%s" contents current-contents)
+                            refresh)))
+
+(defun ry/orgapi-insert-child (item heading &optional contents prepend)
   "Insert a child under ITEM with HEADING and CONTENTS.
 Return newly created child node.
 "
@@ -106,11 +115,10 @@ Return newly created child node.
                                  (s-repeat (1+ level) "*")
                                  heading
                                  (or contents "")))
-                                 
-         (item (ry/orgapi-append-contents item child-contents t)))
-         
+         (item (if prepend
+                   (ry/orgapi-prepend-contents item child-contents t)
+                 (ry/orgapi-append-contents item child-contents t))))
     (ry/orgapi-first-child item :title heading)))
-    
 
 (defun ry/orgapi-tset-child (item heading &optional contents)
   "Insert a child under ITEM with HEADING if no such child exists.

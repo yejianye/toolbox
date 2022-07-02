@@ -121,6 +121,7 @@ It only works in Mac OS "
   (interactive)
   (shell-command-on-region
    (region-beginning) (region-end) "LANG=en_US.UTF-8 pbcopy")
+  (message "Copied to system clipboard.")
   (evil-normal-state))
 
 (provide 'ry-osx)
