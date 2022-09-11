@@ -586,7 +586,6 @@ layers configuration."
   (load "~/toolbox/emacs/funcs.el")
   (ry/global-settings)
   (ry/global-keybindings)
-  (ry/global-abbrev)
   (ry/file-shortcuts)
   (ry/lsp-mode-settings)
   (ry/org-mode-settings)
@@ -842,7 +841,7 @@ layers configuration."
   (define-key evil-insert-state-map (kbd "<s-right>") 'end-of-line)
   (define-key evil-insert-state-map (kbd "C-a") 'beginning-of-line)
   (define-key evil-insert-state-map (kbd "C-e") 'end-of-line)
-  (define-key evil-insert-state-map (kbd "s-C-e") 'ry/helm-emoji)
+  (define-key evil-insert-state-map (kbd "s-C-a") 'ry/helm-abbrev)
   (define-key evil-insert-state-map (kbd "s-t") 'ry/insert-today-date)
 
   ;; all modes
@@ -858,14 +857,6 @@ layers configuration."
   (define-key helm-generic-files-map (kbd "C-o") 'helm-ff-run-switch-other-window))
   ;; Binding keys to projectile key map doesn't work (dont't know why)
   ;; (define-key helm-projectile-find-file-map (kbd "C-o") 'helm-ff-run-switch-other-window))
-
-(defun ry/global-abbrev ()
-  (setq-default abbrev-mode t)
-  (clear-abbrev-table global-abbrev-table)
-  (define-abbrev-table 'global-abbrev-table
-    '(("zyes" "✔")
-      ("zno" "✘")
-      ("zstar" "★"))))
 
 (defun ry/table-el-key-bindings ()
   (ry/declare-prefix-for-minor-mode 'org-src-mode
@@ -1091,10 +1082,10 @@ layers configuration."
    '(sp-show-pair-match-face ((t (:background "Antiquewhite3" :inherit show-paren-match))))
    '(sp-show-pair-match-content-face ((t (:background "#eeeeee")))))
 
-  (setq org-superstar-headline-bullets-list '(?❖ ?◉ ?• ?◦ ?◦ ?◦ ?◦))
+  (setq org-superstar-headline-bullets-list '(?❖ ?⁌ ?◉ ?▸ ?▸ ?▸ ?▸))
   (setq org-superstar-item-bullet-alist
-        '((?* . ?□)
-          (?+ . ?○)
+        '((?* . ?▫)
+          (?+ . ?◦)
           (?- . ?•)))
   (setq org-list-demote-modify-bullet '(("-" . "+") ("+" . "*") ("*" . "-")))
 

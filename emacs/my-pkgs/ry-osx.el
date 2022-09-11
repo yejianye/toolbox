@@ -14,7 +14,7 @@
     safari "tell application \"Safari\" to return URL of current tab of front window"))
 
 (setq browser-title-applescript
-      '(chrome "tell application \"Google Chrome\" to return title of active tab of front window"
+      '(chrome "tell application \"Google Chrome\" to return name of active tab of front window"
         safari "tell application \"Safari\" to return name of current tab of front window"))
 
 (defun ry/osx-browser-url ()
@@ -110,9 +110,19 @@ It only works in Mac OS "
   (interactive)
   (insert (ry/osx-org-link-from-current-webpage)))
 
+(defun fix-lark-title (title)
+  "Zero-width characters have been added Lark document title
+  for screening sharing tracking. This function remove those characters"
+  (->> (string-to-list title)
+       (--remove (< #x2000 it #x20ff))
+       (--remove (= it #xfeff))
+       (-map 'char-to-string)
+       (s-join "")))
+
 (defun ry/osx-org-link-from-current-webpage ()
   (format "[[%s][%s]]" (ry/osx-browser-url)
         (thread-last (ry/osx-browser-title)
+                    (fix-lark-title)
                     (s-replace "[" "{")
                     (s-replace "]" "}"))))
 

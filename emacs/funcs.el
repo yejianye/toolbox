@@ -179,23 +179,6 @@ current buffer's, reload dir-locals."
 ;;                              (find-file-noselect file)))
 ;;           nil))
 
-;; Diary
-
-;; ry/org-goto-diary is not used now. Date headings are created monthly so it
-;; doesn't require much efforts to handle it manually. And since I'm continuously
-;; adjust the structure of diary.org. It's more flexible to keep it manually
-;; at this point.
-(defun ry/org-goto-diary()
-  "Goto Diary org file, and create headings for this month if not exists"
-  (interactive)
-  (let* ((diary-file (concat ry-org-root-dir "diary.org"))
-         (month (format "* %s" (ry/month-string))))
-    (find-file diary-file)
-    (widen)
-    (goto-char (point-max))
-    (unless (ryc//string-in-buffer-p month)
-      (insert (format "\n%s" month)))))
-
 ;; Syntax table
 (defun ry//underscore-as-word()
   (modify-syntax-entry ?_ "w"))
@@ -427,6 +410,13 @@ current buffer's, reload dir-locals."
     (save-excursion
       (evil-ex-execute "g/^ +$/d"))))
 
+(defun ry/add-one-on-one-topic (name topic)
+  (find-file "~/org/bytedance/one-on-one/others.org")
+  (org-ql-select "~/org/bytedance/one-on-one/others.org"
+    '(heading-regexp "shaochi"))
+  (let (node (ry/orgapi-))))
+  
+
 (require 'helm-org)
 (require 'org-tempo)
 (require 'org-ql)
@@ -445,7 +435,7 @@ current buffer's, reload dir-locals."
 (require 'ry-search)
 (require 'ry-sql)
 (require 'ry-elisp)
-(require 'ry-emoji)
+(require 'ry-abbrev)
 (require 'ry-http)
 (require 'ry-clj)
 ;; (require 'ry-archived)
