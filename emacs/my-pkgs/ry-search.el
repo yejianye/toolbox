@@ -110,28 +110,36 @@
   (ryc/vector-to-list
     (ryc/plist-path (ry/http-get "http://localhost:3000/org-entry-all") '(:data :data))))
 
-(defun ry//helm-org-entry-make-source (entries category &optional default-insert-link)
-  (let ((filtered-entries (->> entries
-                            (-filter (fn (e) (string= (plist-get e :category) category)))
-                            (-map 'ry//helm-org-entry-build-item)))
-        (default-action (helm-make-actions
-                            "Go to entry" 'ry//helm-org-entry-goto
-                            "Insert entry link" 'ry//helm-org-entry-insert-link)))
-    (helm-build-sync-source category
-     :candidates filtered-entries
-     :candidate-number-limit 20
-     :keymap (ry/helm-make-keymap
-               (kbd "s-i") (ry/helm-run-action 'ry//helm-org-entry-insert-link))
-     :action (if default-insert-link 'ry//helm-org-entry-insert-link default-action))))
+(defun ry//helm-org-entry-padding-category (entry maxlen)
+  (let* ((category (plist-get entry :category))
+         (padded-category (s-pad-right maxlen " " category)))
+    (plist-put entry :category padded-category)))
+
+(defun ry//helm-org-entry-make-source (entries &optional default-insert-link)
+  (let* ((default-action (helm-make-actions
+                          "Go to entry" 'ry//helm-org-entry-goto
+                          "Insert entry link" 'ry//helm-org-entry-insert-link))
+         (category-maxlen (->> entries
+                               (--map (length (plist-get it :category)))
+                               (apply 'max)))
+         (entries (--map (ry//helm-org-entry-padding-category it category-maxlen) entries)))
+    (helm-build-sync-source "Org Entries"
+      :candidates (-map 'ry//helm-org-entry-build-item entries)
+      :candidate-number-limit 100
+      :keymap (ry/helm-make-keymap
+                (kbd "s-i") (ry/helm-run-action 'ry//helm-org-entry-insert-link))
+      :action (if default-insert-link 'ry//helm-org-entry-insert-link default-action))))
 
 (defun ry//helm-org-entry-build-item (entry)
   (let* ((id (plist-get entry :id))
          (headlines (plist-get entry :headlines))
+         (category (plist-get entry :category))
          (last-modified (thread-last (plist-get entry :time_modified)
                          (s-split " ")
                          (-first-item)))
          (display-item (concat
-                        (propertize last-modified 'face font-lock-comment-face)
+                        (propertize (format "%s | %s" last-modified category)
+                                    'face font-lock-comment-face)
                         "  "
                         headlines))
          (link (ry//helm-org-entry-build-link entry)))
@@ -154,13 +162,8 @@
 (defun ry/helm-org-entries (&optional default-insert-link)
   "Select headings from all indexed entries"
   (interactive)
-  (let* ((entries (ry//helm-org-entry-all-candidates))
-         (categories (->> entries
-                          (-map (fn (e) (plist-get e :category)))
-                          (-distinct)
-                          (-sort 'string<)))
-         (sources (--map (ry//helm-org-entry-make-source entries it default-insert-link) categories)))
-    (helm :sources sources
+  (let* ((entries (ry//helm-org-entry-all-candidates)))
+    (helm :sources (ry//helm-org-entry-make-source entries default-insert-link)
           :buffer "*helm org entries*")))
 
 (defun ry/helm-org-entries-insert-link ()
