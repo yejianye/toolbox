@@ -151,33 +151,12 @@ current buffer's, reload dir-locals."
 (defun ry/org-find-backlinks ()
   "Find backlinks of current heading"
   (interactive)
-  (let* ((heading (-last-item (org-get-outline-path t)))
-         (filepath (file-relative-name (buffer-file-name) org-directory))
-         (link-search-exp (format "%s::*%s]" filepath heading))
+  (let* ((id-link (format "id:%s" (org-id-get)))
          (matched-files
-          (ry/grep-files-in-directory link-search-exp org-directory "*.org" t))
-         (heading-search-exp
-          (format "(link \"%s\")" heading)))
+          (ry/grep-files-in-directory id-link org-directory "*.org" t)))
       (if matched-files
-          (org-ql-search matched-files heading-search-exp)
+          (org-ql-search matched-files (list 'link id-link))
         (message "No back links found"))))
-
-;; This is a backlink search version leverage org-rifle
-;; I'm not going to use it since I could figure how to search a whole phrase
-;; the result buffer of org-rifle is superior than org-ql, but the API is really bad
-;;
-;; (defun ry/org-find-backlinks-v2 ()
-;;   (let ((buffers-collected (ry//files-to-buffers (ry/org-files org-directory)))
-;;         (result-buffer (helm-org-rifle--occur-prepare-results-buffer)))
-;;     (helm-org-rifle-occur-process-input "Organization structure"
-;;                                         buffers-collected
-;;                                         result-buffer))
-;; (defun ry//files-to-buffers (files)
-;;   (append (cl-loop for file in files
-;;                    collect (-if-let (buffer (org-find-base-buffer-visiting file))
-;;                                buffer
-;;                              (find-file-noselect file)))
-;;           nil))
 
 ;; Syntax table
 (defun ry//underscore-as-word()
@@ -388,17 +367,6 @@ current buffer's, reload dir-locals."
          (fname (ry//org-desc-from-filepath fpath)))
     (insert (format "[[%s][%s]]" fpath fname))))
 
-(defun ry/insert-meeting-notes-from-clipboard ()
-  "Paste meeting notes from clipboard. First line as node title.
-   Rest content as node body."
-  (interactive)
-  (find-file (concat org-directory "/bytedance/regular-meetings.org"))
-  (let* ((lines (s-split "\n" (ry//clipboard-content)))
-         (title (s-replace-regexp "^#* *" (format-time-string "%Y-%m-%d ") (-first-item lines)))
-         (content (s-join "\n" (-drop 1 lines)))
-         (meeting-root (ry/orgapi-get-node-by-heading "Adhoc Meetings")))
-    (ry/orgapi-insert-child meeting-root title content t)))
-
 (defun ry/org-capture-webpage-template ()
   "Content template for taking notes for a specific web page"
   (format "** %s\nLink: %s\n%s" (ry/osx-browser-title) (ry/osx-org-link-from-current-webpage) "%?"))
@@ -409,13 +377,6 @@ current buffer's, reload dir-locals."
   (let ((evil-ex-current-buffer (current-buffer)))
     (save-excursion
       (evil-ex-execute "g/^ +$/d"))))
-
-(defun ry/add-one-on-one-topic (name topic)
-  (find-file "~/org/bytedance/one-on-one/others.org")
-  (org-ql-select "~/org/bytedance/one-on-one/others.org"
-    '(heading-regexp "shaochi"))
-  (let (node (ry/orgapi-))))
-  
 
 (require 'helm-org)
 (require 'org-tempo)
@@ -438,5 +399,6 @@ current buffer's, reload dir-locals."
 (require 'ry-abbrev)
 (require 'ry-http)
 (require 'ry-clj)
+(require 'ry-alfred)
 ;; (require 'ry-archived)
 ;; (require 'helm-org-ql)

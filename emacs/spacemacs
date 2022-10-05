@@ -729,6 +729,9 @@ layers configuration."
   (setq create-lockfiles nil)
   (setq auto-save-visited-file-name t)
 
+  ;; Abbrev
+  (setq-default abbrev-mode t)
+
   ;; Smooth Scrolling
   (pixel-scroll-mode)
   (setq pixel-dead-time 0) ; Never go back to the old scrolling behaviour.
@@ -955,7 +958,7 @@ layers configuration."
     (kbd "<s-right>") 'org-metaright))
 
 (defun ry/org-entry-settings ()
-  (setq org-id-link-to-org-use-id 'use-existing)
+  (setq org-id-link-to-org-use-id 'create-if-interactive)
   (setq org-id-locations-file-relative 't)
   (setq org-id-locations-file (concat ry-org-root-dir ".org-id-locations"))
   (with-hook 'org-mode-hook 'ry/org-entry-index-on-save
@@ -1019,8 +1022,7 @@ layers configuration."
         '(
           ("t" "Thoughts" item (file+headline "~/org/thinking.org" "Random Thoughts")
            "- %u %?\n" :prepend t)
-          ("m" "Meeting Topic" item (file+headline "~/org/bytedance/regular-meetings.org" "Topic Inbox")
-           "- [ ] %u %?\n" :prepend t)
+          ("m" "Meeting Topic" item (file+headline "~/org/bytedance/regular-meetings.org" "Topic Inbox"))
           ("a" "Article Notes" entry (file+headline "~/org/vault/bookmark-notes.org" "Articles") (function ry/org-capture-webpage-template) :prepend t))))
 
 (defun ry/org-mode-look-and-feel ()

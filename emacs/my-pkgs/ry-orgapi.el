@@ -27,6 +27,11 @@
   "Return the root element of an Org document"
   (org-element-parse-buffer 'headline))
 
+(defun ry/orgapi-current-heading-node ()
+  "Get current heading node"
+  (-> (org-get-outline-path t)
+      (ry/orgapi-get-node-from-path)))
+
 (defun ry/orgapi-get-children (parent &optional prop-name pattern)
   "Find children whose PROP-NAME matches PATTERN (regex). PATTERN could also be a predicate function."
   (if (and prop-name pattern)
@@ -98,7 +103,7 @@
                             (format "%s%s" contents current-contents)
                             refresh)))
 
-(defun ry/orgapi-insert-child (item heading &optional contents prepend)
+(defun ry/orgapi-insert-child (item heading &optional contents)
   "Insert a child under ITEM with HEADING and CONTENTS.
 Return newly created child node.
 "
@@ -107,17 +112,53 @@ Return newly created child node.
                                  (s-repeat (1+ level) "*")
                                  heading
                                  (or contents "")))
-         (item (if prepend
-                   (ry/orgapi-prepend-contents item child-contents t)
-                 (ry/orgapi-append-contents item child-contents t))))
+         (item (ry/orgapi-append-contents item child-contents t)))
     (ry/orgapi-first-child item :title heading)))
+
+(defun ry/orgapi-prepend-child (item heading &optional contents)
+  "Prepend a child under ITEM with HEADInG and CONTENTS.
+   Return newly created child node"
+  (let* ((level (org-element-property :level item))
+         (child-contents (format "%s %s\n%s"
+                                 (s-repeat (1+ level) "*")
+                                 heading
+                                 (or contents "")))
+         (first-child (ry/orgapi-first-child item)))
+    (if (not first-child)
+        (ry/orgapi-append-contents item child-contents)
+      ;; If there's an existing child node, we need insert the new node
+      ;; right before this node
+      (let* ((insert-pos (- (org-element-property :begin first-child)
+                            (org-element-property :contents-begin item)))
+             (parent-content (ry/orgapi-get-contents item))
+             (new-content (concat (substring parent-content 0 insert-pos)
+                                  child-contents
+                                  (substring parent-content insert-pos))))
+        (ry/orgapi-set-contents item new-content)))
+    (ry/orgapi-first-child (ry//orgapi-refresh-item item) :title heading)))
 
 (defun ry/orgapi-tset-child (item heading &optional contents prepend)
   "Insert a child under ITEM with HEADING if no such child exists.
 Return the newly created child or existing child with HEADING."
   (let ((child (ry/orgapi-first-child item :title heading)))
     (or child
-        (ry/orgapi-insert-child item heading contents prepend))))
+        (if prepend
+          (ry/orgapi-prepend-child item heading contents)
+          (ry/orgapi-insert-child item heading contents)))))
+
+(defun ry/orgapi-insert-sibling (item heading &optional contents prepend)
+  "Append or prepend a silbing node of ITEM"
+  (let* ((insert-pos (if prepend
+                         (org-element-property :begin item)
+                       (org-element-property :end item)))
+         (parent (org-element-property :parent item))
+         (level (org-element-property :level item))
+         (sibling-str (format "%s %s\n%s\n"
+                              (s-repeat level "*") heading contents)))
+    (save-excursion
+      (widen)
+      (goto-char insert-pos)
+      (insert sibling-str))))
 
 (defun ry//orgapi-refresh-item (item)
   (let ((headline-path

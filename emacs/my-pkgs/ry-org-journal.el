@@ -5,6 +5,21 @@
 (defvar ry/reminder-due-dates '("N/A" "today" "tomorrow" "this weekend"))
 (defvar ry/reminder-default-list "Inbox")
 
+(defvar ry/meeting-note-map
+  '(("#* *1-1 \\(.*\\)" ry/insert-one-on-one-note)
+    ("#* *\\(.*\\)" ry/insert-adhoc-meeting-note)))
+
+;; Utility
+
+(defun ry//today-heading-string ()
+  (format-time-string "%Y-%m-%d %A"))
+
+;; Journal
+
+(defun ry//today-journal-node ()
+  "Get Today's Journal Org Node"
+  (ry/orgapi-first-child (ry/orgapi-get-root) :title (ry//today-heading-string)))
+
 (defun ry/journal-org-current-month ()
   (concat ry-org-journal-dir (format-time-string "%Y-%m.org")))
 
@@ -31,6 +46,8 @@
       (when ry/org-journal-add-todo
         (insert (format "** Todo\n%s" (ry//org-todos-from-previous-day)))))))
 
+;; Todo
+
 (defun ry/org-new-today-todo()
   "Quick shortcut to add todo item in Today's journal"
   (interactive)
@@ -110,18 +127,49 @@
     (ry/orgapi-append-contents todo-node
                                (format "- [ ] %s" (s-capitalize text)))))
 
-(defun ry//today-heading-string ()
-  (format-time-string "%Y-%m-%d %A"))
-
-(defun ry//today-journal-node ()
-  "Get Today's Journal Org Node"
-  (ry/orgapi-first-child (ry/orgapi-get-root) :title (ry//today-heading-string)))
-
+;; Notes
+
 (defun ry//org-insert-instant-note(text)
   "Insert an instant note in Today's journal"
   (ry/org-goto-journal)
   (let* ((today-node (ry//today-journal-node))
          (inst-node (ry/orgapi-tset-child today-node "Instant Notes")))
     (ry/orgapi-append-contents inst-node text)))
+
+(defun ry/insert-adhoc-meeting-note (title content)
+  (find-file (concat org-directory "/bytedance/regular-meetings.org"))
+  (let* ((title (format "%s %s" (format-time-string "%Y-%m-%d ") title))
+         (meeting-root (ry/orgapi-get-node-by-heading "Adhoc Meetings")))
+    (->> (ry/orgapi-prepend-child meeting-root title content)
+         (org-element-property :title))))
+
+(defun ry/insert-one-on-one-note (title content)
+  (-first-item
+    (org-ql-select "~/org/bytedance/one-on-one/others.org"
+      (list 'heading title)
+      :action (lambda ()
+                (let ((title (org-get-heading)))
+                  (-> (ry/orgapi-current-heading-node)
+                      (ry/orgapi-tset-child "To be discussed" nil t)
+                      (ry/orgapi-insert-sibling (ry/today-string) content))
+                  title)))))
+
+(defun ry//find-meeting-note-func (title)
+  (let* ((funcs (--map (list :matched_title (-> (s-match (-first-item it) title)
+                                                (-last-item))
+                             :func (-last-item it))
+                       ry/meeting-note-map)))
+    (-> (--filter (plist-get it :matched_title) funcs)
+        (-first-item))))
+
+(defun ry/insert-meeting-notes-from-clipboard ()
+  "Paste meeting notes from clipboard. First line as node title.
+   Rest content as node body."
+  (interactive)
+  (let* ((lines (s-split "\n" (ry//clipboard-content)))
+         (title (-first-item lines))
+         (content (concat (s-join "\n" (-drop 1 lines)) "\n"))
+         (matched (ry//find-meeting-note-func title)))
+    (funcall (plist-get matched :func) (plist-get matched :matched_title) content)))
 
 (provide 'ry-org-journal)

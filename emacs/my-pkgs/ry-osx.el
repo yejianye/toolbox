@@ -117,7 +117,10 @@ It only works in Mac OS "
        (--remove (< #x2000 it #x20ff))
        (--remove (= it #xfeff))
        (-map 'char-to-string)
-       (s-join "")))
+       (s-join "")
+       ;; Remove "飞书去文档" at the end of the title
+       (s-replace " - 飞书云文档" "")))
+
 
 (defun ry/osx-org-link-from-current-webpage ()
   (format "[[%s][%s]]" (ry/osx-browser-url)

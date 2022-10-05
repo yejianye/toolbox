@@ -1,5 +1,10 @@
+(setq ry-abbrev-table
+      '(("zyes" "✔")
+        ("zno" "✘")
+        ("zstar" "★")))
+
 (defun ry//helm-abbrev-candidates ()
-  (--map (cons (format "[%s] %s" (car it) (cdr it)) (cdr it)) ry-abbrev-table))
+  (--map (cons (format "[%s] %s" (nth 0 it) (nth 1 it)) (nth 1 it)) ry-abbrev-table))
 
 (defun ry//helm-abbrev-action (candidate)
   (insert candidate))
