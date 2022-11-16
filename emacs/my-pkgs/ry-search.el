@@ -106,9 +106,13 @@
 
 
 ;; Org Indexed Entries
-(defun ry//helm-org-entry-all-candidates ()
-  (ryc/vector-to-list
-    (ryc/plist-path (ry/http-get "http://localhost:3000/org-entry-all") '(:data :data))))
+(defun ry//helm-org-entry-candidates (source)
+  (let ((all-entries (-> (ry/http-get "http://localhost:3000/org-entry-all")
+                         (ryc/plist-path '(:data :data))
+                         (ryc/vector-to-list))))
+    (if source
+        (--filter (string= (plist-get it :category) source) all-entries)
+      all-entries)))
 
 (defun ry//helm-org-entry-padding-category (entry maxlen)
   (let* ((category (plist-get entry :category))
@@ -117,6 +121,7 @@
 
 (defun ry//helm-org-entry-make-source (entries &optional default-insert-link)
   (let* ((default-action (helm-make-actions
+                          "Open entry in indirect buffer" 'ry//helm-org-entry-indirect-buffer
                           "Go to entry" 'ry//helm-org-entry-goto
                           "Insert entry link" 'ry//helm-org-entry-insert-link))
          (category-maxlen (->> entries
@@ -127,6 +132,7 @@
       :candidates (-map 'ry//helm-org-entry-build-item entries)
       :candidate-number-limit 100
       :keymap (ry/helm-make-keymap
+                (kbd "s-<return>") (ry/helm-run-action 'ry//helm-org-entry-goto)
                 (kbd "s-i") (ry/helm-run-action 'ry//helm-org-entry-insert-link))
       :action (if default-insert-link 'ry//helm-org-entry-insert-link default-action))))
 
@@ -156,19 +162,23 @@
 (defun ry//helm-org-entry-goto (link)
   (org-open-link-from-string link))
 
+(defun ry//helm-org-entry-indirect-buffer (link)
+  (org-open-link-from-string link)
+  (ry/org-heading-to-indirect-buffer))
+
 (defun ry//helm-org-entry-insert-link (link)
   (insert link))
 
-(defun ry/helm-org-entries (&optional default-insert-link)
+(defun ry/helm-org-entries (&optional source default-insert-link)
   "Select headings from all indexed entries"
   (interactive)
-  (let* ((entries (ry//helm-org-entry-all-candidates)))
+  (let* ((entries (ry//helm-org-entry-candidates source)))
     (helm :sources (ry//helm-org-entry-make-source entries default-insert-link)
           :buffer "*helm org entries*")))
 
 (defun ry/helm-org-entries-insert-link ()
   "Insert link from all indexed entries"
   (interactive)
-  (ry/helm-org-entries t))
+  (ry/helm-org-entries nil t))
 
 (provide 'ry-search)

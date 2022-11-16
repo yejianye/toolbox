@@ -5,10 +5,6 @@
 (defvar ry/reminder-due-dates '("N/A" "today" "tomorrow" "this weekend"))
 (defvar ry/reminder-default-list "Inbox")
 
-(defvar ry/meeting-note-map
-  '(("#* *1-1 \\(.*\\)" ry/insert-one-on-one-note)
-    ("#* *\\(.*\\)" ry/insert-adhoc-meeting-note)))
-
 ;; Utility
 
 (defun ry//today-heading-string ()
@@ -136,12 +132,27 @@
          (inst-node (ry/orgapi-tset-child today-node "Instant Notes")))
     (ry/orgapi-append-contents inst-node text)))
 
+;; Meeting Notes
+
+(defvar ry/meeting-note-map
+  '(("#* *1-1 \\(.*\\)" ry/insert-one-on-one-note)
+    ("#* *\\(.*weekly.*\\)" ry/insert-regular-meeting)
+    ("#* *\\(.*monthly.*\\)" ry/insert-regular-meeting)
+    ("#* *\\(.*\\)" ry/insert-adhoc-meeting-note)))
+
 (defun ry/insert-adhoc-meeting-note (title content)
-  (find-file (concat org-directory "/bytedance/regular-meetings.org"))
-  (let* ((title (format "%s %s" (format-time-string "%Y-%m-%d ") title))
-         (meeting-root (ry/orgapi-get-node-by-heading "Adhoc Meetings")))
-    (->> (ry/orgapi-prepend-child meeting-root title content)
-         (org-element-property :title))))
+  (let* ((meeting-root (ry/orgx-select-one '(heading "Adhoc Meetings")
+                                           "~/org/bytedance/regular-meetings.org"))
+         (title (format "%s %s" (format-time-string "%Y-%m-%d") title)))
+    (ry/orgx-child-prepend meeting-root title :content content)
+    title))
+
+(defun ry/insert-regular-meeting (title content)
+  (let* ((root (ry/orgx-select-one '(heading "Regular Meetings")
+                                   "~/org/bytedance/regular-meetings.org"))
+         (meeting (ry/orgx-child-prepend root title :tset t)))
+    (ry/orgx-child-prepend meeting (ry/today-string) :content content)
+    (plist-get meeting :title)))
 
 (defun ry/insert-one-on-one-note (title content)
   (-first-item

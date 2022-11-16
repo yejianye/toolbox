@@ -82,6 +82,20 @@ It only works in Mac OS "
     (shell-command (format "LANG=en_US.UTF-8 cat %s | pbcopy" fname))
     (delete-file fname)))
 
+(defun ry/org-copy-as-html ()
+  "Copy current region as html to clipboard.
+It only works in Mac OS "
+  (interactive)
+  (require 'ox-md)
+  (let* ((beg (region-beginning))
+         (end (region-end))
+         (region-string (format "#+OPTIONS: toc:nil num:0\n%s" (buffer-substring beg end)))
+         (content (org-export-string-as region-string 'html t))
+         (fname (make-temp-file "org-clipboard")))
+    (write-region content nil fname)
+    (shell-command (format "LANG=en_US.UTF-8 cat %s | copy-html-to-clipboard.sh" fname))
+    (delete-file fname)))
+
 (defun ry/copy-org-protocol-to-osx-clipboard ()
   (interactive)
   (let ((link (ry//org-protocol-url-for-file (buffer-file-name))))

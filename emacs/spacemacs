@@ -762,7 +762,7 @@ layers configuration."
         popwin:special-display-config)
 
   ;; ry/pyfunc
-  (setq ry/python-executable "/Users/ryan/.pyenv/shims/python")
+  (setq ry/python-executable "python")
 
   ;; gui & terminal
   (evil-terminal-cursor-changer-activate)
@@ -817,6 +817,8 @@ layers configuration."
     "oA" 'ry/org-agenda-column-view
     "oj" 'ry/org-goto-journal
     "oh" 'ry/helm-org-entries
+    "oP" (make-cmd (ry/helm-org-entries "project"))
+    "o!" (make-cmd (ry/helm-org-entries "one-on-one"))
     "oH" 'ry/helm-org-headings-in-org-directory
     "ol" 'ry/helm-org-search-links
     "o/" 'helm-org-rifle-org-directory
@@ -848,10 +850,10 @@ layers configuration."
   (define-key evil-insert-state-map (kbd "s-t") 'ry/insert-today-date)
 
   ;; all modes
+  (global-set-key (kbd "s-/") 'ry/helm-org-entries)
   (global-set-key (kbd "C-h f") 'helpful-callable)
   (global-set-key (kbd "C-h v") 'helpful-variable)
   (global-set-key (kbd "C-h k") 'helpful-key)
-  (global-set-key (kbd "C-s-h") 'ry/helm-org-entries)
 
   ;; helm
   (setq helm-window-prefer-horizontal-split 'decide)
@@ -904,7 +906,9 @@ layers configuration."
               ">" 'org-demote-subtree
               "<" 'org-promote-subtree
               "ss" 'org-show-subtree
+              "sb" 'ry/org-heading-to-indirect-buffer
               "yy" 'ry/org-copy-as-rtf
+              "yh" 'ry/org-copy-as-html
               "ym" 'ry/org-copy-as-markdown
               "yM" 'ry/orglark-region-to-docx
               "l" 'org-open-at-point
@@ -1169,7 +1173,8 @@ layers configuration."
     "dt" 'trace-function
     "dT" 'untrace-function
     "rw" 'ry/delete-whitespace-lines
-    "ec" 'spacemacs/eval-current-form-sp)
+    "ec" 'spacemacs/eval-current-form-sp
+    "et" 'ert-run-tests-interactively)
 
   (spacemacs/set-leader-keys-for-major-mode 'edebug-eval-mode
     "u" 'edebug-update-eval-list

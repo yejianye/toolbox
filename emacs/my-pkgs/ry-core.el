@@ -12,6 +12,8 @@
 E.g. (ryc/plist-path '(:a (:b 1) :c 2) '(:a :b)) => 1"
   (--reduce-from (plist-get acc it) plist path))
 
+(defalias 'ryc/plist-merge 'org-combine-plists)
+
 ;; list conversion
 (defun ryc/vector-to-list (vec)
   "Convert vector to list"
@@ -91,6 +93,20 @@ E.g. (ryc/plist-path '(:a (:b 1) :c 2) '(:a :b)) => 1"
       (function
         (lambda () ,@body)))
     (add-hook ,mode-hook ,func-name)))
+
+(defmacro with-temp-file-buffer (filepath &rest body)
+  "Create a temp buffer with the content of FILEPATH
+   Change content of buffer has no impact to the original file."
+  `(with-temp-buffer
+     (insert-file-contents ,filepath)
+     ,@body))
+
+(defmacro with-file-buffer (filepath &rest body)
+  "Switch to a buffer visiting FILEPATH, create one if the buffer doesn't exist)
+And then execute BODY in that buffer"
+  `(with-current-buffer (find-file-noselect ,filepath)
+     ,@body))
+
 
 (provide 'ry-core)
 

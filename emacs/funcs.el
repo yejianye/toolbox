@@ -384,6 +384,7 @@ current buffer's, reload dir-locals."
 (require 'org-ql-search)
 (require 'ry-core)
 (require 'ry-org)
+(require 'ry-orgx)
 (require 'ry-orgentry)
 (require 'ry-orgtable)
 (require 'ry-orgtext)

@@ -13,6 +13,16 @@ For example, a heading with path `Heading 1/Sub-heading 2` will move to `Heading
                                  (format "%s::" archive-file))))
     (org-archive-subtree)))
 
+(defun ry/org-heading-to-indirect-buffer ()
+  "Similar to =org-tree-to-indirect-buffer= but this function is able to create
+a unique indirect buffer for each individual heading"
+  (interactive)
+  (let* ((bname (format "%s-%s-1" (buffer-name) (org-get-heading 'no-tags)))
+         (buf (get-buffer bname)))
+    (if (buffer-live-p buf)
+        (pop-to-buffer buf)
+      (org-tree-to-indirect-buffer t))))
+
 (defun ry/org-capture (template-key note)
   "Create a note based via org-capture based on TEMPLATE-KEY with content NOTE"
   (org-capture nil template-key)
