@@ -60,7 +60,7 @@
       (should (string= "Parent content\nAppend test\n" (ry/orgx-content-get node3))))))
 
 
-(ert-deftest ry/orgx-create-node ()
+(ert-deftest ry/orgx-create-child ()
   (ry/orgx-with-test-file
     (let* ((parent (ry/orgx-select-one '(heading "Heading1")))
            (child0 (ry/orgx-child-prepend parent "Sub-heading-1-0"))
@@ -72,3 +72,14 @@
       (should (string= "child1\n" (ry/orgx-content-get child1)))
       (should (string= "Another sub-node\n" (ry/orgx-content-get child2)))
       (should (= 3 (plist-get child3 :level))))))
+
+(ert-deftest ry/orgx-create-sibling ()
+  (ry/orgx-with-test-file
+   (let* ((parent (ry/orgx-select-one '(heading "Heading2")))
+          (node (ry/orgx-select-one '(heading "Sub-heading-2-1")))
+          (sibling1 (ry/orgx-sibling-prepend node "Sub-heading-2-0"))
+          (sibling2 (ry/orgx-sibling-append node "Sub-heading-2-2")))
+     (should (string= "Sub-heading-2-0" (-> (ry/orgx-select-first-child parent)
+                                            (plist-get :title))))
+     (should (string= "Sub-heading-2-2" (-> (ry/orgx-select-last-child parent)
+                                            (plist-get :title)))))))

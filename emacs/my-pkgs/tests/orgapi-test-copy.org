@@ -3,6 +3,9 @@
 
 * Heading1
 Parent content
+** Sub-heading-0-0
+** Sub-heading-0-0
+** Sub-heading-0-0
 ** Sub-heading-1-1
 :PROPERTIES:
 :ID:       6526D1F9-5776-4DFB-B895-E37560FE3A12

@@ -77,8 +77,10 @@ E.g. (ryc/plist-path '(:a (:b 1) :c 2) '(:a :b)) => 1"
 
 ;; Alias name that can be remembered more easily
 (defalias 's-replace-regexp 'replace-regexp-in-string)
-(defalias '-> 'thread-first)
-(defalias '->> 'thread-last)
+
+;; This should have already been included in dash.el
+;; (defalias '-> 'thread-first)
+;; (defalias '->> 'thread-last)
 (defalias 'fn 'lambda)
 
 ;; Macros

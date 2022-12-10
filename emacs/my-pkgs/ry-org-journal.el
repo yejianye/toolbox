@@ -155,15 +155,10 @@
     (plist-get meeting :title)))
 
 (defun ry/insert-one-on-one-note (title content)
-  (-first-item
-    (org-ql-select "~/org/bytedance/one-on-one/others.org"
-      (list 'heading title)
-      :action (lambda ()
-                (let ((title (org-get-heading)))
-                  (-> (ry/orgapi-current-heading-node)
-                      (ry/orgapi-tset-child "To be discussed" nil t)
-                      (ry/orgapi-insert-sibling (ry/today-string) content))
-                  title)))))
+  (let ((node (ry/orgx-select-one `(heading ,title) "~/org/bytedance/one-on-one/others.org")))
+    (-> (ry/orgx-child-prepend node "To be discussed" :tset t)
+        (ry/orgx-sibling-append (ry/today-string) :content content))
+    (plist-get node :title)))
 
 (defun ry//find-meeting-note-func (title)
   (let* ((funcs (--map (list :matched_title (-> (s-match (-first-item it) title)

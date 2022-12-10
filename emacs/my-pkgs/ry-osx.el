@@ -17,6 +17,10 @@
       '(chrome "tell application \"Google Chrome\" to return name of active tab of front window"
         safari "tell application \"Safari\" to return name of current tab of front window"))
 
+(setq ry/osx-browser-title-map
+      '(("feishu.cn" fix-lark-title)
+        ("youtube.com" fix-youtube-title)))
+
 (defun ry/osx-browser-url ()
   (substring
    (do-applescript (plist-get browser-url-applescript default-browser))
@@ -93,7 +97,7 @@ It only works in Mac OS "
          (content (org-export-string-as region-string 'html t))
          (fname (make-temp-file "org-clipboard")))
     (write-region content nil fname)
-    (shell-command (format "LANG=en_US.UTF-8 cat %s | copy-html-to-clipboard.sh" fname))
+    (shell-command (format "LANG=en_US.UTF-8 cat %s | ~/utils/copy-html-to-clipboard.sh" fname))
     (delete-file fname)))
 
 (defun ry/copy-org-protocol-to-osx-clipboard ()
@@ -135,13 +139,19 @@ It only works in Mac OS "
        ;; Remove "飞书去文档" at the end of the title
        (s-replace " - 飞书云文档" "")))
 
+(defun fix-youtube-title (title)
+  (s-replace-regexp "^([0-9]*) *" "" title))
 
 (defun ry/osx-org-link-from-current-webpage ()
-  (format "[[%s][%s]]" (ry/osx-browser-url)
-        (thread-last (ry/osx-browser-title)
-                    (fix-lark-title)
-                    (s-replace "[" "{")
-                    (s-replace "]" "}"))))
+  (let* ((url (ry/osx-browser-url))
+         (domain (-last-item (s-match "http[s]?://\\(.*?\\)/.*" url)))
+         (func (-> (--filter (s-contains? (-first-item it) domain) ry/osx-browser-title-map)
+                   (-first-item)
+                   (-last-item)))
+         (title (->> (funcall func (ry/osx-browser-title))
+                     (s-replace "[" "{")
+                     (s-replace "]" "}"))))
+    (format "[[%s][%s]]" url title)))
 
 (defun ry/osx-copy()
   "Copy region to OS X system pasteboard."

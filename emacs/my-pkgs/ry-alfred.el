@@ -16,19 +16,14 @@
     (apply func (-drop 1 params))))
 
 (defun ry/alfred-one-on-one (topic name)
-   (org-ql-select "~/org/bytedance/one-on-one/others.org"
-     (list 'heading name)
-     :action (lambda ()
-               (let ((heading (org-get-heading)))
-                 (-> (ry/orgapi-current-heading-node)
-                     (ry/orgapi-tset-child "To be discussed" nil t)
-                     (ry/orgapi-prepend-contents (format "- [ ] %s\n" topic)))
-                 (ry/alfred-message "Topic '%s' added to '%s'\n" topic heading)))))
+  (let ((node (ry/orgx-select-one (list 'heading name) "~/org/bytedance/one-on-one/others.org")))
+    (-> (ry/orgx-child-prepend node "To be discussed" :tset t)
+        (ry/orgx-content-prepend (format "- [ ] %s\n" topic)))
+    (ry/alfred-message "Topic '%s' added to '%s'\n" topic (plist-get node :title))))
 
 (defun ry/alfred-meeting-notes (_)
   (let ((title (ry/insert-meeting-notes-from-clipboard)))
     (ry/alfred-message "Meeting Notes Added: %s" title)))
-
 
 (defun ry/alfred-message (fmt &rest args)
   (f-append-text (apply 'format fmt args)

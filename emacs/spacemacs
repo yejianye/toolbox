@@ -711,6 +711,9 @@ layers configuration."
   ;; start server
   (server-start)
 
+  ;; scratch buffer
+  (setq initial-major-mode 'emacs-lisp-mode)
+
   ;; garbage collections
   (setq garbage-collection-messages t)
 
@@ -840,6 +843,7 @@ layers configuration."
   (define-key evil-normal-state-map (kbd "s-p") 'lazy-helm/helm-recentf)
 
   ;; insert mode
+  (define-key evil-insert-state-map (kbd "C-【") 'evil-force-normal-state)
   (define-key evil-insert-state-map (kbd "C-v") 'evil-paste-after)
   (define-key evil-insert-state-map (kbd "DEL") 'ry/backspace-whitespace-to-tab-stop)
   (define-key evil-insert-state-map (kbd "<s-left>") 'beginning-of-line)

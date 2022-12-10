@@ -1,7 +1,8 @@
 (setq ry-abbrev-table
       '(("zyes" "✔")
         ("zno" "✘")
-        ("zstar" "★")))
+        ("zstar" "★")
+        ("zarrow" "➔")))
 
 (defun ry//helm-abbrev-candidates ()
   (--map (cons (format "[%s] %s" (nth 0 it) (nth 1 it)) (nth 1 it)) ry-abbrev-table))
@@ -18,4 +19,8 @@
           :action 'ry//helm-abbrev-action)
         :buffer "*helm abbrev*"))
 
+(defun ry/abbrev-init ()
+  (define-abbrev-table 'global-abbrev-table ry-abbrev-table))
+
+(ry/abbrev-init)
 (provide 'ry-abbrev)
