@@ -15,9 +15,12 @@
   (let ((cider-comment-prefix "\n;; => "))
     (cider-pprint-form-to-comment 'cider-list-at-point nil)))
 
-(defun ry/clj-hotload-dep (dep)
+(defun ry/clj-hot-reload-dep-interactive ()
+  (interactive)
+  (ry/clj-hot-reload-dep (s-trim (thing-at-point 'line))))
+
+(defun ry/clj-hot-reload-dep (dep)
   "Hot-load specific dependencies without restarting REPL"
-  (interactive "sDependency to hot-load:")
   (cider-insert-in-repl
     (format
       "(use '[cemerick.pomegranate :only (add-dependencies)])

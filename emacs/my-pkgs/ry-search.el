@@ -164,7 +164,8 @@
 
 (defun ry//helm-org-entry-indirect-buffer (link)
   (org-open-link-from-string link)
-  (ry/org-heading-to-indirect-buffer))
+  (unless (plist-get (ry/orgx-node-at-point) :ROOT)
+    (ry/org-heading-to-indirect-buffer)))
 
 (defun ry//helm-org-entry-insert-link (link)
   (insert link))

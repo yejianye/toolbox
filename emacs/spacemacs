@@ -36,7 +36,6 @@ This function should only modify configuration layer settings."
          go-tab-width 4
          go-use-golangci-lint t
          go-backend 'lsp)
-     octave
      csv
      ruby
      sql
@@ -73,6 +72,7 @@ This function should only modify configuration layer settings."
      (chinese :variables
               chinese-enable-fcitx t
               chinese-enable-youdao-dict t)
+     templates
      lsp)
      ;; ipython-notebook
      ;; Disable ansible for breaking describe key
@@ -711,8 +711,20 @@ layers configuration."
   ;; start server
   (server-start)
 
+  ;; margin
+  (setq-default left-margin-width 1 right-margin-width 1)
+
+  ;; remove menu bar
+  (define-key global-map [menu-bar] nil)
+  (add-hook 'projectile-mode-hook (lambda () (define-key projectile-mode-map [menu-bar] nil)))
+  (add-hook 'persp-mode-hook (lambda () (define-key persp-mode-map [menu-bar] nil)))
+  (add-hook 'hs-minor-mode-hook (lambda () (define-key hs-minor-mode-map [menu-bar] nil)))
+
   ;; scratch buffer
   (setq initial-major-mode 'emacs-lisp-mode)
+
+  ;; yatemplate
+  (setq auto-insert-query nil)
 
   ;; garbage collections
   (setq garbage-collection-messages t)
@@ -724,6 +736,7 @@ layers configuration."
   ;; Chinese
   (spacemacs//set-monospaced-font   "Source Code Pro" "Hiragino Sans GB" 14 16)
   (setq pangu-spacing-real-insert-separtor t)
+  (setq word-wrap-by-category t)
 
   ;; Enable auto-completion globally
   (global-company-mode)
@@ -779,14 +792,15 @@ layers configuration."
    "ot" "~/org/thinking.org"
    "ow" "~/org/bytedance/weekly-report.org"
    "or" "~/org/bytedance/recruiting.org"
-   "os" "~/org/bytedance/security.org"
    "om" "~/org/bytedance/regular-meetings.org"
+   "os" "~/org/scratch.org"
    "op" "~/org/tasks.org"
    "o1" "~/org/bytedance/one-on-one/others.org"
    "od" "~/org/diary.org"
    "ob" "~/org/vault/bookmark-notes.org"
    "oo" "~/org/okrs.org"
-   "oe" "~/org/topics/emacs.org"))
+   "oe" "~/org/topics/emacs.org"
+   "bs" "~/org/scratch.el"))
 
 (defun ry/global-keybindings ()
   (spacemacs/set-leader-keys
@@ -1117,7 +1131,7 @@ layers configuration."
       "ep:" 'ry/clj-pprint-current-sexp-to-comment
       "se" 'ry/clj-send-current-sexp-to-repl
       "di" 'cider-inspect-last-result
-      "sh" 'ry/clj-hotload-dep))
+      "sh" 'ry/clj-hot-reload-dep-interactive))
 
   (with-hook 'clojure-mode-hook 'clojure-ui-setup
     (smartparens-mode 1)
