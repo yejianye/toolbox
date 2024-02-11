@@ -7,6 +7,28 @@
   (cdr (assoc key alist)))
 
 ;; Plist
+(defun ryc/plist-keys (plist)
+  "Get a list of all the keys in a plist."
+  (let ((result '()))
+    (while plist
+      (setq result (cons (car plist) result))
+      (setq plist (cddr plist)))
+    (reverse result)))
+
+(defun ryc/plist-values (plist)
+  "Get a list of all the values in a plist."
+  (let ((keys (plist-keys plist)))
+    (mapcar (lambda (key) (plist-get plist key))
+            keys)))
+
+(defun ryc/plist-to-alist (plist)
+  "Convert a plist to an alist."
+  (let ((result '()))
+    (while plist
+      (setq result (cons (cons (car plist) (cadr plist)) result))
+      (setq plist (cddr plist)))
+    (reverse result)))
+
 (defun ryc/plist-path (plist path)
   "Like JSON path. Get value from PLIST following a list of keys
 E.g. (ryc/plist-path '(:a (:b 1) :c 2) '(:a :b)) => 1"
@@ -75,8 +97,33 @@ E.g. (ryc/plist-path '(:a (:b 1) :c 2) '(:a :b)) => 1"
       (beginning-of-line)
       (replace-string old new t start end))))
 
+;; file
+(defun ryc/spit (filename content)
+  "Write CONTENT to FILENAME, similar to spit function in Clojure"
+  (with-temp-buffer
+    (insert content)
+    (when (file-writable-p filename)
+      (write-region (point-min) (point-max) filename))))
+
+(defun ryc/slurp (filename)
+  "Read content of filename into a string"
+  (if (file-readable-p filename)
+      (with-temp-buffer
+        (insert-file-contents filename)
+        (buffer-string))))
+
+;; date time
+(defun ryc/string-to-timestamp (time-string time-format)
+  "Given a time string return unix timestamp"
+  (thread-last "date -j -f '{time-format}' '{time-string}' '+%s'"
+               (s-replace "{time-format}" time-format)
+               (s-replace "{time-string}" time-string)
+               (shell-command-to-string)
+               (string-to-number)))
+
 ;; Alias name that can be remembered more easily
 (defalias 's-replace-regexp 'replace-regexp-in-string)
+(defalias 'range 'number-sequence)
 
 ;; This should have already been included in dash.el
 ;; (defalias '-> 'thread-first)

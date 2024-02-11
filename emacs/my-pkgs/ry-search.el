@@ -62,20 +62,32 @@
 
 
 ;; Org Search Links
+(defun ry/log-url-click (cdd)
+  (ry/http-post "http://localhost:3000/log"
+                (list :event "click"
+                      :url (plist-get cdd :link)
+                      :rank (plist-get cdd :rank)
+                      :query_id (plist-get cdd :query_id))))
+
 (defun ry/search-link-action-open (cdd)
-  (browse-url (plist-get cdd :link)))
+  (browse-url (plist-get cdd :link))
+  (ry/log-url-click cdd))
 
 (defun ry/search-link-action-insert (cdd)
-  (insert (format "[[%s][%s]]" (plist-get cdd :link) (plist-get cdd :title))))
+  (insert (format "[[%s][%s]]"
+                  (plist-get cdd :link)
+                  (fix-lark-title (plist-get cdd :title))))
+  (ry/log-url-click cdd))
 
 (defun ry/search-link-action-copy (cdd)
-  (ry//copy-to-osx-clipboard (plist-get cdd :link)))
+  (ry//copy-to-osx-clipboard (plist-get cdd :link))
+  (ry/log-url-click cdd))
 
 (defun ry/search-link (term)
-  (ry/log-time "[search-link] Time spent in HTTP request"
-    (->
-      (ry/http-get "http://localhost:3000/search-link" (list :term term :limit 100))
-      (ryc/plist-path '(:data :data)))))
+  (let* ((result (-> (ry/http-get "http://localhost:3000/search-link" (list :term term :limit 100))
+                     (plist-get :data)))
+         (query-id (plist-get result :id)))
+    (--map (plist-put it :query_id query-id) (plist-get result :data))))
 
 (defun ry//helm-org-search-links--candidates ()
   (--map (cons (plist-get it :desc) it)
@@ -106,6 +118,11 @@
 
 
 ;; Org Indexed Entries
+(defun ry/log-heading-click (entry)
+  (ry/http-post "http://localhost:3000/log"
+                (list :event "heading_click"
+                      :heading_id (plist-get entry :id))))
+
 (defun ry//helm-org-entry-candidates (source)
   (let ((all-entries (-> (ry/http-get "http://localhost:3000/org-entry-all")
                          (ryc/plist-path '(:data :data))
@@ -119,6 +136,11 @@
          (padded-category (s-pad-right maxlen " " category)))
     (plist-put entry :category padded-category)))
 
+(defun ry//helm-org-entry-candidate-transformer (candidates source)
+  (if (> (length candidates) 0)
+      candidates
+    (list (cons "Create New Note?" (list :create-note 1)))))
+
 (defun ry//helm-org-entry-make-source (entries &optional default-insert-link)
   (let* ((default-action (helm-make-actions
                           "Open entry in indirect buffer" 'ry//helm-org-entry-indirect-buffer
@@ -131,6 +153,7 @@
     (helm-build-sync-source "Org Entries"
       :candidates (-map 'ry//helm-org-entry-build-item entries)
       :candidate-number-limit 100
+      :filtered-candidate-transformer 'ry//helm-org-entry-candidate-transformer
       :keymap (ry/helm-make-keymap
                 (kbd "s-<return>") (ry/helm-run-action 'ry//helm-org-entry-goto)
                 (kbd "s-i") (ry/helm-run-action 'ry//helm-org-entry-insert-link))
@@ -147,9 +170,8 @@
                         (propertize (format "%s | %s" last-modified category)
                                     'face font-lock-comment-face)
                         "  "
-                        headlines))
-         (link (ry//helm-org-entry-build-link entry)))
-    (cons display-item link)))
+                        headlines)))
+    (cons display-item entry)))
 
 (defun ry//helm-org-entry-build-link (entry)
   (let ((id (plist-get entry :id))
@@ -159,16 +181,26 @@
                     (s-trim))))
     (format "[[id:%s][%s]]" id headline)))
 
-(defun ry//helm-org-entry-goto (link)
-  (org-open-link-from-string link))
+(defun ry//helm-org-entry-goto (entry)
+  (ry/log-heading-click entry)
+  (if (ry//helm-org-entry-new? entry)
+      (ry/pkm-note-create-interactive)
+    (org-open-link-from-string (ry//helm-org-entry-build-link entry))))
 
-(defun ry//helm-org-entry-indirect-buffer (link)
-  (org-open-link-from-string link)
-  (unless (plist-get (ry/orgx-node-at-point) :ROOT)
+(defun ry//helm-org-entry-indirect-buffer (entry)
+  (ry//helm-org-entry-goto entry)
+  (unless (or (ry//helm-org-entry-new? entry)
+              (plist-get (ry/orgx-node-at-point) :ROOT))
     (ry/org-heading-to-indirect-buffer)))
 
-(defun ry//helm-org-entry-insert-link (link)
-  (insert link))
+(defun ry//helm-org-entry-insert-link (entry)
+  (ry/log-heading-click entry)
+  (if (ry//helm-org-entry-new? entry)
+      (ry/pkm-note-create-interactive)
+    (insert (ry//helm-org-entry-build-link entry))))
+
+(defun ry//helm-org-entry-new? (entry)
+  (plist-get entry :create-note))
 
 (defun ry/helm-org-entries (&optional source default-insert-link)
   "Select headings from all indexed entries"
@@ -181,5 +213,37 @@
   "Insert link from all indexed entries"
   (interactive)
   (ry/helm-org-entries nil t))
+
+
+;; Org Search Links in current buffer
+
+(defun ry//helm-buf-search-link--action (candidate)
+  (browse-url candidate))
+
+(defun ry//helm-buf-search-link--candidates ()
+  "Get a list of links and their descriptions from current org-mode buffer."
+  (let ((links '()))
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward org-bracket-link-regexp nil t)
+        (let* ((element (org-element-context))
+               (link (org-element-property :raw-link element))
+               (desc (org-element-property :contents-begin element))
+               (desc (when desc
+                       (buffer-substring-no-properties desc (org-element-property :contents-end element)))))
+          (push (cons desc link) links))))
+    links))
+
+(defun ry/helm-buf-search-link ()
+  "Search links in current org buffer"
+  (interactive)
+  (let ((links (ry//helm-buf-search-link--candidates)))
+    (helm :sources
+          (helm-build-sync-source "Search Link in Buffer"
+            :candidates links
+            :action 'ry//helm-buf-search-link--action)
+          :buffer "*helm search link in org buffer*")))
+
+
 
 (provide 'ry-search)

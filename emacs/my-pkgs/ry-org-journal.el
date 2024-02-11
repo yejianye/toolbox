@@ -19,6 +19,9 @@
 (defun ry/journal-org-current-month ()
   (concat ry-org-journal-dir (format-time-string "%Y-%m.org")))
 
+(defun ry/journal-org-current-year ()
+  (concat ry-org-journal-dir (format-time-string "%Y.org")))
+
 (defun ry/journal-org-last-month ()
   (let* ((days (+ (string-to-number (format-time-string "%d")) 1))
          (date (seconds-to-time (- (float-time) (* days 86400)))))
@@ -27,20 +30,17 @@
 (defun ry/org-goto-journal()
   "Goto journal org file, and create headings for today if not exists"
   (interactive)
-  (let ((journal-file (ry/journal-org-current-month))
-        (today-heading (format "* %s" (ry/today-string)))
-        (title (format-time-string "#+title: Journal - %b, %Y\n"))
-        (property "#+TODO: NEW(n) | REVIEWED(r)\n#+INDEX-ENTRIES: level:2 !heading:Todo\n")
-        (settings "# -*- eval: (toggle-word-wrap -1); -*-\n"))
+  (let ((journal-file (ry/journal-org-current-year))
+        (month-heading (format "* %s" (ry/month-string)))
+        (title (format-time-string "#+title: Journal - %Y\n"))
+        (property "#+INDEX-ENTRIES: level:2\n"))
     (find-file journal-file)
     (unless (file-exists-p journal-file)
-      (insert (concat settings title property))
+      (insert (concat title property))
       (save-buffer))
-    (unless (ryc//string-in-buffer-p today-heading)
+    (unless (ryc//string-in-buffer-p month-heading)
       (goto-char (point-max))
-      (insert (format "\n%s\n" today-heading))
-      (when ry/org-journal-add-todo
-        (insert (format "** Todo\n%s" (ry//org-todos-from-previous-day)))))))
+      (insert (format "\n%s\n" month-heading)))))
 
 ;; Todo
 
@@ -100,7 +100,7 @@
 (defun ry//org-insert-todo-someday (todo)
   "Add todo item to someday list"
   (find-file "~/org/tasks.org")
-  (let ((content (format "- [ ] [%s] %s" (format-time-string "%Y-%m-%d") todo)))
+  (let ((content (format "- [%s] %s" (format-time-string "%Y-%m-%d") todo)))
     (ry/orgapi-append-contents
      (ry/orgapi-get-node-by-heading "Todo - Some day")
      content)))
@@ -136,6 +136,7 @@
 
 (defvar ry/meeting-note-map
   '(("#* *1-1 \\(.*\\)" ry/insert-one-on-one-note)
+    ("#* *Report of Work *[-:]? *\\(.*\\)" ry/insert-report-of-work-meeting)
     ("#* *\\(.*weekly.*\\)" ry/insert-regular-meeting)
     ("#* *\\(.*monthly.*\\)" ry/insert-regular-meeting)
     ("#* *\\(.*\\)" ry/insert-adhoc-meeting-note)))
@@ -160,6 +161,11 @@
         (ry/orgx-sibling-append (ry/today-string) :content content))
     (plist-get node :title)))
 
+(defun ry/insert-report-of-work-meeting (title content)
+  (let ((node (ry/orgx-select-one `(heading "Report on Work") "~/org/bytedance/regular-meetings.org")))
+    (-> (ry/orgx-child-append node (format "述职答辩 - %s" title) :content content)
+        (plist-get :title))))
+
 (defun ry//find-meeting-note-func (title)
   (let* ((funcs (--map (list :matched_title (-> (s-match (-first-item it) title)
                                                 (-last-item))
@@ -177,5 +183,24 @@
          (content (concat (s-join "\n" (-drop 1 lines)) "\n"))
          (matched (ry//find-meeting-note-func title)))
     (funcall (plist-get matched :func) (plist-get matched :matched_title) content)))
+
+;; Restructure
+
+(setq ry/org-heading-file-template
+ "#+STARTUP: content
+#+INDEX-ENTRIES: level:1
+#+CATEGORY: default
+")
+
+(defun ry/org-heading-to-file (filename &optional nolink)
+  (interactive "FTarget file: ")
+  (let ((org-refile-targets `((,filename :maxlevel . 1)))
+        (org-refile-use-outline-path 'file)
+        (heading-text (plist-get (ry/orgx-node-at-point) :title))
+        (heading-id (org-id-get-create)))
+    (ryc/spit filename ry/org-heading-file-template)
+    (org-refile nil nil (list nil filename nil 1))
+    (unless nolink
+      (insert (format "[[id:%s][%s]]" heading-id heading-text)))))
 
 (provide 'ry-org-journal)

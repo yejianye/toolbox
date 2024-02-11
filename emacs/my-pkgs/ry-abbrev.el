@@ -2,7 +2,8 @@
       '(("zyes" "✔")
         ("zno" "✘")
         ("zstar" "★")
-        ("zarrow" "➔")))
+        ("zarrow" "➔")
+        ("zidx" "#+INDEX-ENTRIES: level:2")))
 
 (defun ry//helm-abbrev-candidates ()
   (--map (cons (format "[%s] %s" (nth 0 it) (nth 1 it)) (nth 1 it)) ry-abbrev-table))

@@ -35,4 +35,23 @@
                   (ryc/plist-path '(:data :url)))))
     (org-open-link-from-string (format "[[%s]]" url))))
 
+(defun ry/auto-translate (text)
+  "Translate en->zh or zh->en depends on TEXT"
+  (-> (ry/http-post "http://localhost:3000/lark/auto-translate"
+                    (list :text text))
+      (ryc/plist-path '(:data :text))))
+
+(defun ry/auto-translate-region (beg end)
+  "Auto-translate current region"
+  (interactive "r")
+  (let* ((text (ry/auto-translate (buffer-substring-no-properties beg end)))
+         (translate-buffer (get-buffer-create "*auto-translate*")))
+    (deactivate-mark)
+    (with-current-buffer translate-buffer
+      (erase-buffer)
+      (insert text))
+    (popwin:popup-buffer translate-buffer :stick t)
+    (evil-local-set-key 'normal (kbd "q") 'quit-window)))
+
+
 (provide 'ry-orglark)

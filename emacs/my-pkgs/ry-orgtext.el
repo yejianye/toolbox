@@ -18,6 +18,12 @@
   (interactive "r")
   (ry//org-toggle-style "+" region-start region-end))
 
+(defun ry/org-toggle-bold-current-word ()
+  "Bold current word"
+  (interactive)
+  (let ((bounds (bounds-of-thing-at-point 'word)))
+    (ry/org-toggle-bold (car bounds) (cdr bounds))))
+
 (defun ry//org-toggle-style(style-char region-start region-end)
   "Add or remove CHAR from selected text region"
   (let* ((prev-char (char-to-string (or (char-before region-start) ?\s)))

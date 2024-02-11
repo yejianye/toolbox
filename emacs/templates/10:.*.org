@@ -1,3 +1,1 @@
 #+STARTUP: content
-#+INDEX-ENTRIES: level:2
-#+CATEGORY: default

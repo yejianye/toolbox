@@ -44,4 +44,30 @@ This macro returns same value as BODY."
      (message "%s: time spent %dms" ,name time-spent)
      result))
 
-(provide 'ry-elisp)
+;; Debug functions for -> and ->> (thread-first, thread-last)
+(defun dbg (object &optional msg)
+  "Pretty-print OBJECT with prefix MSG, and then return OBJECT."
+  (message (format "%s%s" (or msg "") (pp-to-string object)))
+  object)
+
+(defmacro dbg-> (x form)
+  "Pretty-print the result of current step in thread-first call.
+   Example:
+   (-> 1
+       (dbg-> (+ 2)))"
+  (let ((_form-str (format "dbg: %s\n  => " (s-trim (pp-to-string form)))))
+    `(-> ,x
+         ,form
+         (dbg ,_form-str))))
+
+(defmacro dbg->> (form x)
+  "Pretty-print the result of current step in thread-last call.
+   Example:
+   (->> '(1 2 3)
+        (dbg->> (-map 1+)))"
+  (let ((_form-str (format "dbg: %s\n  => " (s-trim (pp-to-string form)))))
+    `(->> ,x
+          ,form
+          ((lambda (_obj) (dbg _obj ,_form-str))))))
+
+(provide 'ry-debug)

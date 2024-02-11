@@ -11,24 +11,42 @@
 
 (setq browser-url-applescript
   '(chrome "tell application \"Google Chrome\" to return URL of active tab of front window"
-    safari "tell application \"Safari\" to return URL of current tab of front window"))
+    safari "tell application \"Safari\" to return URL of current tab of front window"
+    edge "tell application \"Microsoft Edge Dev\" to return URL of active tab of front window"))
 
 (setq browser-title-applescript
       '(chrome "tell application \"Google Chrome\" to return name of active tab of front window"
+        edge "tell application \"Microsoft Edge Dev\" to return name of active tab of front window"
         safari "tell application \"Safari\" to return name of current tab of front window"))
+
+(setq browser-process-names
+      '(chrome "Google_Chrome"
+        edge "Microsoft_Edge_Dev"
+        safari "Safari"))
 
 (setq ry/osx-browser-title-map
       '(("feishu.cn" fix-lark-title)
+        ("larksuite.com" fix-lark-title)
+        ("larkoffice.com" fix-lark-title)
         ("youtube.com" fix-youtube-title)))
 
-(defun ry/osx-browser-url ()
+(defun ry/last-used-browser ()
+  (let ((recent-apps (shell-command-to-string "lsappinfo visibleProcessList")))
+     (->> (ryc/plist-to-alist browser-process-names)
+          (--map (cons (car it) (s-index-of (cdr it) recent-apps)))
+          (--filter (cdr it))
+          (--sort (< (cdr it) (cdr other)))
+          (-first-item)
+          (car))))
+
+(defun ry/osx-browser-url (&optional browser)
   (substring
-   (do-applescript (plist-get browser-url-applescript default-browser))
+   (do-applescript (plist-get browser-url-applescript (or browser (ry/last-used-browser))))
    1 -1))
 
-(defun ry/osx-browser-title ()
+(defun ry/osx-browser-title (&optional browser)
   (substring
-   (do-applescript (plist-get browser-title-applescript default-browser))
+   (do-applescript (plist-get browser-title-applescript (or browser (ry/last-used-browser))))
    1 -1))
 ;;
 ;; emacs-plus version
@@ -123,6 +141,12 @@ It only works in Mac OS "
   (interactive)
   (ry//copy-to-osx-clipboard (buffer-file-name)))
 
+(defun ry/insert-file-link-from-osx-clipboard ()
+  (interactive)
+  (let* ((fpath (concat "file:" (ry//clipboard-content)))
+         (fdesc (ry//org-desc-from-filepath fpath)))
+     (insert (format "[[%s][%s]]" fpath fdesc))))
+
 (defun ry/org-insert-browser-url-osx ()
   "Insert an org-mode link with the title and url of current tab in Chrome"
   (interactive)
@@ -148,7 +172,7 @@ It only works in Mac OS "
          (func (-> (--filter (s-contains? (-first-item it) domain) ry/osx-browser-title-map)
                    (-first-item)
                    (-last-item)))
-         (title (->> (funcall func (ry/osx-browser-title))
+         (title (->> (funcall (or func 'identity) (ry/osx-browser-title))
                      (s-replace "[" "{")
                      (s-replace "]" "}"))))
     (format "[[%s][%s]]" url title)))

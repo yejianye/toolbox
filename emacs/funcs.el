@@ -2,6 +2,9 @@
 
 (add-to-list 'load-path "~/toolbox/emacs/my-pkgs/")
 
+(defun ry/remove-menu-from-keymap (keymap)
+  (define-key keymap [menu-bar] nil))
+
 (defun ry/show-parens-mode ()
   "Enable show-smartparens-mode while disable smartparanes-mode"
   ;; We'd like to turn on show-smartparens-mode but turn off smartparens-mode
@@ -79,6 +82,7 @@ current buffer's, reload dir-locals."
 (defun ry/org-paste-image()
   (interactive)
   (let* ((is-retina (y-or-n-p "Is the screenshot taken from a retina display?"))
+         (width (string-to-number (read-string "Resize to width (empty for original size): ")))
          (date-string (format-time-string "%Y-%m-%d-%H-%M"))
          (random-id (random (expt 16 4)))
          (filename (format "%s-%04x.png" date-string random-id))
@@ -88,7 +92,9 @@ current buffer's, reload dir-locals."
       (shell-command (format "~/utils/save_screen.py --scale=0.5 --filename='%s'" fullpath))
       (shell-command (format "~/utils/save_screen.py --filename='%s'"
                              (s-replace ".png" "@2x.png" fullpath))))
-    (insert (format "[[file:%s]]" fullpath))
+    (if (> width 0)
+        (insert (format "#+ATTR_ORG: :width %d\n" width)))
+    (insert (format "[[file:%s]]\n" fullpath))
     (org-redisplay-inline-images)))
 
 (defun ry/org-hide-other-subtrees ()
@@ -378,6 +384,48 @@ current buffer's, reload dir-locals."
     (save-excursion
       (evil-ex-execute "g/^ +$/d"))))
 
+(defun ry/selected-text-to-bullet-list (beg end)
+  "Remove all blank lines in the region and convert the text to an ordered list in org-mode."
+  (interactive "r")
+  (save-excursion
+    (let ((content (->> (buffer-substring beg end)
+                       (s-split "\n")
+                       (--filter (not (s-matches? "^ *$" it)))
+                       (--map (format "- %s" it))
+                       (s-join "\n"))))
+      (kill-region beg end)
+      (insert (concat content "\n")))))
+
+(defun ry/word-translate-clipboard (&optional stdout)
+  "Translate selected words and save the result to an Excel sheet"
+  (let ((output-buffer (get-buffer-create "*word_translate*"))
+        (command (format "pbpaste | word_translate.py %s"
+                         (if stdout "--stdout" ""))))
+    (with-current-buffer output-buffer
+      (erase-buffer))
+    (async-shell-command command output-buffer output-buffer)))
+
+(defun ry/word-translate-to-excel ()
+  (interactive)
+  (ry/osx-copy)
+  (ry/word-translate-clipboard))
+
+(defun ry/word-translate-to-buffer ()
+  (interactive)
+  (ry/osx-copy)
+  (ry/word-translate-clipboard t))
+
+
+(defun ry/chatgpt ()
+  (interactive)
+  (let ((chatgpt-buffer
+         (make-comint-in-buffer "chatgpt" "*chatgpt*" "/bin/zsh" nil "-c" "chatgpt")))
+    (pop-to-buffer chatgpt-buffer)))
+
+(defun string-equal-ignore-case (str1 str2)
+  "FIX for org-ai. Compare two strings for equality, ignoring case."
+  (string-equal (downcase str1) (downcase str2)))
+
 (require 'helm-org)
 (require 'org-tempo)
 (require 'org-ql)
@@ -396,10 +444,11 @@ current buffer's, reload dir-locals."
 (require 'ry-cnfonts)
 (require 'ry-search)
 (require 'ry-sql)
-(require 'ry-elisp)
+(require 'ry-debug)
 (require 'ry-abbrev)
 (require 'ry-http)
 (require 'ry-clj)
 (require 'ry-alfred)
+(require 'ry-pkm)
 ;; (require 'ry-archived)
 ;; (require 'helm-org-ql)
