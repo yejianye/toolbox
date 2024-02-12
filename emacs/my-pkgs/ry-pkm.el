@@ -87,7 +87,7 @@
     (setq ry/pkm-last-category-choice choice)
     (unless (-contains? ry/pkm-category-choices choice)
       (add-to-list 'ry/pkm-category-choices choice)
-      (var-store ry/pkm-category-choices ry/pkm-category-choice-file))
+      (ryc/var-store ry/pkm-category-choices ry/pkm-category-choice-file))
     choice))
 
 (defun ry/pkm-note-create-interactive (&optional title-initial)
