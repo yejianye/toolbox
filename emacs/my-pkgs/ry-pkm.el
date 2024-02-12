@@ -8,14 +8,19 @@
 (setq org-id-method 'ts
       org-id-ts-format "%Y%m%d-%H%M%S-%6N")
 
-(setq ry/pkm-category-choices
-  '("default"
-    "project"
-    "thinking"
-    "meeting"
-    "diary"
-    "one-on-one"
-    "test"))
+(defconst ry/pkm-category-choice-file "~/org/note-category.el")
+
+(defun ry/pkm-init ()
+  (if (file-exists-p ry/pkm-category-choice-file)
+      (setq ry/pkm-category-choices (ryc/var-load ry/pkm-category-choice-file))
+     (setq ry/pkm-category-choices
+       '("default"
+         "project"
+         "thinking"
+         "meeting"
+         "diary"
+         "one-on-one"
+         "test"))))
 
 (defvar ry/pkm-last-category-choice
   "default"
@@ -80,6 +85,9 @@
                                ry/pkm-last-category-choice))
          (choice (completing-read "Enter note category: " ry/pkm-category-choices nil nil default-category)))
     (setq ry/pkm-last-category-choice choice)
+    (unless (-contains? ry/pkm-category-choices choice)
+      (add-to-list 'ry/pkm-category-choices choice)
+      (var-store ry/pkm-category-choices ry/pkm-category-choice-file))
     choice))
 
 (defun ry/pkm-note-create-interactive (&optional title-initial)
@@ -151,6 +159,5 @@
   (ry/pkm-note-create "Note Create Test 3" "project" '(("status" . "WIP")))
   (ry//pkm-note-filename "default" "Test Note" "2023-01-20 10:12:33"))
 
+(ry/pkm-init)
 (provide 'ry-pkm)
-
-(setq target-note-file "/Users/ryan/Library/Mobile Documents/com~apple~CloudDocs/org/default/2024/20240211-test-note-8.org")

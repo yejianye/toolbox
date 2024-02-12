@@ -112,6 +112,17 @@ E.g. (ryc/plist-path '(:a (:b 1) :c 2) '(:a :b)) => 1"
         (insert-file-contents filename)
         (buffer-string))))
 
+(defun ryc/var-store (exp filename)
+  "Store the value of EXP into file FILENAME"
+  (with-temp-file filename
+    (prin1 exp (current-buffer))))
+
+(defun ryc/var-load (filename)
+  "Read sexp from filename and return a lisp object"
+  (with-temp-buffer
+      (insert-file-contents filename)
+      (read (current-buffer))))
+
 ;; date time
 (defun ryc/string-to-timestamp (time-string time-format)
   "Given a time string return unix timestamp"
