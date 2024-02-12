@@ -49,6 +49,7 @@
          (year (format-time-string "%Y" ts))
          (today (format-time-string "%Y%m%d" ts))
          (title (thread-last title
+                             (s-replace "-" "")
                              (s-replace-regexp "[ ~!@#$&();:',.<>/?]+" "-")
                              (downcase)))
          (fname (format "%s/%s/%s/%s-%s.org"
