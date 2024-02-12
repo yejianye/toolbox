@@ -81,7 +81,7 @@
     (setq ry/pkm-last-category-choice choice)
     choice))
 
-(defun ry/pkm-note-create-interactive ()
+(defun ry/pkm-note-create-interactive (&optional title-initial)
   " Create new note interactively
 - If no text is selected, prompt user to enter title and category. Create new note file and insert link to that note in current position.
 - Otherwise, use selected text as title, prompt user to enter category. Create new note file and replace selected text with a link to new note
@@ -89,7 +89,7 @@
   (interactive)
   (let* ((title (if (use-region-p)
                     (buffer-substring-no-properties (region-beginning) (region-end))
-                  (read-string "Enter note title: ")))
+                  (read-string "Enter note title: " title-initial)))
          (category (ry//pkm-note-select-category))
          (note (ry/pkm-note-create title category))
          (link (format "[[id:%s][%s]]" (plist-get note :id) title))

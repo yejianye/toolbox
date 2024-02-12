@@ -184,7 +184,7 @@
 (defun ry//helm-org-entry-goto (entry)
   (ry/log-heading-click entry)
   (if (ry//helm-org-entry-new? entry)
-      (ry/pkm-note-create-interactive)
+      (ry/pkm-note-create-interactive helm-pattern)
     (org-open-link-from-string (ry//helm-org-entry-build-link entry))))
 
 (defun ry//helm-org-entry-indirect-buffer (entry)
@@ -196,7 +196,7 @@
 (defun ry//helm-org-entry-insert-link (entry)
   (ry/log-heading-click entry)
   (if (ry//helm-org-entry-new? entry)
-      (ry/pkm-note-create-interactive)
+      (ry/pkm-note-create-interactive helm-pattern)
     (insert (ry//helm-org-entry-build-link entry))))
 
 (defun ry//helm-org-entry-new? (entry)
