@@ -157,7 +157,7 @@ current buffer's, reload dir-locals."
 (defun ry/org-find-backlinks ()
   "Find backlinks of current heading"
   (interactive)
-  (let* ((id-link (format "id:%s" (org-id-get)))
+  (let* ((id-link (format "id:%s" (org-entry-get-with-inheritance "ID")))
          (matched-files
           (ry/grep-files-in-directory id-link org-directory "*.org" t)))
       (if matched-files
