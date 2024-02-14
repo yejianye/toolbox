@@ -61,7 +61,7 @@
            (count (gethash "count" result)))
       (when (> count 0)
         (message "%s entries synced with DB" count)
-        (ry/http-get "http://localhost:3000/org-entry-refresh-views"))
+        (async-start (lambda () (ry/http-get "http://localhost:3000/org-entry-refresh-views"))))
       count)))
 
 (defun ry/orgentry-prettify-buffer-name ()
