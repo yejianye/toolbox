@@ -126,6 +126,7 @@
     (unless (file-exists-p dir)
       (make-directory dir t))
     (org-entry-put nil "CATEGORY" category)
+    (org-entry-put nil "ROOT" "yes")
     (org-copy-subtree nil t)
     (insert (format "%s\n" link))
     (with-current-buffer (find-file-noselect fname)
