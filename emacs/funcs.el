@@ -154,14 +154,25 @@ current buffer's, reload dir-locals."
   (org-back-to-heading)
   (org-cycle))
 
+(defun ry/org-find-backlink-action (marker)
+  (interactive)
+  (pop-to-buffer (marker-buffer marker) t)
+  (goto-char marker)
+  (org-show-entry))
+
 (defun ry/org-find-backlinks ()
   "Find backlinks of current heading"
   (interactive)
-  (let* ((id-link (format "id:%s" (org-entry-get-with-inheritance "ID")))
+  (let* ((note-id (org-entry-get-with-inheritance "ID"))
+         (id-link (format "id:%s" note-id))
          (matched-files
           (ry/grep-files-in-directory id-link org-directory "*.org" t)))
       (if matched-files
-          (org-ql-search matched-files (list 'link id-link))
+          (let ((helm-org-ql-actions (list (cons "Show heading in a new window" 'ry/org-find-backlink-action))))
+            (helm :prompt "Link ID: "
+                  :sources (helm-org-ql-source matched-files :name "Back Links")
+                  :input (format "link:%s" note-id)))
+          ;; (org-ql-search matched-files (list 'link id-link))
         (message "No back links found"))))
 
 ;; Syntax table
