@@ -125,6 +125,7 @@
          (link (format "[[id:%s][%s]]" note-id title)))
     (unless (file-exists-p dir)
       (make-directory dir t))
+    (org-entry-put nil "CATEGORY" category)
     (org-copy-subtree nil t)
     (insert (format "%s\n" link))
     (with-current-buffer (find-file-noselect fname)
