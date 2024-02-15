@@ -60,8 +60,7 @@
            (result (ry/pyfunc "rypy.org-entry" "index" relative-path working-dir))
            (count (gethash "count" result)))
       (when (> count 0)
-        (message "%s entries synced with DB" count)
-        (async-start (lambda () (ry/http-get "http://localhost:3000/org-entry-refresh-views"))))
+        (message "%s entries synced with DB" count))
       count)))
 
 (defun ry/orgentry-prettify-buffer-name ()
