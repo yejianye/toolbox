@@ -157,6 +157,12 @@
     (org-entry-put nil "CATEGORY" new-category)
     (save-buffer))) ;; save buffer for updating index
 
+(defun ry/pkm-note-set-root ()
+  (interactive)
+  (org-id-get-create)
+  (org-entry-put nil "CATEGORY" (ry//pkm-note-select-category))
+  (org-entry-put nil "ROOT" "YES"))
+
 (defun ry//pkm-test-cases ()
   (ry/pkm-note-create "Note Create Test 3" "project" '(("status" . "WIP")))
   (ry//pkm-note-filename "default" "Test Note" "2023-01-20 10:12:33"))
