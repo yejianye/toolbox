@@ -806,7 +806,7 @@ layers configuration."
 (defun ry/file-shortcuts ()
   (ry/set-key-for-file
    "fef" "~/toolbox/emacs/funcs.el"
-   "ot" "~/org/thinking.org"
+   "ot" "~/org/views/thinking-notes.org"
    "ow" "~/org/bytedance/weekly-report.org"
    "or" "~/org/bytedance/recruiting.org"
    "om" "~/org/bytedance/regular-meetings.org"
