@@ -71,11 +71,6 @@
     (when (org-entry-get nil "ROOT")
       (rename-buffer (substring-no-properties (org-get-heading))))))
 
-;; WARNING: This function doesn't work, need debugging later
-(defun ry/orgentry-db-sync-in-background ()
-  "Sync index entries with local DB in background"
-  (async-start 'ry/orgentry-db-sync))
-
 (defun ry/orgentry-select (where sortedby &optional ascend)
   (ry/pyfunc "rypy.org-entry" "select" where sortedby ascend))
 

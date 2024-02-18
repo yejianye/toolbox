@@ -104,7 +104,7 @@
          (link (format "[[id:%s][%s]]" (plist-get note :id) title))
          (insert-link-p (and (s-equals-p "org-mode" major-mode)
                              (or (use-region-p)
-                                 (char-equal ?y (read-char "Insert link into current file? (y/n): "))))))
+                                 (yes-or-no-p "Insert link into current file?")))))
 
     (when (use-region-p)
       (delete-region (region-beginning) (region-end)))
@@ -162,6 +162,19 @@
   (org-id-get-create)
   (org-entry-put nil "CATEGORY" (ry//pkm-note-select-category))
   (org-entry-put nil "ROOT" "YES"))
+
+(defun ry/pkm-note-index ()
+  (interactive)
+  (org-id-get-create)
+  (org-entry-put nil "CATEGORY" (ry//pkm-note-select-category)))
+
+(defun ry/pkm-note-file-delete ()
+  (interactive)
+  (let ((fname (buffer-file-name)))
+    (when (yes-or-no-p "Are you sure deleting the current note file? ")
+      (kill-buffer)
+      (delete-file fname)
+      (ry/orgentry-db-sync fname))))
 
 (defun ry//pkm-test-cases ()
   (ry/pkm-note-create "Note Create Test 3" "project" '(("status" . "WIP")))
