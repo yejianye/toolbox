@@ -23,11 +23,13 @@
       (org-set-property "HASH" cur-hash))))
 
 (defun ry/orgentry-index-entry-root ()
-  (let ((now (format-time-string "%Y-%m-%d %H:%M:%S"))
-        (time-created (thread-first
-                        (s-replace "{}" buffer-file-name "stat -f '%SB' -t '%Y-%m-%d %H:%M:%S' '{}'")
-                        (shell-command-to-string)
-                        (s-trim))))
+  (let* ((now (format-time-string "%Y-%m-%d %H:%M:%S"))
+         (time-created (if (f-exists-p buffer-file-name)
+                           (thread-first
+                             (s-replace "{}" buffer-file-name "stat -f '%SB' -t '%Y-%m-%d %H:%M:%S' '{}'")
+                             (shell-command-to-string)
+                             (s-trim))
+                         now)))
       (org-set-property "CREATED" time-created)
       (org-set-property "MODIFIED" now)))
 
