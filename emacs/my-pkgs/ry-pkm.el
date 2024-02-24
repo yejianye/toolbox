@@ -157,6 +157,11 @@
     (org-entry-put nil "CATEGORY" new-category)
     (save-buffer))) ;; save buffer for updating index
 
+(defun ry/pkm-note-update-file-location ()
+  (interactive)
+  (ry/pkm-note-goto-root-heading)
+  (let* ()))
+
 (defun ry/pkm-note-set-root ()
   (interactive)
   (org-id-get-create)
