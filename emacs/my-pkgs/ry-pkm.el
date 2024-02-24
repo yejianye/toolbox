@@ -176,6 +176,10 @@
       (delete-file fname)
       (ry/orgentry-db-sync fname))))
 
+(defun ry/pkm-note-rename (new-name)
+  (interactive "sEnter new note name: ")
+  ())
+
 (defun ry//pkm-test-cases ()
   (ry/pkm-note-create "Note Create Test 3" "project" '(("status" . "WIP")))
   (ry//pkm-note-filename "default" "Test Note" "2023-01-20 10:12:33"))
