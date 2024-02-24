@@ -143,24 +143,27 @@
 (defun ry/pkm-note-change-category ()
   (interactive)
   (ry/pkm-note-goto-root-heading)
-  (let* ((old-category (org-entry-get nil "CATEGORY"))
-         (new-category (ry//pkm-note-select-category))
-         (target-path (s-replace (format "/%s/" old-category)
-                                 (format "/%s/" new-category)
-                                 (buffer-file-name)))
-         (target-dir (file-name-directory target-path)))
-    (unless (file-exists-p target-dir)
-      (make-directory target-dir 1))
-    (save-buffer) ;; save file before moving the file
-    (rename-file (buffer-file-name) target-path)
-    (set-visited-file-name target-path)
+  (let* ((new-category (ry//pkm-note-select-category)))
     (org-entry-put nil "CATEGORY" new-category)
-    (save-buffer))) ;; save buffer for updating index
+    (save-buffer) ;; save file before moving the file
+    (ry/pkm-note-update-file-location)))
 
 (defun ry/pkm-note-update-file-location ()
   (interactive)
+  (save-buffer) ; save buffer before moving to new location
   (ry/pkm-note-goto-root-heading)
-  (let* ()))
+  (let* ((title (substring-no-properties (org-get-heading)))
+         (category (org-entry-get nil "CATEGORY"))
+         (time-created (org-entry-get nil "CREATED"))
+         (target-path (ry//pkm-note-filename category title time-created))
+         (target-dir (file-name-directory target-path)))
+    (unless (file-exists-p target-dir)
+      (make-directory target-dir))
+    (rename-file (buffer-file-name) target-path)
+    (set-visited-file-name target-path)
+    (set-buffer-modified-p 1)
+    (save-buffer)
+    (ry/org-id-update-id-locations)))
 
 (defun ry/pkm-note-set-root ()
   (interactive)
@@ -180,10 +183,6 @@
       (kill-buffer)
       (delete-file fname)
       (ry/orgentry-db-sync fname))))
-
-(defun ry/pkm-note-rename (new-name)
-  (interactive "sEnter new note name: ")
-  ())
 
 (defun ry//pkm-test-cases ()
   (ry/pkm-note-create "Note Create Test 3" "project" '(("status" . "WIP")))

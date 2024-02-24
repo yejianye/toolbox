@@ -942,6 +942,7 @@ layers configuration."
               "nr" 'ry/pkm-note-set-root
               "ni" 'ry/pkm-note-index
               "nd" 'ry/pkm-note-file-delete
+              "nu" 'ry/pkm-note-update-file-location
               "bl" 'ry/org-find-backlinks
               "bh" 'ry/org-bold-lines-to-headings
               ">" 'org-demote-subtree
