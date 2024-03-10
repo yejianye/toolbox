@@ -161,7 +161,7 @@
 
 (defun ry//helm-org-entry-build-item (entry)
   (let* ((id (plist-get entry :id))
-         (headlines (plist-get entry :headlines))
+         (headlines (plist-get entry :title))
          (category (plist-get entry :category))
          (last-modified (thread-last (plist-get entry :time_modified)
                          (s-split " ")
@@ -175,7 +175,7 @@
 
 (defun ry//helm-org-entry-build-link (entry)
   (let ((id (plist-get entry :id))
-        (headline (thread-last (plist-get entry :headlines)
+        (headline (thread-last (plist-get entry :title)
                     (s-split "/")
                     (-last-item)
                     (s-trim))))
