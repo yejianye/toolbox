@@ -119,11 +119,12 @@
 
 ;; Org Indexed Entries
 (defun ry/log-heading-click (entry)
-  (ry/http-post "http://localhost:3000/log"
-                (list :event "heading_click"
-                      :heading_id (plist-get entry :id)
-                      :query_id (plist-get entry :query_id)
-                      :rank (plist-get entry :rank))))
+  (when (plist-get entry :query_id)
+    (ry/http-post "http://localhost:3000/log"
+                  (list :event "heading_click"
+                        :heading_id (plist-get entry :id)
+                        :query_id (plist-get entry :query_id)
+                        :rank (plist-get entry :rank)))))
 
 
 (defun ry//helm-org-entry-candidates (source)
@@ -148,24 +149,31 @@
   (let* ((default-action (helm-make-actions
                           "Open entry in indirect buffer" 'ry//helm-org-entry-indirect-buffer
                           "Go to entry" 'ry//helm-org-entry-goto
-                          "Insert entry link" 'ry//helm-org-entry-insert-link))
-         (category-maxlen (->> ry/pkm-category-choices
-                               (--map (length it))
-                               (apply 'max)))
-         (entries (--map (ry//helm-org-entry-padding-category it category-maxlen) entries)))
+                          "Insert entry link" 'ry//helm-org-entry-insert-link)))
     (helm-build-sync-source "Org Entries"
-      :candidates (-map 'ry//helm-org-entry-build-item entries)
-      :candidate-number-limit 100
+      :candidates 'ry//helm-org-entry--candidates
+      :match-dynamic t
+      :requires-pattern 0
       :filtered-candidate-transformer 'ry//helm-org-entry-candidate-transformer
       :keymap (ry/helm-make-keymap
                 (kbd "s-<return>") (ry/helm-run-action 'ry//helm-org-entry-goto)
                 (kbd "s-i") (ry/helm-run-action 'ry//helm-org-entry-insert-link))
       :action (if default-insert-link 'ry//helm-org-entry-insert-link default-action))))
 
+(defun ry//helm-org-entry--candidates ()
+  (-map 'ry//helm-org-entry-build-item (ry/search-note helm-pattern)))
+
+(defun ry/search-note (term)
+  (let* ((result (-> (ry/http-get "http://localhost:3000/search-note" (list :term term :limit 100))
+                     (plist-get :data)))
+         (query-id (plist-get result :id)))
+    (--map (plist-put it :query_id query-id) (plist-get result :data))))
+
 (defun ry//helm-org-entry-build-item (entry)
   (let* ((id (plist-get entry :id))
          (headlines (plist-get entry :title))
-         (category (plist-get entry :category))
+         (category-maxlen (-max (-map 'length ry/pkm-category-choices)))
+         (category (s-pad-right category-maxlen " " (plist-get entry :category)))
          (last-modified (thread-last (plist-get entry :time_modified)
                          (s-split " ")
                          (-first-item)))
@@ -178,11 +186,11 @@
 
 (defun ry//helm-org-entry-build-link (entry)
   (let ((id (plist-get entry :id))
-        (headline (thread-last (plist-get entry :title)
-                    (s-split "/")
-                    (-last-item)
-                    (s-trim))))
-    (format "[[id:%s][%s]]" id headline)))
+        (title (thread-last (plist-get entry :title)
+                 (s-split "/")
+                 (-last-item)
+                 (s-trim))))
+    (format "[[id:%s][%s]]" id title)))
 
 (defun ry//helm-org-entry-goto (entry)
   (ry/log-heading-click entry)
