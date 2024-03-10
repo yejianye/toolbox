@@ -93,13 +93,13 @@
   (--map (cons (plist-get it :desc) it)
          (ry/search-link helm-pattern)))
 
-(defun ry//helm-org-search-links--no-sort (candidates _source)
+(defun ry//helm-org-no-sort (candidates _source)
   candidates)
 
 (defun ry/helm-org-search-links (&optional arg)
-  "Search all links in ORG-DIRECTORY"
+  "Search all links in Notes, Bookmarks and Browser Histories"
   (interactive "P")
-  (let ((helm-fuzzy-sort-fn 'ry//helm-org-search-links--no-sort))
+  (let ((helm-fuzzy-sort-fn 'ry//helm-org-no-sort))
     (helm :sources
           (helm-build-sync-source "Org Search Links"
             :candidates 'ry//helm-org-search-links--candidates
@@ -121,7 +121,10 @@
 (defun ry/log-heading-click (entry)
   (ry/http-post "http://localhost:3000/log"
                 (list :event "heading_click"
-                      :heading_id (plist-get entry :id))))
+                      :heading_id (plist-get entry :id)
+                      :query_id (plist-get entry :query_id)
+                      :rank (plist-get entry :rank))))
+
 
 (defun ry//helm-org-entry-candidates (source)
   (let ((all-entries (-> (ry/http-get "http://localhost:3000/org-entry-all")
@@ -141,13 +144,13 @@
       candidates
     (list (cons "Create New Note?" (list :create-note 1)))))
 
-(defun ry//helm-org-entry-make-source (entries &optional default-insert-link)
+(defun ry//helm-org-entry-make-source (&optional default-insert-link)
   (let* ((default-action (helm-make-actions
                           "Open entry in indirect buffer" 'ry//helm-org-entry-indirect-buffer
                           "Go to entry" 'ry//helm-org-entry-goto
                           "Insert entry link" 'ry//helm-org-entry-insert-link))
-         (category-maxlen (->> entries
-                               (--map (length (plist-get it :category)))
+         (category-maxlen (->> ry/pkm-category-choices
+                               (--map (length it))
                                (apply 'max)))
          (entries (--map (ry//helm-org-entry-padding-category it category-maxlen) entries)))
     (helm-build-sync-source "Org Entries"
@@ -203,10 +206,10 @@
   (plist-get entry :create-note))
 
 (defun ry/helm-org-entries (&optional source default-insert-link)
-  "Select headings from all indexed entries"
-  (interactive)
-  (let* ((entries (ry//helm-org-entry-candidates source)))
-    (helm :sources (ry//helm-org-entry-make-source entries default-insert-link)
+  "Search all notes in ORG-DIRECTORY"
+  (interactive "P")
+  (let* ((helm-fuzzy-sort-fn 'ry//helm-org-no-sort))
+    (helm :sources (ry//helm-org-entry-make-source default-insert-link)
           :buffer "*helm org entries*")))
 
 (defun ry/helm-org-entries-insert-link ()
