@@ -173,7 +173,8 @@
                                   (if query-group
                                     (list :term term :group query-group :limit 100)
                                     (list :term term :limit 100)))
-                     (plist-get :data))))
+                     (plist-get :data)))
+         (query-id (plist-get result :id)))
     (--map (plist-put it :query_id query-id) (plist-get result :data))))
 
 (defun ry//helm-org-entry-build-item (entry)
