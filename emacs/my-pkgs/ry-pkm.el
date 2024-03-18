@@ -91,7 +91,7 @@
     choice))
 
 (defun ry/pkm-note-create-interactive (&optional title-initial)
-  " Create new note interactively
+  " Create new note interactively, return node id
 - If no text is selected, prompt user to enter title and category. Create new note file and insert link to that note in current position.
 - Otherwise, use selected text as title, prompt user to enter category. Create new note file and replace selected text with a link to new note
 - Category will be inherited by default if category attribute is available in parent node PROPERTIES"
@@ -101,7 +101,8 @@
                   (read-string "Enter note title: " title-initial)))
          (category (ry//pkm-note-select-category))
          (note (ry/pkm-note-create title category))
-         (link (format "[[id:%s][%s]]" (plist-get note :id) title))
+         (note-id (plist-get note :id))
+         (link (format "[[id:%s][%s]]" note-id title))
          (insert-link-p (and (s-equals-p "org-mode" major-mode)
                              (or (use-region-p)
                                  (yes-or-no-p "Insert link into current file?")))))
@@ -110,7 +111,8 @@
       (delete-region (region-beginning) (region-end)))
     (if insert-link-p
       (insert link)
-      (org-open-link-from-string link))))
+      (org-open-link-from-string link))
+    note-id))
 
 (defun ry/pkm-note-from-subtree ()
   "Convert current heading to a separate note, and then replace the current heading (and its content) with a link to that note"

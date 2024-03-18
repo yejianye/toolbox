@@ -122,13 +122,11 @@
 
 
 ;; Org Indexed Entries
-(defun ry/log-heading-click (entry)
-  (when (plist-get entry :query_id)
-    (ry/http-post "http://localhost:3000/log"
-                  (list :event "heading_click"
-                        :heading_id (plist-get entry :id)
-                        :query_id (plist-get entry :query_id)
-                        :rank (plist-get entry :rank)))))
+(defun ry/log-create-note (note-id)
+  (ry/http-post "http://localhost:3000/log"
+                (list :event "create_note_from_search"
+                      :note_id note-id
+                      :query_group ry//org-entry-query-group)))
 
 (defun ry/log-heading-click (entry)
   (when (plist-get entry :query_id)
@@ -211,7 +209,8 @@
 (defun ry//helm-org-entry-goto (entry)
   (if (ry//helm-org-entry-new? entry)
       (progn
-        (ry/pkm-note-create-interactive helm-pattern))
+        (let ((note-id (ry/pkm-note-create-interactive helm-pattern)))
+          (ry/log-create-note note-id)))
     (progn
       (ry/log-heading-click entry)
       (org-open-link-from-string (ry//helm-org-entry-build-link entry)))))
