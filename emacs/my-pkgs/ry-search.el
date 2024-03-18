@@ -130,6 +130,14 @@
                         :query_id (plist-get entry :query_id)
                         :rank (plist-get entry :rank)))))
 
+(defun ry/log-heading-click (entry)
+  (when (plist-get entry :query_id)
+    (ry/http-post "http://localhost:3000/log"
+                  (list :event "heading_click"
+                        :heading_id (plist-get entry :id)
+                        :query_id (plist-get entry :query_id)
+                        :rank (plist-get entry :rank)))))
+
 
 (defun ry//helm-org-entry-candidates (source)
   (let ((all-entries (-> (ry/http-get "http://localhost:3000/org-entry-all")
@@ -201,10 +209,12 @@
     (format "[[id:%s][%s]]" id title)))
 
 (defun ry//helm-org-entry-goto (entry)
-  (ry/log-heading-click entry)
   (if (ry//helm-org-entry-new? entry)
-      (ry/pkm-note-create-interactive helm-pattern)
-    (org-open-link-from-string (ry//helm-org-entry-build-link entry))))
+      (progn
+        (ry/pkm-note-create-interactive helm-pattern))
+    (progn
+      (ry/log-heading-click entry)
+      (org-open-link-from-string (ry//helm-org-entry-build-link entry)))))
 
 (defun ry//helm-org-entry-indirect-buffer (entry)
   (ry//helm-org-entry-goto entry)
