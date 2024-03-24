@@ -872,6 +872,7 @@ layers configuration."
   (define-key evil-normal-state-map (kbd "C-k") (kbd "5k"))
   (define-key evil-normal-state-map (kbd "C-i") 'evil-jump-forward)
   (define-key evil-normal-state-map (kbd "s-p") 'lazy-helm/helm-recentf)
+  (define-key evil-normal-state-map (kbd "s-t") 'tab-new)
 
   ;; insert mode
   (define-key evil-insert-state-map (kbd "C-【") 'evil-force-normal-state)
@@ -890,6 +891,8 @@ layers configuration."
   (global-set-key (kbd "C-h f") 'helpful-callable)
   (global-set-key (kbd "C-h v") 'helpful-variable)
   (global-set-key (kbd "C-h k") 'helpful-key)
+  (global-set-key (kbd "s-}") 'tab-bar-switch-to-next-tab)
+  (global-set-key (kbd "s-{") 'tab-bar-switch-to-prev-tab)
 
   ;; helm
   (setq helm-window-prefer-horizontal-split 'decide)
