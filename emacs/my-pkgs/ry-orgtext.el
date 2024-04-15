@@ -3,6 +3,11 @@
   (interactive)
   (ry//org-toggle-style "*" (ryc/line-begin-pos) (ryc/line-end-pos)))
 
+(defun ry/org-toggle-underline-line ()
+  "Toggle underline font for current line"
+  (interactive)
+  (ry//org-toggle-style "_" (ryc/line-begin-pos) (ryc/line-end-pos)))
+
 (defun ry/org-toggle-bold (&optional region-start region-end)
   "Toggle bold font in Orgmode"
   (interactive "r")
@@ -17,6 +22,11 @@
   "Toggle strike through font in Orgmode"
   (interactive "r")
   (ry//org-toggle-style "+" region-start region-end))
+
+(defun ry/org-toggle-underline (&optional region-start region-end)
+  "Toggle underline font in Orgmode"
+  (interactive "r")
+  (ry//org-toggle-style "_" region-start region-end))
 
 (defun ry/org-toggle-bold-current-word ()
   "Bold current word"

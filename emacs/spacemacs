@@ -977,6 +977,7 @@ layers configuration."
     (kbd "s-i") 'ry/helm-org-entries-insert-link
     "t" 'org-todo
     ",B" 'ry/org-toggle-bold-line
+    ",U" 'ry/org-toggle-underline-line
     (kbd "s-b") 'ry/org-toggle-bold-current-word)
 
   (evil-define-key 'insert org-mode-map
@@ -996,6 +997,7 @@ layers configuration."
 
   (evil-define-key 'visual org-mode-map
     (kbd "s-b") 'ry/org-toggle-bold
+    (kbd "s-u") 'ry/org-toggle-underline
     (kbd "s-i") 'ry/org-toggle-italic
     (kbd "s-s") 'ry/org-toggle-strikethrough
     (kbd "s-k") 'ry/org-add-link-on-region)
