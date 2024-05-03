@@ -155,12 +155,13 @@
       candidates
     (list (cons "Create New Note?" (list :create-note 1)))))
 
-(defun ry//helm-org-entry-make-source (&optional default-insert-link)
+(defun ry//helm-org-entry-make-source (&optional default-insert-link category)
   (let* ((default-action (helm-make-actions
                           "Open entry in indirect buffer" 'ry//helm-org-entry-indirect-buffer
                           "Go to entry" 'ry//helm-org-entry-goto
                           "Insert entry link" 'ry//helm-org-entry-insert-link)))
     (setq ry//org-entry-query-group (uuidgen-4))
+    (setq ry//org-entry-query-category category)
     (helm-build-sync-source "Org Entries"
       :candidates 'ry//helm-org-entry--candidates
       :match-dynamic t
@@ -172,13 +173,19 @@
       :action (if default-insert-link 'ry//helm-org-entry-insert-link default-action))))
 
 (defun ry//helm-org-entry--candidates ()
-  (-map 'ry//helm-org-entry-build-item (ry/search-note helm-pattern ry//org-entry-query-group)))
+  (-map 'ry//helm-org-entry-build-item
+         (ry/search-note helm-pattern ry//org-entry-query-group ry//org-entry-query-category)))
 
-(defun ry/search-note (term &optional query-group)
-  (let* ((result (-> (ry/http-get "http://localhost:3000/search-note"
-                                  (if query-group
-                                    (list :term term :group query-group :limit 100)
-                                    (list :term term :limit 100)))
+(defun ry//search-note-add-params (params key value)
+  (if key
+      (plist-put params key value)
+    params))
+
+(defun ry/search-note (term &optional query-group category)
+  (let* ((query-params (-> (list :term term :limit 100)
+                           (ry//search-note-add-params :group query-group)
+                           (ry//search-note-add-params :category category)))
+         (result (-> (ry/http-get "http://localhost:3000/search-note" query-params)
                      (plist-get :data)))
          (query-id (plist-get result :id)))
     (--map (plist-put it :query_id query-id) (plist-get result :data))))
