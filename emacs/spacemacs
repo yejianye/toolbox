@@ -888,6 +888,7 @@ layers configuration."
   ;; all modes
   (global-set-key (kbd "s-o") 'ry/pkm-note-create-interactive)
   (global-set-key (kbd "s-/") 'ry/helm-org-entries)
+  (global-set-key (kbd "s-'") 'ry/helm-org-entries-in-category)
   (global-set-key (kbd "C-h f") 'helpful-callable)
   (global-set-key (kbd "C-h v") 'helpful-variable)
   (global-set-key (kbd "C-h k") 'helpful-key)

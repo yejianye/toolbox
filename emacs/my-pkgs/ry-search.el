@@ -237,17 +237,23 @@
 (defun ry//helm-org-entry-new? (entry)
   (plist-get entry :create-note))
 
-(defun ry/helm-org-entries (&optional source default-insert-link)
+(defun ry/helm-org-entries (&optional default-insert-link category)
   "Search all notes in ORG-DIRECTORY"
   (interactive "P")
   (let* ((helm-fuzzy-sort-fn 'ry//helm-org-no-sort))
-    (helm :sources (ry//helm-org-entry-make-source default-insert-link)
+    (helm :sources (ry//helm-org-entry-make-source default-insert-link category)
           :buffer "*helm org entries*")))
 
 (defun ry/helm-org-entries-insert-link ()
   "Insert link from all indexed entries"
   (interactive)
-  (ry/helm-org-entries nil t))
+  (ry/helm-org-entries t))
+
+(defun ry/helm-org-entries-in-category ()
+  "Search note in a specific category"
+  (interactive)
+  (let ((category (completing-read "Select note category: " ry/pkm-category-choices)))
+    (ry/helm-org-entries nil category)))
 
 
 ;; Org Search Links in current buffer
