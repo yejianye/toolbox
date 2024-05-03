@@ -177,7 +177,7 @@
          (ry/search-note helm-pattern ry//org-entry-query-group ry//org-entry-query-category)))
 
 (defun ry//search-note-add-params (params key value)
-  (if key
+  (if value
       (plist-put params key value)
     params))
 
