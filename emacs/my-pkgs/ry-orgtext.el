@@ -34,6 +34,18 @@
   (let ((bounds (bounds-of-thing-at-point 'word)))
     (ry/org-toggle-bold (car bounds) (cdr bounds))))
 
+(defun ry//beginning-of-line-p (pos)
+  "Check if the position POS is at the beginning of a line."
+  (save-excursion
+    (goto-char pos)
+    (bolp)))
+
+(defun ry//end-of-line-p (pos)
+  "Check if the position POS is at the beginning of a line."
+  (save-excursion
+    (goto-char pos)
+    (eolp)))
+
 (defun ry//org-toggle-style(style-char region-start region-end)
   "Add or remove CHAR from selected text region"
   (let* ((prev-char (char-to-string (or (char-before region-start) ?\s)))
@@ -41,6 +53,7 @@
          (begin (if (string= prev-char style-char) (1- region-start) region-start))
          (end (if (string= next-char style-char) (1+ region-end) region-end))
          (expanded-string (buffer-substring begin end))
+         (style-char-prev (if (or (ry//beginning-of-line-p begin) )))
          (clear-style (and (s-starts-with? style-char expanded-string)
                            (s-ends-with? style-char expanded-string)))
          (modified-string (if clear-style
