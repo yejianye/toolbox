@@ -53,12 +53,17 @@
          (begin (if (string= prev-char style-char) (1- region-start) region-start))
          (end (if (string= next-char style-char) (1+ region-end) region-end))
          (expanded-string (buffer-substring begin end))
-         (style-char-prev (if (or (ry//beginning-of-line-p begin) )))
+         (style-char-prefix (if (or (ry//beginning-of-line-p region-start) (string= prev-char "") (string= prev-char " "))
+                                style-char
+                              (s-concat " " style-char)))
+         (style-char-suffix (if (or (ry//end-of-line-p region-end) (string= next-char "") (string= next-char " "))
+                                style-char
+                              (s-concat style-char " ")))
          (clear-style (and (s-starts-with? style-char expanded-string)
                            (s-ends-with? style-char expanded-string)))
          (modified-string (if clear-style
                               (substring expanded-string 1 (1- (length expanded-string)))
-                            (s-concat style-char expanded-string style-char))))
+                            (s-concat style-char-prefix expanded-string style-char-suffix))))
     (replace-string expanded-string modified-string nil begin end)))
 
 (provide 'ry-orgtext)
