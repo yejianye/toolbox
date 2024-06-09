@@ -258,9 +258,29 @@
 
 ;; Semantic Search for Note Content
 (defun ry/search-note-content (question)
-  (let* ((result (-> (ry/http-get "http://localhost:3000/search-note-content" (list :question question :limit 20))
-                     (plist-get :data))))
+  (let ((result (-> (ry/http-get "http://localhost:3000/search-note-content" (list :question question :limit 20))
+                    (plist-get :data))))
     (plist-get result :data)))
+
+(defun ry//render-content-search-item (item)
+  (let* ((title (plist-get item :title))
+         (note-id (plist-get item :id))
+         (link (format "[[id:%s][Open note]]" note-id)))
+    (format "* %s\n%s\n%s\n" title link (plist-get item :text))))
+
+(defun ry/search-note-content-interactive (question)
+  (interactive "sEnter your question: ")
+  (let* ((buffer-content (->> (ry/search-note-content question)
+                              (-map 'ry//render-content-search-item)
+                              (s-join "\n")))
+         (buffer-name (format "Notes related to '%s'" question))
+         (new-buffer (get-buffer-create buffer-name)))
+    (switch-to-buffer-other-window new-buffer)
+    (erase-buffer)
+    (insert buffer-content)
+    (goto-char (point-min))
+    (org-mode)
+    (org-overview)))
 
 
 ;; Org Search Links in current buffer
