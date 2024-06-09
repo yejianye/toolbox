@@ -270,7 +270,7 @@
     (format "* %s\n%s\n%s\n" title link (plist-get item :text))))
 
 (defun ry//search-note-content-candidates (question)
-  (--map (cons (plist-get it :title) it) (ry/search-note-content question)))
+  (-map 'ry//helm-org-entry-build-item (ry/search-note-content question)))
 
 (defun ry/search-note-content-interactive (question)
   (interactive "sEnter your question: ")
