@@ -170,7 +170,8 @@
       :keymap (ry/helm-make-keymap
                 (kbd "s-<return>") (ry/helm-run-action 'ry//helm-org-entry-goto)
                 (kbd "s-i") (ry/helm-run-action 'ry//helm-org-entry-insert-link))
-      :action (if default-insert-link 'ry//helm-org-entry-insert-link default-action))))
+      :action (if default-insert-link 'ry//helm-org-entry-insert-link default-action)
+      :persistent-action 'ry//helm-org-entry-indirect-buffer)))
 
 (defun ry//helm-org-entry--candidates ()
   (-map 'ry//helm-org-entry-build-item
@@ -268,19 +269,16 @@
          (link (format "[[id:%s][Open note]]" note-id)))
     (format "* %s\n%s\n%s\n" title link (plist-get item :text))))
 
+(defun ry//search-note-content-candidates (question)
+  (--map (cons (plist-get it :title) it) (ry/search-note-content question)))
+
 (defun ry/search-note-content-interactive (question)
   (interactive "sEnter your question: ")
-  (let* ((buffer-content (->> (ry/search-note-content question)
-                              (-map 'ry//render-content-search-item)
-                              (s-join "\n")))
-         (buffer-name (format "Notes related to '%s'" question))
-         (new-buffer (get-buffer-create buffer-name)))
-    (switch-to-buffer-other-window new-buffer)
-    (erase-buffer)
-    (insert buffer-content)
-    (goto-char (point-min))
-    (org-mode)
-    (org-overview)))
+  (helm :sources (helm-build-sync-source "Related Notes"
+                   :candidates (ry//search-note-content-candidates question)
+                   :action 'ry//helm-org-entry-indirect-buffer
+                   :persistent-action 'ry//helm-org-entry-indirect-buffer)
+        :buffer "*helm org entries*"))
 
 
 ;; Org Search Links in current buffer
