@@ -843,6 +843,7 @@ layers configuration."
     "bp" 'ry/switch-to-prev-buffer-in-other-window
     "bl" 'ry/show-log-buffer
     "Tw" 'writeroom-mode
+    "sn" 'ry/search-note-content-interactive
     "oy" 'youdao-dictionary-search-at-point-tooltip
     "oft" 'ry/test-function
     "ofT" 'ry/test-set-function
