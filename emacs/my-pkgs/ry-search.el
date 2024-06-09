@@ -256,6 +256,13 @@
     (ry/helm-org-entries nil category)))
 
 
+;; Semantic Search for Note Content
+(defun ry/search-note-content (question)
+  (let* ((result (-> (ry/http-get "http://localhost:3000/search-note-content" (list :question question :limit 20))
+                     (plist-get :data))))
+    (plist-get result :data)))
+
+
 ;; Org Search Links in current buffer
 
 (defun ry//helm-buf-search-link--action (candidate)
