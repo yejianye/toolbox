@@ -140,7 +140,8 @@
 (defun ry/pkm-note-goto-root-heading ()
   (interactive)
   (goto-char (point-min))
-  (org-next-visible-heading 1))
+  (unless (org-get-heading)
+    (org-next-visible-heading 1)))
 
 (defun ry/pkm-note-change-category ()
   (interactive)
