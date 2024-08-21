@@ -1064,6 +1064,10 @@ layers configuration."
            :base-url "http://home-dir/"
            :working-directory "/Users/ryan/")))
 
+  (setq org-protocol-protocol-alist
+        '(("org-id" :protocol "org-id"
+           :function ry/org-protocol-org-id)))
+
   ;; org-ql
   (setq org-ql-search-directories-files-recursive t)
 

@@ -134,18 +134,24 @@
 
 ;; Meeting Notes
 
-(defvar ry/meeting-note-map
+(setq ry/meeting-note-map
   '(("#* *1-1 \\(.*\\)" ry/insert-one-on-one-note)
     ("#* *Report of Work *[-:]? *\\(.*\\)" ry/insert-report-of-work-meeting)
     ("#* *\\(.*weekly.*\\)" ry/insert-regular-meeting)
     ("#* *\\(.*monthly.*\\)" ry/insert-regular-meeting)
-    ("#* *\\(.*\\)" ry/insert-adhoc-meeting-note)))
+    ("#* *\\(.*\\)" ry/insert-today-note)))
 
 (defun ry/insert-adhoc-meeting-note (title content)
   (let* ((meeting-root (ry/orgx-select-one '(heading "Adhoc Meetings")
                                            "~/org/bytedance/regular-meetings.org"))
          (title (format "%s %s" (format-time-string "%Y-%m-%d") title)))
     (ry/orgx-child-prepend meeting-root title :content content)
+    title))
+
+(defun ry/insert-today-note (title content)
+  (let* ((journal-parent (ry/orgx-select-one `(heading ,(format-time-string "%Y-%m"))
+                                             (ry/journal-org-current-year))))
+    (ry/orgx-child-append journal-parent title :content content)
     title))
 
 (defun ry/insert-regular-meeting (title content)
