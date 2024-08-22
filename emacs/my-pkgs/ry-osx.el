@@ -118,16 +118,19 @@ It only works in Mac OS "
     (shell-command (format "LANG=en_US.UTF-8 cat %s | ~/utils/copy-html-to-clipboard.sh" fname))
     (delete-file fname)))
 
-(defun ry/copy-org-protocol-to-osx-clipboard ()
-  (interactive)
-  (let ((link (ry//org-protocol-url-for-file (buffer-file-name))))
-    (ry//copy-to-osx-clipboard link)
-    (message (format "%s copied to clipboard."
-                     (s-replace "%" "%%" link)))))
 
-(defun ry//org-protocol-url-for-file (fname)
-  (format "org-protocol://open-source?url=http://home-dir/%s"
-          (s-replace " " "%20" (file-relative-name fname "/Users/ryan"))))
+(defun ry/org-protocol-org-id (info)
+  "Handle org-protocol://org-id?id=xxxx link"
+  (when-let ((id (plist-get info :id)))
+    (org-id-goto id))
+  nil)
+
+(defun ry/org-protocol-copy-link ()
+  "Copy org-protocol link of current org heading to clipboard"
+  (interactive)
+  (let ((link (format "http://localhost:3000/open-note?id=%s" (org-id-get))))
+    (ry//copy-to-osx-clipboard link)
+    (message link)))
 
 (defun ry//copy-to-osx-clipboard (string)
   (shell-command (format "LANG=en_US.UTF-8 echo \"%s\" | pbcopy"

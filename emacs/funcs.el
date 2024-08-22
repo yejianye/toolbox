@@ -116,16 +116,6 @@ current buffer's, reload dir-locals."
       (show-children)
       (goto-char buf-pos))))
 
-(defun ry/org-protocol-org-id (info)
-  "Handle org-protocol://org-id?id=xxxx link"
-  (when-let ((id (plist-get info :id)))
-    (org-id-goto id))
-  nil)
-
-(defun ry/org-protocol-copy-link ()
-  "Copy org-protocol link of current org heading to clipboard"
-  (let ((link (format "http://localhost:3000/open-)))))
-
 (defun ry/markdown-cleanup-org-tables()
   (save-excursion
     (goto-char (point-min))
