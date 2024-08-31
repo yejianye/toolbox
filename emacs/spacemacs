@@ -86,7 +86,6 @@ This function should only modify configuration layer settings."
    dotspacemacs-excluded-packages
    '(
      importmagic
-     org-brain
      company-tern
      ;; lsp-python-ms
      gitattributes-mode
