@@ -33,8 +33,12 @@
         1 'org-table prepend))
     'append))
 
+(defvar ry/tablex-init-completed nil)
 (defun ry/tablex-init ()
-  (ry/tablex-register-font-face))
+  (unless ry/tablex-init-completed
+    (message "Initialize ry/tablex module")
+    (ry/tablex-register-font-face)
+    (setq ry/tablex-init-completed t)))
 
 (ry/tablex-init)
 (provide 'ry-tablex)
