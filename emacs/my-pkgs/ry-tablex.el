@@ -21,7 +21,7 @@
          (src-buffer (current-buffer))
          (buffer (generate-new-buffer (format "*Table %s*" table-id)))
          (table-content (ry/tablex-get-table table-id t)))
-    (switch-to-buffer-other-window buffer)
+    (pop-to-buffer buffer)
     (insert "# Use `, c c` to commit the changes; use `, c k` to abort the changes.\n")
     (insert table-content)
     (yaml-mode)
@@ -31,7 +31,35 @@
 (define-minor-mode tablex-edit-mode
   "A minor mode to edit tablex"
   :lighter "tablex"
-  :keymap (let ((map (m)))))
+  :keymap (let ((map (make-sparse-keymap)))
+            (evil-define-key 'normal map
+              ",cc" 'ry/tablex-commit-changes
+              ",ck" 'ry/tablex-abort-changes)
+            map)
+  (if tablex-edit-mode
+      (message "tablex-edit-mode enabled")
+    (message "tablex-edit-mode disabled")))
+
+(defun ry/tablex-commit-changes ()
+  (interactive)
+  (let* ((content (buffer-substring-no-properties (point-min) (point-max)))
+         (buffer (current-buffer))
+         (src-buffer (ry/tablex-source-buffer))
+         (table-id (ry/tablex-source-table-id)))
+    (ry/tablex-save-raw table-id content)
+    (delete-window)
+    (kill-buffer buffer)
+    (display-buffer-reuse-window src-buffer)
+    (goto-char (point-min))
+    (re-search-forward (format ":id %s" table-id))
+    (org-ctrl-c-ctrl-c)))
+
+(defun ry/tablex-abort-changes ()
+  (interactive)
+  (let ((buffer (current-buffer)))
+    (when (yes-or-no-p "Are you sure to abort the changes?")
+        (delete-window)
+        (kill-buffer buffer))))
 
 (defun org-dblock-write:tablex (params)
   (let* ((table-id (plist-get params :id))
@@ -49,6 +77,10 @@
 (defun ry/tablex-create (column-names)
   (ry/pyfunc "rypy.tablex" "table_create" column-names))
 
+(defun ry/tablex-save-raw (table-id content)
+  (ry/pyfunc "rypy.tablex" "table_save_raw" table-id content))
+
+;; Look & Feel
 (defun ry/tablex-register-font-face ()
   (font-lock-add-keywords
     'org-mode
