@@ -15,10 +15,23 @@
     (org-ctrl-c-ctrl-c)))
 
 ;; Full Table Edit
-(defun ry/org-tablex-edit-full-table
-    (interactive)
-  (let ((table-id (ry/tablex-get-table-id)))
-    (find-file-other-window)))
+(defun ry/org-tablex-edit-full-table ()
+  (interactive)
+  (let* ((table-id (ry/tablex-get-table-id))
+         (src-buffer (current-buffer))
+         (buffer (generate-new-buffer (format "*Table %s*" table-id)))
+         (table-content (ry/tablex-get-table table-id t)))
+    (switch-to-buffer-other-window buffer)
+    (insert "# Use `, c c` to commit the changes; use `, c k` to abort the changes.\n")
+    (insert table-content)
+    (yaml-mode)
+    (setq-local ry/tablex-source-table-id table-id)
+    (setq-local ry/tablex-source-buffer src-buffer)))
+
+(define-minor-mode tablex-edit-mode
+  "A minor mode to edit tablex"
+  :lighter "tablex"
+  :keymap (let ((map (m)))))
 
 (defun org-dblock-write:tablex (params)
   (let* ((table-id (plist-get params :id))
@@ -30,8 +43,8 @@
 (defun ry/tablex-render (table-id)
   (ry/pyfunc "rypy.tablex" "table_render" table-id))
 
-(defun ry/tablex-get-table (table-id)
-  (ry/pyfunc "rypy.tablex" "table_get" table-id))
+(defun ry/tablex-get-table (table-id yaml-str)
+  (ry/pyfunc "rypy.tablex" "table_get" table-id yaml-str))
 
 (defun ry/tablex-create (column-names)
   (ry/pyfunc "rypy.tablex" "table_create" column-names))
