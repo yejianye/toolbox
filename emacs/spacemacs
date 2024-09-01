@@ -973,7 +973,8 @@ layers configuration."
               "mr" 'ry/send-current-line-to-reminder-app
               "sa" 'ry/org-smart-archive
               "sf" 'ry/org-heading-to-file
-              "tiR" 'ry/orgtable-insert-row-after)
+              "tiR" 'ry/orgtable-insert-row-after
+              "te" 'ry/org-tablex-edit-full-table)
   (ry/declare-prefix-for-mode 'org-mode "mo" "user bindings")
   (evil-define-key 'normal org-mode-map
     (kbd "s-i") 'ry/helm-org-entries-insert-link
