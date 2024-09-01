@@ -1142,7 +1142,8 @@ layers configuration."
   (font-lock-add-keywords
    'org-mode
    `(("^[ \t]*\\(?:[-+*]\\|[0-9]+[).]\\)[ \t]+\\(\\(?:\\[@\\(?:start:\\)?[0-9]+\\][ \t]*\\)?\\[\\(?:X\\|\\([0-9]+\\)/\\2\\)\\][^\n]*\n\\)"
-      1 'org-checkbox-done-text prepend))
+      1 'org-checkbox-done-text prepend)
+     ("^[ \t]*\\(\\(|\\|\\+-[-+]\\).*\\S-\\)"))
    'append)
 
   (custom-set-faces
