@@ -974,7 +974,8 @@ layers configuration."
               "sa" 'ry/org-smart-archive
               "sf" 'ry/org-heading-to-file
               "tiR" 'ry/orgtable-insert-row-after
-              "te" 'ry/org-tablex-edit-full-table)
+              "te" 'ry/org-tablex-edit-full-table
+              "tc" 'ry/org-tablex-create-interactively)
   (ry/declare-prefix-for-mode 'org-mode "mo" "user bindings")
   (evil-define-key 'normal org-mode-map
     (kbd "s-i") 'ry/helm-org-entries-insert-link
