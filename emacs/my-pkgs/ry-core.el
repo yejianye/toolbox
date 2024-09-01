@@ -34,17 +34,6 @@
 E.g. (ryc/plist-path '(:a (:b 1) :c 2) '(:a :b)) => 1"
   (--reduce-from (plist-get acc it) plist path))
 
-(defun ryc/hash-to-plist (hash)
-  "Convert a hashtable HASH to a property list (plist)."
-  (let (plist)
-    ;; Iterate over the hashtable
-    (maphash (lambda (key value)
-               ;; Append each key-value pair to the plist
-               (setq plist (cons value (cons key plist))))
-             hash)
-    ;; Return the constructed plist
-    plist))
-
 (defalias 'ryc/plist-merge 'org-combine-plists)
 
 ;; list conversion
