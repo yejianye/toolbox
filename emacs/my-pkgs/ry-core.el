@@ -41,6 +41,9 @@ E.g. (ryc/plist-path '(:a (:b 1) :c 2) '(:a :b)) => 1"
   "Convert vector to list"
   (append vec nil))
 
+(defun ryc/list-to-vector (l)
+  (vconcat l))
+
 (defun ryc/plist-to-alist (plist)
   "Convert plist to alist"
   (let ((plist (-clone plist))
