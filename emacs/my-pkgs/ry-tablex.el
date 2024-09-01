@@ -5,7 +5,7 @@
 (defun org-dblock-write:tablex (params)
   (let* ((table-id (plist-get params :id))
          (output (gethash "display" (ry/tablex-render table-id)))
-         (prop-output (propertize output 'face '(:foreground "blue"))))
+         (prop-output (propertize output 'face 'org-block)))
     (insert prop-output)))
 
 (defun ry/tablex-render (table-id)
