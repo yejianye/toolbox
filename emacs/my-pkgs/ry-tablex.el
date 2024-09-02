@@ -53,6 +53,27 @@
   (interactive)
   (ry/org-tablex-column-width-inc -5))
 
+(defun ry/org-tablex-column-insert-after ()
+  (interactive)
+  (ry/org-tablex-column-insert t))
+
+(defun ry/org-tablex-column-insert-before ()
+  (interactive)
+  (ry/org-tablex-column-insert nil))
+
+(defun ry/org-tablex-column-insert (after)
+  (let* ((column-name (read-string "Enter column name: "))
+         (table-id (ry/tablex-get-table-id))
+         (col-idx (ry/org-tablex-column-current-index)))
+    (ry/tablex-column-insert table-id (if after (1+ col-idx) col-idx) column-name)
+    (ry/org-tablex-redisplay)))
+
+(defun ry/org-tablex-column-remove ()
+  (interactive)
+  (let* ((table-id (ry/tablex-get-table-id))
+         (col-idx (ry/org-tablex-column-current-index)))
+    (ry/tablex-column-remove table-id col-idx)
+    (ry/org-tablex-redisplay)))
 
 ;; Refresh table
 (defun ry/org-tablex-redisplay ()
@@ -109,7 +130,7 @@
 (defun ry/tablex-render (table-id)
   (ry/pyfunc "rypy.tablex" "table_render" table-id))
 
-(defun ry/tablex-get-table (table-id yaml-str)
+(defun ry/tablex-get-table (table-id &optional yaml-str)
   (ry/pyfunc "rypy.tablex" "table_get" table-id yaml-str))
 
 (defun ry/tablex-create (column-names)
@@ -120,6 +141,12 @@
 
 (defun ry/tablex-column-width-inc (table-id column-index val)
   (ry/pyfunc "rypy.tablex" "table_column_width_inc" table-id column-index val))
+
+(defun ry/tablex-column-insert (table-id column-index column-name)
+  (ry/pyfunc "rypy.tablex" "table_column_insert" table-id column-index column-name))
+
+(defun ry/tablex-column-remove (table-id column-index)
+  (ry/pyfunc "rypy.tablex" "table_column_remove" table-id column-index))
 
 ;; Look & Feel
 (defun ry/tablex-register-font-face ()
