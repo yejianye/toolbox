@@ -29,6 +29,11 @@
     (setq-local ry/tablex-source-table-id table-id)
     (setq-local ry/tablex-source-buffer src-buffer)))
 
+;; Resize columns
+(defun ry/org-tablex-column-current-index ()
+  (let* ((table-id (ry/tablex-get-table-id))
+         (col_pos (gethash "col_pos" (ry/tablex-render table-id))))))
+
 (define-minor-mode tablex-edit-mode
   "A minor mode to edit tablex"
   :lighter "tablex"
@@ -78,6 +83,9 @@
 
 (defun ry/tablex-save-raw (table-id content)
   (ry/pyfunc "rypy.tablex" "table_save_raw" table-id content))
+
+(defun ry/tablex-column-width-inc (table-id column-index val)
+  (ry/pyfunc "rypy.tablex" "table_column_width_inc" table-id column-index val))
 
 ;; Look & Feel
 (defun ry/tablex-register-font-face ()
