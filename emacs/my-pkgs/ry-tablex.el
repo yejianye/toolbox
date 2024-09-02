@@ -32,7 +32,41 @@
 ;; Resize columns
 (defun ry/org-tablex-column-current-index ()
   (let* ((table-id (ry/tablex-get-table-id))
-         (col_pos (gethash "col_pos" (ry/tablex-render table-id))))))
+         (col-pos (thread-last (ry/tablex-render table-id)
+                               (gethash "col_pos")
+                               (ryc/vector-to-list)))
+         (cur-col (current-column)))
+    (thread-last col-pos
+                  (--filter (<= it cur-col))
+                  (length)
+                  (1-))))
+
+(defun ry/org-tablex-column-width-inc (&optional val)
+  (interactive)
+  (let* ((step (or val 5))
+         (table-id (ry/tablex-get-table-id))
+         (col-idx (ry/org-tablex-column-current-index)))
+    (ry/tablex-column-width-inc table-id col-idx step)
+    (ry/org-tablex-redisplay)))
+
+(defun ry/org-tablex-column-width-dec ()
+  (interactive)
+  (ry/org-tablex-column-width-inc -5))
+
+
+;; Refresh table
+(defun ry/org-tablex-redisplay ()
+  "Re-render the tablex at point"
+  (interactive)
+  (let ((line-pos (line-number-at-pos))
+        (col-pos (current-column))
+        (case-fold-search t))
+      (move-end-of-line nil)
+      (re-search-backward "^#\\+begin: tablex")
+      (org-ctrl-c-ctrl-c)
+      (goto-char (point-min))
+      (forward-line (1- line-pos))
+      (move-to-column col-pos)))
 
 (define-minor-mode tablex-edit-mode
   "A minor mode to edit tablex"
