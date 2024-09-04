@@ -156,6 +156,11 @@
         1 'org-table prepend))
     'append))
 
+;; Hydra
+(defhydra ry/hydra-org-tablex (:color red :hint nil)
+  "Tablex"
+  ("t" ry/org-tablex-create-interactively "Create Table"))
+
 ;; Help function
 (defun ry/tablex-get-table-id ()
   (save-excursion

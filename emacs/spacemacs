@@ -978,6 +978,7 @@ layers configuration."
               "tc" 'ry/org-tablex-create-interactively)
   (ry/declare-prefix-for-mode 'org-mode "mo" "user bindings")
   (evil-define-key 'normal org-mode-map
+    (kbd "C-t") 'ry/hydra-org-tablex/body
     (kbd "s-i") 'ry/helm-org-entries-insert-link
     "t" 'org-todo
     ",B" 'ry/org-toggle-bold-line
