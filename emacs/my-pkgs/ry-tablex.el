@@ -30,21 +30,50 @@
     (setq-local ry/tablex-source-buffer src-buffer)))
 
 ;; Movement
+(defun ry/tablex-find-pos (array val)
+  "Find the index of a sorted ARRAY where the indexed element is smaller or equal to VAL"
+  (thread-last array
+               (--filter (<= it val))
+               (length)
+               (1-)))
+
+(defun ry/org-tablex-pos-map ()
+  (let* ((table-id (ry/tablex-get-table-id))
+         (render-data (ry/tablex-render table-id)))
+    (list :rows (ryc/vector-to-list (gethash "row_pos" render-data))
+          :cols (ryc/vector-to-list (gethash "col_pos" render-data)))))
+
+(defun ry/org-tablex-goto-beginning ()
+  (interactive)
+  (let ((case-fold-search t))
+    (move-end-of-line nil)
+    (re-search-backward "^#\\+begin: tablex")))
+
 (defun ry/org-tablex-goto-cell (row col)
   "Goto specific row and column of current tablex"
-  (let* ((table-id (ry/tablex-get-table-id))
-         (col-pos ()))))
+  (let* ((pos-map (ry/org-tablex-pos-map))
+         (row-offset (nth row (plist-get pos-map :rows)))
+         (col-offset (nth col (plist-get pos-map :cols))))
+    (ry/org-tablex-goto-beginning)
+    (forward-line (1+ row-offset))
+    (move-to-column (1+ col-offset))))
+
 (defun ry/org-tablex-column-current-index ()
   (let* ((table-id (ry/tablex-get-table-id))
-         (col-pos (thread-last (ry/tablex-render table-id)
-                               (gethash "col_pos")
-                               (ryc/vector-to-list)))
+         (col-pos (plist-get (ry/org-tablex-pos-map) :cols))
          (cur-col (current-column)))
-    (thread-last col-pos
-                 (--filter (<= it cur-col))
-                 (length)
-                 (1-))))
+    (ry/tablex-find-pos col-pos cur-col)))
 
+(defun ry/org-tablex-row-current-index ()
+  (let* ((table-id (ry/tablex-get-table-id))
+         (row-pos (plist-get (ry/org-tablex-pos-map) :rows))
+         (start-row (save-excursion
+                      (ry/org-tablex-goto-beginning)
+                      (line-number-at-pos)))
+         (cur-row (- (line-number-at-pos) (1+ start-row))))
+    (ry/tablex-find-pos row-pos cur-row)))
+
+(defun r)
 ;; Resize columns
 
 (defun ry/org-tablex-column-width-inc (&optional val)
@@ -172,8 +201,7 @@
   (save-excursion
     (let ((case-fold-search t)
           (id-pattern ":id \\([0-9-]+\\)"))
-      (move-end-of-line nil)
-      (re-search-backward "^#\\+begin: tablex")
+      (ry/org-tablex-goto-beginning)
       (if (re-search-forward id-pattern nil t)
           (substring-no-properties (match-string 1))
         nil))))
