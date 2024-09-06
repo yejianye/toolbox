@@ -29,7 +29,11 @@
     (setq-local ry/tablex-source-table-id table-id)
     (setq-local ry/tablex-source-buffer src-buffer)))
 
-;; Resize columns
+;; Movement
+(defun ry/org-tablex-goto-cell (row col)
+  "Goto specific row and column of current tablex"
+  (let* ((table-id (ry/tablex-get-table-id))
+         (col-pos ()))))
 (defun ry/org-tablex-column-current-index ()
   (let* ((table-id (ry/tablex-get-table-id))
          (col-pos (thread-last (ry/tablex-render table-id)
@@ -37,9 +41,11 @@
                                (ryc/vector-to-list)))
          (cur-col (current-column)))
     (thread-last col-pos
-                  (--filter (<= it cur-col))
-                  (length)
-                  (1-))))
+                 (--filter (<= it cur-col))
+                 (length)
+                 (1-))))
+
+;; Resize columns
 
 (defun ry/org-tablex-column-width-inc (&optional val)
   (interactive)

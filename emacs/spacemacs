@@ -1200,8 +1200,8 @@ layers configuration."
   (setq flycheck-python-flake8-executable "flake8")
 
   (add-hook 'python-mode-hook (lambda ()
-                                (yafolding-mode 1)))
-                                ;; (setq flycheck-checker 'python-flake8)
+                                (yafolding-mode 1)
+                                (setq flycheck-checker 'python-flake8)))
   ;; It should be '-i' to keep ipython in interactive mode
   ;; But ipython would fail to boot with '-i', and currently
   ;; I have no idea why it happens.
