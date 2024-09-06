@@ -137,6 +137,17 @@
     (ry/tablex-column-remove table-id col-idx)
     (ry/org-tablex-redisplay)))
 
+(defun ry/org-tablex-column-rename ()
+  (interactive)
+  (let* ((table-id (ry/tablex-get-table-id))
+         (col-idx (ry/org-tablex-column-current-index))
+         (columns (gethash "columns" (ry/tablex-get-table table-id)))
+         (old-name (gethash "name" (aref columns col-idx)))
+         (new-name (read-string "Enter new column name: " old-name)))
+    (unless (string= new-name old-name)
+      (ry/tablex-column-rename table-id col-idx new-name)
+      (ry/org-tablex-redisplay))))
+
 ;; Insert / Remove Row
 (defun ry/org-tablex-row-insert-after ()
   (interactive)
@@ -153,10 +164,30 @@
     (ry/org-tablex-redisplay)))
 
 (defun ry/org-tablex-row-remove ()
+  (interactive)
   (let* ((table-id (ry/tablex-get-table-id))
          (row-idx (ry/org-tablex-row-current-index)))
     (ry/tablex-row-remove table-id row-idx)
     (ry/org-tablex-redisplay)))
+
+;; Edit Cell
+(defun ry/org-tablex-edit-cell ()
+  (interactive)
+  (let* ((table-id (ry/tablex-get-table-id))
+         (cur-row (ry/org-tablex-row-current-index))
+         (cur-col (ry/org-tablex-col-current-index))
+         (src-buffer (current-buffer))
+         (buffer (generate-new-buffer (format "*Edit Tablex %s (%d, %d)*"
+                                              table-id cur-row cur-col)))
+         (cell-content (thread-last (ry/tablex-get-table table-id))))
+    (pop-to-buffer buffer)
+    (insert table-content)
+    (yaml-mode)
+    (tablex-edit-mode)
+    (evil-normal-state)
+    (setq-local ry/tablex-source-table-id table-id)
+    (setq-local ry/tablex-source-buffer src-buffer)))
+
 
 ;; Refresh table
 (defun ry/org-tablex-redisplay ()
@@ -228,6 +259,9 @@
 (defun ry/tablex-column-insert (table-id column-index column-name)
   (ry/pyfunc "rypy.tablex" "table_column_insert" table-id column-index column-name))
 
+(defun ry/tablex-column-rename (table-id column-index column-name)
+  (ry/pyfunc "rypy.tablex" "table_column_rename" table-id column-index column-name))
+
 (defun ry/tablex-column-remove (table-id column-index)
   (ry/pyfunc "rypy.tablex" "table_column_remove" table-id column-index))
 
@@ -235,6 +269,9 @@
   (ry/pyfunc "rypy.tablex" "table_row_insert" table-id row-index))
 
 (defun ry/tablex-row-remove (table-id row-index)
+  (ry/pyfunc "rypy.tablex" "table_row_remove" table-id row-index))
+
+(defun ry/tablex-cell-get (table-id row col)
   (ry/pyfunc "rypy.tablex" "table_row_remove" table-id row-index))
 
 ;; Look & Feel
@@ -255,6 +292,8 @@
   ("j" ry/org-tablex-next-row "Move to Next Row")
   ("L" ry/org-tablex-column-insert-after "Insert Column to the Right")
   ("H" ry/org-tablex-column-insert-before "Insert Column to the Left")
+  ("+" ry/org-tablex-column-width-inc "Increase Column Width")
+  ("-" ry/org-tablex-column-width-dec "Decrease Column Width")
   ("D" ry/org-tablex-column-remove "Remove Column")
   ("J" ry/org-tablex-row-insert-after "Insert Row Below")
   ("K" ry/org-tablex-row-insert-before "Insert Row Above")
