@@ -59,23 +59,49 @@
     (move-to-column (1+ col-offset))))
 
 (defun ry/org-tablex-column-current-index ()
-  (let* ((table-id (ry/tablex-get-table-id))
-         (col-pos (plist-get (ry/org-tablex-pos-map) :cols))
+  (let* ((col-pos (plist-get (ry/org-tablex-pos-map) :cols))
          (cur-col (current-column)))
     (ry/tablex-find-pos col-pos cur-col)))
 
 (defun ry/org-tablex-row-current-index ()
-  (let* ((table-id (ry/tablex-get-table-id))
-         (row-pos (plist-get (ry/org-tablex-pos-map) :rows))
+  (let* ((row-pos (plist-get (ry/org-tablex-pos-map) :rows))
          (start-row (save-excursion
                       (ry/org-tablex-goto-beginning)
                       (line-number-at-pos)))
          (cur-row (- (line-number-at-pos) (1+ start-row))))
     (ry/tablex-find-pos row-pos cur-row)))
 
-(defun r)
-;; Resize columns
+(defun ry/org-tablex-next-column ()
+  (interactive)
+  (let* ((cur-col (ry/org-tablex-column-current-index))
+         (cur-row (ry/org-tablex-row-current-index))
+         (total-cols (length (plist-get (ry/org-tablex-pos-map) :cols))))
+    (unless (= cur-col (1- total-cols))
+      (ry/org-tablex-goto-cell cur-row (1+ cur-col)))))
 
+(defun ry/org-tablex-prev-column ()
+  (interactive)
+  (let* ((cur-col (ry/org-tablex-column-current-index))
+         (cur-row (ry/org-tablex-row-current-index)))
+    (unless (= cur-col 0)
+      (ry/org-tablex-goto-cell cur-row (1- cur-col)))))
+
+(defun ry/org-tablex-next-row ()
+  (interactive)
+  (let* ((cur-col (ry/org-tablex-column-current-index))
+         (cur-row (ry/org-tablex-row-current-index))
+         (total-rows (length (plist-get (ry/org-tablex-pos-map) :rows))))
+    (unless (= cur-row (1- total-rows))
+      (ry/org-tablex-goto-cell (1+ cur-row) cur-col))))
+
+(defun ry/org-tablex-prev-row ()
+  (interactive)
+  (let* ((cur-col (ry/org-tablex-column-current-index))
+         (cur-row (ry/org-tablex-row-current-index)))
+    (unless (= cur-row 0)
+      (ry/org-tablex-goto-cell (1- cur-row) cur-col))))
+
+;; Resize columns
 (defun ry/org-tablex-column-width-inc (&optional val)
   (interactive)
   (let* ((step (or val 5))
@@ -194,7 +220,13 @@
 ;; Hydra
 (defhydra ry/hydra-org-tablex (:color red :hint nil)
   "Tablex"
-  ("t" ry/org-tablex-create-interactively "Create Table"))
+  ("t" ry/org-tablex-create-interactively "Create Table")
+  ("h" ry/org-tablex-prev-column "Move to Prev Column")
+  ("l" ry/org-tablex-next-column "Move to Next Column")
+  ("k" ry/org-tablex-prev-row "Move to Prev Row")
+  ("j" ry/org-tablex-next-row "Move to Next Row")
+  ("L" ry/org-tablex-column-insert-after "Insert Column to the Right")
+  ("H" ry/org-tablex-column-insert-before "Insert Column to the Left"))
 
 ;; Help function
 (defun ry/tablex-get-table-id ()
