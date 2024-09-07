@@ -12,7 +12,8 @@
          (table-id (ry/tablex-create column-names))
          (table-block (format "#+begin: tablex :id %s\n#+end:" table-id)))
     (insert table-block)
-    (org-ctrl-c-ctrl-c)))
+    (org-ctrl-c-ctrl-c)
+    (ry/org-tablex-goto-cell 0 0)))
 
 ;; Full Table Edit
 (defun ry/org-tablex-edit-full-table ()
@@ -52,7 +53,7 @@
 (defun ry/org-tablex-goto-cell (row col)
   "Goto specific row and column of current tablex"
   (let* ((pos-map (ry/org-tablex-pos-map))
-         (row-offset (nth (1+ row) (plist-get pos-map :rows)))
+         (row-offset (nth row (plist-get pos-map :rows)))
          (col-offset (nth col (plist-get pos-map :cols))))
     (ry/org-tablex-goto-beginning)
     (forward-line (1+ row-offset))
@@ -69,7 +70,7 @@
                       (ry/org-tablex-goto-beginning)
                       (line-number-at-pos)))
          (cur-row (- (line-number-at-pos) (1+ start-row))))
-    (1- (ry/tablex-find-pos row-pos cur-row))))
+    (ry/tablex-find-pos row-pos cur-row)))
 
 (defun ry/org-tablex-next-column ()
   (interactive)
