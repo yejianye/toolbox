@@ -282,6 +282,7 @@
         (kill-buffer buffer)
         (display-buffer src-buffer '(display-buffer-reuse-window)))))
 
+(defun ry/tablex-)
 (defun org-dblock-write:tablex (params)
   (let* ((table-id (plist-get params :id))
          (output (gethash "display" (ry/tablex-render table-id)))
@@ -361,6 +362,21 @@
   ("d" ry/org-tablex-row-remove))
 
 ;; Help function
+(defun substring-by-display-width (str start width)
+  "Return a substring of STR starting at display width START with a total display width of WIDTH."
+  (let ((current-width -1)
+        (result ""))
+    (dolist (char (string-to-list str))
+      (let ((char-width (string-width (string char))))
+        (setq current-width (+ current-width char-width))
+        (cond
+         ((and (>= current-width start)
+               (< current-width (+ start width)))
+          (setq result (concat result (string char))))
+         ((>= current-width (+ start width))
+          (return result)))))
+    result))
+
 (defun ry/tablex-get-table-id ()
   (save-excursion
     (let ((case-fold-search t)
