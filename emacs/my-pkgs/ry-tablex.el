@@ -316,6 +316,7 @@
                               (--map (substring-by-display-width it 0 display-width))
                               (s-join "\n")))
          (prop-output (propertize output 'line-spacing 0)))
+    ;; (message "block update: %s\n%s" table-id (ry/tablex-render table-id))
     (insert prop-output)
     (setq-local ry/org-tablex-exists t)))
 

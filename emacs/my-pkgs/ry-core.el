@@ -171,12 +171,12 @@ And then execute BODY in that buffer"
      ,@body))
 
 ;; Cache
-(defvar ryc-cache (make-hash-table))
+(defvar ryc-cache (make-hash-table :test 'equal))
 
 (defmacro ryc/with-cache (namespace key &rest body)
   "If cache KEY exists in NAMESPACE, return the cached value. Otherwise, execute BODY and cache the result."
   `(let* ((cache-namespace (or (gethash ,namespace ryc-cache)
-                               (puthash ,namespace (make-hash-table) ryc-cache)))
+                               (puthash ,namespace (make-hash-table :test 'equal) ryc-cache)))
           (cached-value (gethash ,key cache-namespace)))
      (if cached-value
          cached-value
