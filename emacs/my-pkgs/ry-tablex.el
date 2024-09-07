@@ -53,26 +53,26 @@
 (defun ry/org-tablex-goto-cell (row col)
   "Goto specific row and column of current tablex"
   (let* ((pos-map (ry/org-tablex-pos-map))
-         (margin-left 10)
-         (margin-right 15)
+         ;; (margin-left 10)
+         ;; (margin-right 15)
          (table-id (ry/tablex-get-table-id))
          (display-width (ry/tablex-max-display-width))
          (hscroll (ry/org-tablex-hscroll-get table-id))
          (row-offset (nth row (plist-get pos-map :rows)))
          (col-offset (- (nth col (plist-get pos-map :cols)) hscroll)))
-    (if (< col-offset 0)
-        (ry/org-tablex-hscroll-left (+ (- col-offset) margin-left))
-      (setq col-offset margin-left))
-    (if (> col-offset display-width)
-        (ry/org-tablex-hscroll-right (+ margin-right (- col-offset display-width)))
-      (setq col-offset (- display-width margin-right)))
+    ;; (if (< col-offset 0)
+    ;;     (ry/org-tablex-hscroll-left (+ (- col-offset) margin-left))
+    ;;   (setq col-offset margin-left))
+    ;; (if (> col-offset display-width)
+    ;;     (ry/org-tablex-hscroll-right (+ margin-right (- col-offset display-width)))
+    ;;   (setq col-offset (- display-width margin-right)))
     (ry/org-tablex-goto-beginning)
     (forward-line (1+ row-offset))
     (move-to-column (1+ col-offset))))
 
 (defun ry/org-tablex-column-current-index ()
   (let* ((col-pos (plist-get (ry/org-tablex-pos-map) :cols))
-         (cur-col (current-column)))
+         (cur-col (+ (current-column) (ry/org-tablex-hscroll-get))))
     (ry/tablex-find-pos col-pos cur-col)))
 
 (defun ry/org-tablex-row-current-index ()
@@ -277,11 +277,12 @@
     (move-to-column col-pos)))
 
 ;; Horizontal Scrolling
-(defun ry/org-tablex-hscroll-get (table-id)
+(defun ry/org-tablex-hscroll-get (&optional table-id)
   (unless (local-variable-p 'ry/org-tablex-hscroll-map)
     (setq-local ry/org-tablex-hscroll-map (make-hash-table :test 'equal)))
-  (or (gethash table-id ry/org-tablex-hscroll-map)
-      (puthash table-id 0 ry/org-tablex-hscroll-map)))
+  (let ((table-id (or table-id (ry/tablex-get-table-id))))
+    (or (gethash table-id ry/org-tablex-hscroll-map)
+        (puthash table-id 0 ry/org-tablex-hscroll-map))))
 
 (defun ry/org-tablex-hscroll-left (&optional table-id offset)
   (interactive)
@@ -292,10 +293,16 @@
 (defun ry/org-tablex-hscroll-right (&optional table-id offset)
   (interactive)
   (let* ((table-id (or table-id (ry/tablex-get-table-id)))
+         (cur-scroll (ry/org-tablex-hscroll-get table-id))
+         (col-idx (ry/org-tablex-column-current-index))
+         (row-idx (ry/org-tablex-row-current-index))
          (offset (or offset 5))
-         (cur-scroll (ry/org-tablex-hscroll-get table-id)))
-    (puthash table-id (+ cur-scroll offset) ry/org-tablex-hscroll-map)
-    (ry/org-tablex-redisplay)))
+         (new-scroll (+ cur-scroll offset)))
+    (if (< new-scroll 0)
+        (puthash table-id 0 ry/org-tablex-hscroll-map)
+      (puthash table-id (+ cur-scroll offset) ry/org-tablex-hscroll-map))
+    (ry/org-tablex-redisplay)
+    (ry/org-tablex-goto-cell row-idx col-idx)))
 
 (define-minor-mode tablex-edit-mode
   "A minor mode to edit tablex"
@@ -339,7 +346,7 @@
          (output (thread-last (gethash "display" (ry/tablex-render table-id))
                               (s-split "\n")
                               (--map (substring-by-display-width it hscroll (1- display-width)))
-                              (--map (concat "\u2009" it))
+                              (--map (concat "\u200B" it))
                               (s-join "\n")))
          (prop-output (propertize output 'line-spacing 0)))
     (insert prop-output)
@@ -349,9 +356,13 @@
 (defun ry/org-tablex-on-load ()
   (ry/org-tablex-redisplay-all))
 
-(defun ry/org-tablex-on-window-resize (window))
-  ;; (when (local-variable-p 'ry/org-tablex-exists)))
-    ;; (ry/org-tablex-redisplay-all)))
+(defun ry/org-tablex-on-window-resize (window)
+  (let ((prev-window-width (if (local-variable-p 'ry/org-tablex-window-width)
+                               ry/org-tablex-window-width 0)))
+    (when (and (local-variable-p 'ry/org-tablex-exists)
+              (/= prev-window-width (window-width)))
+      (ry/org-tablex-redisplay-all)
+      (setq-local ry/org-tablex-window-width (window-width)))))
 
 ;; Tablex Core Wrapper
 (defun ry/tablex-render (table-id)
@@ -407,7 +418,7 @@
 (defun ry/tablex-register-font-face ()
   (font-lock-add-keywords
     'org-mode
-    `(("^[ \t]*[\u2000-\u200A]\\(.*\\S-\\)"
+    `(("^[ \t]*[\u2000-\u200D]\\(.*\\S-\\)"
         1 'org-table prepend))
     'append))
 
@@ -443,7 +454,9 @@
   ("e" ry/org-tablex-cell-edit :exit t)
   ("J" ry/org-tablex-row-insert-after)
   ("K" ry/org-tablex-row-insert-before)
-  ("d" ry/org-tablex-row-remove))
+  ("d" ry/org-tablex-row-remove)
+  ("," ry/org-tablex-hscroll-left)
+  ("." ry/org-tablex-hscroll-right))
 
 ;; Help function
 (defun substring-by-display-width (str start width)
