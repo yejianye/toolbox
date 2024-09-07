@@ -335,22 +335,30 @@
 
 ;; Hydra
 (defhydra ry/hydra-org-tablex (:color red :hint nil)
-  "Tablex"
-  ("t" ry/org-tablex-create-interactively "Create Table")
-  ("h" ry/org-tablex-prev-column "Move to Prev Column")
-  ("l" ry/org-tablex-next-column "Move to Next Column")
-  ("k" ry/org-tablex-prev-row "Move to Prev Row")
-  ("j" ry/org-tablex-next-row "Move to Next Row")
-  ("L" ry/org-tablex-column-insert-after "Insert Column to the Right")
-  ("H" ry/org-tablex-column-insert-before "Insert Column to the Left")
-  ("+" ry/org-tablex-column-width-inc "Increase Column Width")
-  ("-" ry/org-tablex-column-width-dec "Decrease Column Width")
-  ("D" ry/org-tablex-column-remove "Remove Column")
-  ("r" ry/org-tablex-column-rename "Rename Column")
-  ("e" ry/org-tablex-cell-edit "Edit Cell" :exit t)
-  ("J" ry/org-tablex-row-insert-after "Insert Row Below")
-  ("K" ry/org-tablex-row-insert-before "Insert Row Above")
-  ("d" ry/org-tablex-row-remove "Remove Row"))
+  "Tablex
+------------------------------------------------------------------------------
+[t] Create Table         [e] Edit Cell               [r] Rename Column
+[h] Move to Prev Column  [H] Insert Column to Left   [+] Increase Column Width
+[l] Move to Next Column. [L] Insert Column to Right  [-] Decrease Column Width
+[k] Move to Prev Row.    [K] Insert Row Above        [D] Delete Column
+[j] Move to Next Row.    [J] INsert Row Below        [d] Delete Row
+[q or any other key to exit]
+"
+  ("t" ry/org-tablex-create-interactively)
+  ("h" ry/org-tablex-prev-column)
+  ("l" ry/org-tablex-next-column)
+  ("k" ry/org-tablex-prev-row)
+  ("j" ry/org-tablex-next-row)
+  ("L" ry/org-tablex-column-insert-after)
+  ("H" ry/org-tablex-column-insert-before)
+  ("+" ry/org-tablex-column-width-inc)
+  ("-" ry/org-tablex-column-width-dec)
+  ("D" ry/org-tablex-column-remove)
+  ("r" ry/org-tablex-column-rename)
+  ("e" ry/org-tablex-cell-edit :exit t)
+  ("J" ry/org-tablex-row-insert-after)
+  ("K" ry/org-tablex-row-insert-before)
+  ("d" ry/org-tablex-row-remove))
 
 ;; Help function
 (defun ry/tablex-get-table-id ()
