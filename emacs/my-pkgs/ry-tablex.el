@@ -338,7 +338,8 @@
          (hscroll (ry/org-tablex-hscroll-get table-id))
          (output (thread-last (gethash "display" (ry/tablex-render table-id))
                               (s-split "\n")
-                              (--map (substring-by-display-width it hscroll display-width))
+                              (--map (substring-by-display-width it hscroll (1- display-width)))
+                              (--map (concat "\u2009" it))
                               (s-join "\n")))
          (prop-output (propertize output 'line-spacing 0)))
     (insert prop-output)
@@ -406,9 +407,16 @@
 (defun ry/tablex-register-font-face ()
   (font-lock-add-keywords
     'org-mode
-    `(("^[ \t]*\\([┌│├└].*\\S-\\)"
+    `(("^[ \t]*[\u2000-\u200A]\\(.*\\S-\\)"
         1 'org-table prepend))
     'append))
+
+;; (defun ry/tablex-register-font-face ()
+;;   (font-lock-add-keywords
+;;    'org-mode
+;;    `(("^[ \t]*\\([┌│├└].*\\S-\\)"
+;;       1 'org-table prepend))
+;;    'append))
 
 ;; Hydra
 (defhydra ry/hydra-org-tablex (:color red :hint nil)
