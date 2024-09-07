@@ -53,8 +53,11 @@
 (defun ry/org-tablex-goto-cell (row col)
   "Goto specific row and column of current tablex"
   (let* ((pos-map (ry/org-tablex-pos-map))
+         (table-id (ry/tablex-get-table-id))
+         (display-width (ry/))
+         (hscroll (ry/org-tablex-hscroll-get table-id))
          (row-offset (nth row (plist-get pos-map :rows)))
-         (col-offset (nth col (plist-get pos-map :cols))))
+         (col-offset (- (nth col (plist-get pos-map :cols)) hscroll)))
     (ry/org-tablex-goto-beginning)
     (forward-line (1+ row-offset))
     (move-to-column (1+ col-offset))))
@@ -266,11 +269,16 @@
     (move-to-column col-pos)))
 
 ;; Horizontal Scrolling
-(defun ry/org-tablex-hscroll-get (table-id)
+(defun ry/org-tablex-hscroll-get table-id (table-id)
   (unless (local-variable-p 'ry/org-tablex-hscroll-map)
     (setq-local ry/org-tablex-hscroll-map (make-hash-table)))
   (or (gethash table-id ry/org-tablex-hscroll-map)
       (puthash table-id 0 ry/org-tablex-hscroll-map)))
+
+(defun ry/org-tablex-hscroll-set (table-id offset)
+  (unless (local-variable-p 'ry/org-tablex-hscroll-map)
+    (setq-local ry/org-tablex-hscroll-map (make-hash-table)))
+  (puthash table-id offset ry/org-tablex-hscroll-map))
 
 (define-minor-mode tablex-edit-mode
   "A minor mode to edit tablex"
@@ -308,15 +316,14 @@
   (- (window-width) (* (org-current-level) org-indent-indentation-per-level)))
 
 (defun org-dblock-write:tablex (params)
-  (let* ((table-id (plist-get params :id))
+  (let* ((table-id (format "%s" (plist-get params :id)))
          (display-width (ry/tablex-max-display-width))
-         ;; (hscroll (ry/org-tablex-hscroll-get table-id))
+         (hscroll (ry/org-tablex-hscroll-get table-id table-id))
          (output (thread-last (gethash "display" (ry/tablex-render table-id))
                               (s-split "\n")
                               (--map (substring-by-display-width it 0 display-width))
                               (s-join "\n")))
          (prop-output (propertize output 'line-spacing 0)))
-    ;; (message "block update: %s\n%s" table-id (ry/tablex-render table-id))
     (insert prop-output)
     (setq-local ry/org-tablex-exists t)))
 
