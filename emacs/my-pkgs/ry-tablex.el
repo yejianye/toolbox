@@ -202,7 +202,6 @@
          (buffer (generate-new-buffer (format "*Edit Tablex %s (%d, %d)*"
                                               table-id cur-row cur-col)))
          (cell-content (ry/tablex-cell-get table-id cur-row cur-col)))
-    (hydra-keyboard-quit)
     (pop-to-buffer buffer '((display-buffer-below-selected) (window-height .10)))
     (insert cell-content)
     (local-set-key (kbd "C-c C-c") 'ry/org-tablex-cell-edit-commit)
@@ -348,7 +347,7 @@
   ("-" ry/org-tablex-column-width-dec "Decrease Column Width")
   ("D" ry/org-tablex-column-remove "Remove Column")
   ("r" ry/org-tablex-column-rename "Rename Column")
-  ("e" ry/org-tablex-cell-edit "Edit Cell")
+  ("e" ry/org-tablex-cell-edit "Edit Cell" :exit t)
   ("J" ry/org-tablex-row-insert-after "Insert Row Below")
   ("K" ry/org-tablex-row-insert-before "Insert Row Above")
   ("d" ry/org-tablex-row-remove "Remove Row"))
