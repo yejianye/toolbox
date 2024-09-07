@@ -53,11 +53,19 @@
 (defun ry/org-tablex-goto-cell (row col)
   "Goto specific row and column of current tablex"
   (let* ((pos-map (ry/org-tablex-pos-map))
+         (margin-left 10)
+         (margin-right 15)
          (table-id (ry/tablex-get-table-id))
-         (display-width (ry/))
+         (display-width (ry/tablex-max-display-width))
          (hscroll (ry/org-tablex-hscroll-get table-id))
          (row-offset (nth row (plist-get pos-map :rows)))
          (col-offset (- (nth col (plist-get pos-map :cols)) hscroll)))
+    (if (< col-offset 0)
+        (ry/org-tablex-hscroll-left (+ (- col-offset) margin-left))
+      (setq col-offset margin-left))
+    (if (> col-offset display-width)
+        (ry/org-tablex-hscroll-right (+ margin-right (- col-offset display-width)))
+      (setq col-offset (- display-width margin-right)))
     (ry/org-tablex-goto-beginning)
     (forward-line (1+ row-offset))
     (move-to-column (1+ col-offset))))
@@ -269,16 +277,25 @@
     (move-to-column col-pos)))
 
 ;; Horizontal Scrolling
-(defun ry/org-tablex-hscroll-get table-id (table-id)
+(defun ry/org-tablex-hscroll-get (table-id)
   (unless (local-variable-p 'ry/org-tablex-hscroll-map)
-    (setq-local ry/org-tablex-hscroll-map (make-hash-table)))
+    (setq-local ry/org-tablex-hscroll-map (make-hash-table :test 'equal)))
   (or (gethash table-id ry/org-tablex-hscroll-map)
       (puthash table-id 0 ry/org-tablex-hscroll-map)))
 
-(defun ry/org-tablex-hscroll-set (table-id offset)
-  (unless (local-variable-p 'ry/org-tablex-hscroll-map)
-    (setq-local ry/org-tablex-hscroll-map (make-hash-table)))
-  (puthash table-id offset ry/org-tablex-hscroll-map))
+(defun ry/org-tablex-hscroll-left (&optional table-id offset)
+  (interactive)
+  (let ((table-id (or table-id (ry/tablex-get-table-id)))
+        (offset (or offset 5)))
+    (ry/org-tablex-hscroll-right table-id (- offset))))
+
+(defun ry/org-tablex-hscroll-right (&optional table-id offset)
+  (interactive)
+  (let* ((table-id (or table-id (ry/tablex-get-table-id)))
+         (offset (or offset 5))
+         (cur-scroll (ry/org-tablex-hscroll-get table-id)))
+    (puthash table-id (+ cur-scroll offset) ry/org-tablex-hscroll-map)
+    (ry/org-tablex-redisplay)))
 
 (define-minor-mode tablex-edit-mode
   "A minor mode to edit tablex"
@@ -318,10 +335,10 @@
 (defun org-dblock-write:tablex (params)
   (let* ((table-id (format "%s" (plist-get params :id)))
          (display-width (ry/tablex-max-display-width))
-         (hscroll (ry/org-tablex-hscroll-get table-id table-id))
+         (hscroll (ry/org-tablex-hscroll-get table-id))
          (output (thread-last (gethash "display" (ry/tablex-render table-id))
                               (s-split "\n")
-                              (--map (substring-by-display-width it 0 display-width))
+                              (--map (substring-by-display-width it hscroll display-width))
                               (s-join "\n")))
          (prop-output (propertize output 'line-spacing 0)))
     (insert prop-output)
@@ -331,9 +348,9 @@
 (defun ry/org-tablex-on-load ()
   (ry/org-tablex-redisplay-all))
 
-(defun ry/org-tablex-on-window-resize (window)
-  (when (local-variable-p 'ry/org-tablex-exists)
-    (ry/org-tablex-redisplay-all)))
+(defun ry/org-tablex-on-window-resize (window))
+  ;; (when (local-variable-p 'ry/org-tablex-exists)))
+    ;; (ry/org-tablex-redisplay-all)))
 
 ;; Tablex Core Wrapper
 (defun ry/tablex-render (table-id)
