@@ -265,6 +265,13 @@
     (forward-line (1- line-pos))
     (move-to-column col-pos)))
 
+;; Horizontal Scrolling
+(defun ry/org-tablex-hscroll-get (table-id)
+  (unless (local-variable-p 'ry/org-tablex-hscroll-map)
+    (setq-local ry/org-tablex-hscroll-map (make-hash-table)))
+  (or (gethash table-id ry/org-tablex-hscroll-map)
+      (puthash table-id 0 ry/org-tablex-hscroll-map)))
+
 (define-minor-mode tablex-edit-mode
   "A minor mode to edit tablex"
   :lighter "tablex"
@@ -303,6 +310,7 @@
 (defun org-dblock-write:tablex (params)
   (let* ((table-id (plist-get params :id))
          (display-width (ry/tablex-max-display-width))
+         ;; (hscroll (ry/org-tablex-hscroll-get table-id))
          (output (thread-last (gethash "display" (ry/tablex-render table-id))
                               (s-split "\n")
                               (--map (substring-by-display-width it 0 display-width))
