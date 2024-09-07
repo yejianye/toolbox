@@ -170,6 +170,26 @@ And then execute BODY in that buffer"
   `(with-current-buffer (find-file-noselect ,filepath)
      ,@body))
 
+;; Cache
+(defvar ryc-cache (make-hash-table))
+
+(defmacro ryc/with-cache (namespace key &rest body)
+  "If cache KEY exists in NAMESPACE, return the cached value. Otherwise, execute BODY and cache the result."
+  `(let* ((cache-namespace (or (gethash ,namespace ryc-cache)
+                               (puthash ,namespace (make-hash-table) ryc-cache)))
+          (cached-value (gethash ,key cache-namespace)))
+     (if cached-value
+         cached-value
+       (let ((result (progn ,@body)))
+         (puthash ,key result cache-namespace)
+         result))))
+
+(defun ryc/cache-invalidate (namespace &optional key)
+  "Invalidate cache KEY in NAMESPACE"
+  (if key
+      (remhash key (gethash namespace ryc-cache))
+    (remhash namespace ryc-cache)))
+
 
 (provide 'ry-core)
 

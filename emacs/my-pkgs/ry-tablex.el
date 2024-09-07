@@ -21,7 +21,7 @@
   (let* ((table-id (ry/tablex-get-table-id))
          (src-buffer (current-buffer))
          (buffer (generate-new-buffer (format "*Table %s*" table-id)))
-         (table-content (ry/tablex-get-table table-id t)))
+         (table-content (ry/tablex-get-table-yaml table-id)))
     (pop-to-buffer buffer)
     (insert table-content)
     (yaml-mode)
@@ -321,39 +321,52 @@
 
 ;; Tablex Core Wrapper
 (defun ry/tablex-render (table-id)
-  (ry/pyfunc "rypy.tablex" "table_render" table-id))
+  (ryc/with-cache table-id "tablex-render"
+    (ry/pyfunc "rypy.tablex" "table_render" table-id)))
 
-(defun ry/tablex-get-table (table-id &optional yaml-str)
-  (ry/pyfunc "rypy.tablex" "table_get" table-id yaml-str))
+(defun ry/tablex-get-table (table-id)
+  (ryc/with-cache table-id "tablex-get-table"
+    (ry/pyfunc "rypy.tablex" "table_get" table-id)))
+
+(defun ry/tablex-get-table-yaml (table-id)
+    (ry/pyfunc "rypy.tablex" "table_get" table-id t))
 
 (defun ry/tablex-create (column-names)
   (ry/pyfunc "rypy.tablex" "table_create" column-names))
 
 (defun ry/tablex-save-raw (table-id content)
+  (ryc/cache-invalidate table-id)
   (ry/pyfunc "rypy.tablex" "table_save_raw" table-id content))
 
 (defun ry/tablex-column-width-inc (table-id column-index val)
+  (ryc/cache-invalidate table-id)
   (ry/pyfunc "rypy.tablex" "table_column_width_inc" table-id column-index val))
 
 (defun ry/tablex-column-insert (table-id column-index column-name)
+  (ryc/cache-invalidate table-id)
   (ry/pyfunc "rypy.tablex" "table_column_insert" table-id column-index column-name))
 
 (defun ry/tablex-column-rename (table-id column-index column-name)
+  (ryc/cache-invalidate table-id)
   (ry/pyfunc "rypy.tablex" "table_column_rename" table-id column-index column-name))
 
 (defun ry/tablex-column-remove (table-id column-index)
+  (ryc/cache-invalidate table-id)
   (ry/pyfunc "rypy.tablex" "table_column_remove" table-id column-index))
 
 (defun ry/tablex-row-insert (table-id row-index)
+  (ryc/cache-invalidate table-id)
   (ry/pyfunc "rypy.tablex" "table_row_insert" table-id row-index))
 
 (defun ry/tablex-row-remove (table-id row-index)
+  (ryc/cache-invalidate table-id)
   (ry/pyfunc "rypy.tablex" "table_row_remove" table-id row-index))
 
 (defun ry/tablex-cell-get (table-id row-index col-index)
   (ry/pyfunc "rypy.tablex" "table_cell_get" table-id row-index col-index))
 
 (defun ry/tablex-cell-update (table-id row-index col-index content)
+  (ryc/cache-invalidate table-id)
   (ry/pyfunc "rypy.tablex" "table_cell_update" table-id row-index col-index content))
 
 ;; Look & Feel
@@ -404,7 +417,7 @@
                (< current-width (+ start width)))
           (setq result (concat result (string char))))
          ((>= current-width (+ start width))
-          (return result)))))
+          (cl-return result)))))
     result))
 
 (defun ry/tablex-get-table-id ()
