@@ -316,11 +316,8 @@
   (ry/org-tablex-redisplay-all))
 
 (defun ry/org-tablex-on-window-resize (window)
-  (message "ry/org-tablex-on-window-resize called")
-  (let ((buffer (window-buffer window)))
-    (with-current-buffer buffer
-      (when (local-variable-p 'ry/org-tablex-exists)
-        (ry/org-tablex-redisplay-all)))))
+  (when (local-variable-p 'ry/org-tablex-exists)
+    (ry/org-tablex-redisplay-all)))
 
 ;; Tablex Core Wrapper
 (defun ry/tablex-render (table-id)
