@@ -1023,7 +1023,8 @@ layers configuration."
   (with-hook 'org-mode-hook 'ry/org-entry-index-on-save
     (add-hook 'before-save-hook 'ry/orgentry-index-buffer nil t)
     (add-hook 'after-save-hook 'ry/orgentry-db-sync nil t))
-  (add-hook 'org-mode-hook 'ry/orgentry-prettify-buffer-name))
+  (add-hook 'org-mode-hook 'ry/orgentry-prettify-buffer-name)
+  (add-hook 'org-mode-hook 'ry/org-tablex-on-load))
 
 (defun ry/org-mode-settings()
   (setq org-startup-folded 'fold)

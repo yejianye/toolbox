@@ -252,14 +252,15 @@
       (move-to-column col-pos)))
 
 (defun ry/org-tablex-redisplay-all ()
-  "Re-render the tablex at point"
+  "Re-render all tablex in current buffer"
   (interactive)
-  (let ((line-pos (line-number-at-pos)
-          (col-pos (current-column))
-          (case-fold-search t)))
+  (message "ry/org-tablex-redisplay-all called")
+  (let ((line-pos (line-number-at-pos))
+        (col-pos (current-column))
+        (case-fold-search t))
     (goto-char (point-min))
-    (re-search-forward "^#\\+begin: tablex")
-    (org-ctrl-c-ctrl-c)
+    (while (re-search-forward "^#\\+begin: tablex" nil t)
+      (org-ctrl-c-ctrl-c))
     (goto-char (point-min))
     (forward-line (1- line-pos))
     (move-to-column col-pos)))
@@ -295,6 +296,7 @@
         (kill-buffer buffer)
         (display-buffer src-buffer '(display-buffer-reuse-window)))))
 
+;; Dynamic Block
 (defun ry/tablex-max-display-width ()
   (- (window-width) (* (org-current-level) org-indent-indentation-per-level)))
 
@@ -306,7 +308,19 @@
                               (--map (substring-by-display-width it 0 display-width))
                               (s-join "\n")))
          (prop-output (propertize output 'line-spacing 0)))
-    (insert prop-output)))
+    (insert prop-output)
+    (setq-local ry/org-tablex-exists t)))
+
+;; Hooks
+(defun ry/org-tablex-on-load ()
+  (ry/org-tablex-redisplay-all))
+
+(defun ry/org-tablex-on-window-resize (window)
+  (message "ry/org-tablex-on-window-resize called")
+  (let ((buffer (window-buffer window)))
+    (with-current-buffer buffer
+      (when (local-variable-p 'ry/org-tablex-exists)
+        (ry/org-tablex-redisplay-all)))))
 
 ;; Tablex Core Wrapper
 (defun ry/tablex-render (table-id)
@@ -413,6 +427,7 @@
       ",cc" 'ry/tablex-commit-changes
       ",ck" 'ry/tablex-abort-changes)
     (ry/tablex-register-font-face)
+    (add-hook 'window-size-change-functions 'ry/org-tablex-on-window-resize)
     (setq ry/tablex-init-completed t)))
 
 (ry/tablex-init)
