@@ -251,6 +251,19 @@
       (forward-line (1- line-pos))
       (move-to-column col-pos)))
 
+(defun ry/org-tablex-redisplay-all ()
+  "Re-render the tablex at point"
+  (interactive)
+  (let ((line-pos (line-number-at-pos)
+          (col-pos (current-column))
+          (case-fold-search t)))
+    (goto-char (point-min))
+    (re-search-forward "^#\\+begin: tablex")
+    (org-ctrl-c-ctrl-c)
+    (goto-char (point-min))
+    (forward-line (1- line-pos))
+    (move-to-column col-pos)))
+
 (define-minor-mode tablex-edit-mode
   "A minor mode to edit tablex"
   :lighter "tablex"
@@ -282,10 +295,16 @@
         (kill-buffer buffer)
         (display-buffer src-buffer '(display-buffer-reuse-window)))))
 
-(defun ry/tablex-)
+(defun ry/tablex-max-display-width ()
+  (- (window-width) (* (org-current-level) org-indent-indentation-per-level)))
+
 (defun org-dblock-write:tablex (params)
   (let* ((table-id (plist-get params :id))
-         (output (gethash "display" (ry/tablex-render table-id)))
+         (display-width (ry/tablex-max-display-width))
+         (output (thread-last (gethash "display" (ry/tablex-render table-id))
+                              (s-split "\n")
+                              (--map (substring-by-display-width it 0 display-width))
+                              (s-join "\n")))
          (prop-output (propertize output 'line-spacing 0)))
     (insert prop-output)))
 
