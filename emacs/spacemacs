@@ -1215,12 +1215,12 @@ layers configuration."
   ;;   )
   (remove-hook 'python-mode-hook 'turn-on-evil-matchit-mode)
 
-  ;; (message "bind leader key for python mode in my config")
-  ;; (spacemacs/set-leader-keys-for-major-mode 'python-mode
-  ;;   "'" 'ry/python-start-or-switch-repl)
+  (setq lsp-pylsp-configuration-sources ["flake8"])
+  (setq lsp-pylsp-plugins-flake8-enabled t)
+  (setq lsp-pylsp-plugins-flake8-ignore ["E" "W"])  ;; Ignores errors and warnings
 
   (with-eval-after-load "anaconda-mode"
-    (define-key anaconda-mode-map [remap find-tag] nil))
+     (define-key anaconda-mode-map [remap find-tag] nil))
   (setq ein:connect-default-notebook "8888/emacs-default.ipynb"))
 
 (defun ry/sql-mode-settings ()
