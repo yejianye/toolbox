@@ -1217,7 +1217,8 @@ layers configuration."
 
   (setq lsp-pylsp-configuration-sources ["flake8"])
   (setq lsp-pylsp-plugins-flake8-enabled t)
-  (setq lsp-pylsp-plugins-flake8-ignore ["E" "W"])  ;; Ignores errors and warnings
+  (setq lsp-pylsp-plugins-flake8-config "~/.flake8")
+  ;; (setq lsp-pylsp-plugins-flake8-ignore ["E" "W"])  ;; Ignores errors and warnings
 
   (with-eval-after-load "anaconda-mode"
      (define-key anaconda-mode-map [remap find-tag] nil))
