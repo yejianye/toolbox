@@ -438,6 +438,7 @@
 [l] Move to Next Column. [L] Insert Column to Right  [-] Decrease Column Width
 [k] Move to Prev Row.    [K] Insert Row Above        [D] Delete Column
 [j] Move to Next Row.    [J] INsert Row Below        [d] Delete Row
+[E] Edit Raw Table
 [q or any other key to exit]
 "
   ("t" ry/org-tablex-create-interactively)
@@ -452,6 +453,7 @@
   ("D" ry/org-tablex-column-remove)
   ("r" ry/org-tablex-column-rename)
   ("e" ry/org-tablex-cell-edit :exit t)
+  ("E" ry/org-tablex-edit-full-table :exit t)
   ("J" ry/org-tablex-row-insert-after)
   ("K" ry/org-tablex-row-insert-before)
   ("d" ry/org-tablex-row-remove)
