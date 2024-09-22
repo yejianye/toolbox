@@ -31,8 +31,12 @@
          (choice (read-char prompt)))
     (cond
      ((= choice ?p) (progn (delete-region beg end)
-                           (insert proofread))
-      (= choice ?r) (progn (delete-region beg end)
-                           (insert rewritten))))))
+                           (insert proofread)
+                           (when (string-suffix-p "\n" selected-text)
+                             (insert "\n"))))
+     ((= choice ?r) (progn (delete-region beg end)
+                           (insert rewritten)
+                           (when (string-suffix-p "\n" selected-text)
+                             (insert "\n")))))))
 
 (provide 'ry-writing)

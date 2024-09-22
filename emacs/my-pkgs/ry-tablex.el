@@ -204,6 +204,16 @@
       (ry/org-tablex-goto-cell 0 col-idx))))
 
 ;; Edit Cell
+(defun ry/org-tablex-cell-paste ()
+  (interactive)
+  (let* ((table-id (ry/tablex-get-table-id))
+         (cur-row (ry/org-tablex-row-current-index))
+         (cur-col (ry/org-tablex-column-current-index))
+         (text (current-kill 0 t)))
+    (ry/tablex-cell-update table-id cur-row cur-col text)
+    (ry/org-tablex-redisplay)
+    (ry/org-tablex-goto-cell cur-row cur-col)))
+
 (defun ry/org-tablex-cell-edit ()
   (interactive)
   (let* ((table-id (ry/tablex-get-table-id))
@@ -221,6 +231,16 @@
     (setq-local ry/tablex-source-buffer src-buffer)
     (setq-local ry/tablex-source-row cur-row)
     (setq-local ry/tablex-source-col cur-col)))
+
+(defun ry/org-tablex-cell-edit-inline ()
+  (interactive)
+  (let* ((table-id (ry/tablex-get-table-id))
+         (cur-row (ry/org-tablex-row-current-index))
+         (cur-col (ry/org-tablex-column-current-index))
+         (cell-content (ry/tablex-cell-get table-id cur-row cur-col))
+         (new-content (read-string "Edit: " cell-content)))
+    (ry/tablex-cell-update table-id cur-row cur-col new-content)
+    (ry/org-tablex-redisplay)))
 
 (defun ry/org-tablex-cell-edit-commit ()
   (interactive)
@@ -433,12 +453,12 @@
 (defhydra ry/hydra-org-tablex (:color red :hint nil)
   "Tablex
 ------------------------------------------------------------------------------
-[t] Create Table         [e] Edit Cell               [r] Rename Column
+[t] Create Table         [e/c] Edit Cell (inline)    [r] Rename Column
 [h] Move to Prev Column  [H] Insert Column to Left   [+] Increase Column Width
 [l] Move to Next Column. [L] Insert Column to Right  [-] Decrease Column Width
 [k] Move to Prev Row.    [K] Insert Row Above        [D] Delete Column
 [j] Move to Next Row.    [J] INsert Row Below        [d] Delete Row
-[E] Edit Raw Table
+[E] Edit Raw Table       [p] Paste to Cell
 [q or any other key to exit]
 "
   ("t" ry/org-tablex-create-interactively)
@@ -452,6 +472,8 @@
   ("-" ry/org-tablex-column-width-dec)
   ("D" ry/org-tablex-column-remove)
   ("r" ry/org-tablex-column-rename)
+  ("p" ry/org-tablex-cell-paste)
+  ("c" ry/org-tablex-cell-edit-inline)
   ("e" ry/org-tablex-cell-edit :exit t)
   ("E" ry/org-tablex-edit-full-table :exit t)
   ("J" ry/org-tablex-row-insert-after)

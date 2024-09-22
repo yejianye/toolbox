@@ -895,6 +895,9 @@ layers configuration."
   (global-set-key (kbd "s-}") 'tab-bar-switch-to-next-tab)
   (global-set-key (kbd "s-{") 'tab-bar-switch-to-prev-tab)
 
+  (global-set-key (kbd "s-w t") 'ry/writing-translate)
+  (global-set-key (kbd "s-w r") 'ry/writing-proofread)
+
   ;; helm
   (setq helm-window-prefer-horizontal-split 'decide)
   (define-key helm-buffer-map (kbd "C-o") 'helm-buffer-switch-other-window)
