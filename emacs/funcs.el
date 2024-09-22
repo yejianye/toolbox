@@ -465,5 +465,6 @@ current buffer's, reload dir-locals."
 (require 'ry-alfred)
 (require 'ry-pkm)
 (require 'ry-tablex)
+(require 'ry-writing)
 ;; (require 'ry-archived)
 ;; (require 'helm-org-ql)
