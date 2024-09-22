@@ -1,6 +1,7 @@
 ;;; ry-tablex.el --- Enhanced table with multi-line cell support  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2024  Ryan Ye
+(defvar ry/tablex-yanked-table-id nil)
 
 ;; Create
 (defun ry/org-tablex-create-interactively ()
@@ -14,6 +15,22 @@
     (insert table-block)
     (org-ctrl-c-ctrl-c)
     (ry/org-tablex-goto-cell 0 0)))
+
+(defun ry/org-tablex-yank ()
+  (interactive)
+  (let ((table-id (ry/tablex-get-table-id)))
+    (setq ry/tablex-yanked-table-id table-id)
+    (message (format "Table %s yanked" table-id))))
+
+(defun ry/org-tablex-paste ()
+  (interactive)
+  (if ry/tablex-yanked-table-id
+      (let* ((table-id (ry/tablex-duplicate ry/tablex-yanked-table-id))
+             (tablex-block (format "\n#+begin: tablex :id %s\n#+end:" table-id)))
+        (insert tablex-block)
+        (ry/org-tablex-goto-beginning)
+        (org-ctrl-c-ctrl-c)
+        (ry/org-tablex-goto-cell 0 0))))
 
 ;; Full Table Edit
 (defun ry/org-tablex-edit-full-table ()
@@ -399,6 +416,9 @@
 (defun ry/tablex-create (column-names)
   (ry/pyfunc "rypy.tablex" "table_create" column-names))
 
+(defun ry/tablex-duplicate (table-id)
+  (ry/pyfunc "rypy.tablex" "table_duplicate" table-id))
+
 (defun ry/tablex-save-raw (table-id content)
   (ryc/cache-invalidate table-id)
   (ry/pyfunc "rypy.tablex" "table_save_raw" table-id content))
@@ -458,10 +478,13 @@
 [l] Move to Next Column. [L] Insert Column to Right  [-] Decrease Column Width
 [k] Move to Prev Row.    [K] Insert Row Above        [D] Delete Column
 [j] Move to Next Row.    [J] INsert Row Below        [d] Delete Row
-[E] Edit Raw Table       [p] Paste to Cell
+[E] Edit Raw Table       [p] Paste Text to Cell
+[Y] Yank Table           [P] Paste Table
 [q or any other key to exit]
 "
   ("t" ry/org-tablex-create-interactively)
+  ("Y" ry/org-tablex-yank :exit t)
+  ("P" ry/org-tablex-paste)
   ("h" ry/org-tablex-prev-column)
   ("l" ry/org-tablex-next-column)
   ("k" ry/org-tablex-prev-row)
