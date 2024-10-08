@@ -16,10 +16,11 @@
                                   (json-read-from-string (buffer-string)))))
         (if (= (gethash "rc" result) 0)
             (progn
-              (message "[pyfunc] Time spent in actual python function: %dms"
-                       (->> result
-                            (gethash "debug")
-                            (gethash "time_spent")))
+              (when ry/log-time-enabled
+                (message "[pyfunc] Time spent in actual python function: %dms"
+                         (->> result
+                              (gethash "debug")
+                              (gethash "time_spent"))))
               (gethash "data" result))
           (progn
             (message (gethash "data" result))

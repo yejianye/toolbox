@@ -11,9 +11,13 @@
 (defun ry/writing-translate ()
   """ Translate text according to previous text """
   (interactive)
-  (let* ((text (read-string "Enter text to translate: "))
+  (let* ((text (if (use-region-p)
+                   (buffer-substring-no-properties (region-beginning) (region-end))
+                 (read-string "Enter text to translate: ")))
          (context (ry/writing-current-paragraph))
          (translated-text (ry/pyfunc "rypy.writingkit" "translate" text context)))
+    (when (use-region-p)
+        (delete-region (region-beginning) (region-end)))
     (insert translated-text)))
 
 (defun ry/writing-proofread ()

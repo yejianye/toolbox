@@ -35,13 +35,17 @@
     (message "Set %s as current testing function" command-name)
     (setq ry-testing-function command-name)))
 
+(defvar ry/log-time-enabled nil
+  "Enable ry/log-time function")
+
 (defmacro ry/log-time (name &rest body)
   "Print out time elapsed to execute FORM. NAME is used to help interpretation.
 This macro returns same value as BODY."
   `(let* ((start-time (current-time))
           (result (progn ,@body))
           (time-spent (* 1000 (float-time (time-since start-time)))))
-     (message "%s: time spent %dms" ,name time-spent)
+     (when ry/log-time-enabled
+       (message "%s: time spent %dms" ,name time-spent))
      result))
 
 ;; Debug functions for -> and ->> (thread-first, thread-last)
