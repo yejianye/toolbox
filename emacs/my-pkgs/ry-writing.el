@@ -15,10 +15,13 @@
                    (buffer-substring-no-properties (region-beginning) (region-end))
                  (read-string "Enter text to translate: ")))
          (context (ry/writing-current-paragraph))
-         (translated-text (ry/pyfunc "rypy.writingkit" "translate" text context)))
+         (translated-text))
+    (message (format "Translate %s" text))
+    (setq translated-text (ry/pyfunc "rypy.writingkit" "translate" text context))
     (when (use-region-p)
         (delete-region (region-beginning) (region-end)))
-    (insert translated-text)))
+    (insert translated-text)
+    (message translated-text)))
 
 (defun ry/writing-proofread ()
   """ Proofread the selected text """
