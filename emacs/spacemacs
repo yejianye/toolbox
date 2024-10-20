@@ -796,6 +796,9 @@ layers configuration."
   ;; ry/pyfunc
   (setq ry/python-executable "python")
 
+  ;; ispell
+  (setq ispell-program-name "/opt/homebrew/bin/aspell")
+
   ;; gui & terminal
   (evil-terminal-cursor-changer-activate)
   (if (display-graphic-p)
