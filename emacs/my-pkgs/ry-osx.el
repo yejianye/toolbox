@@ -128,9 +128,11 @@ It only works in Mac OS "
 (defun ry/org-protocol-copy-link ()
   "Copy org-protocol link of current org heading to clipboard"
   (interactive)
-  (let ((link (format "http://localhost:3000/open-note?id=%s" (org-id-get))))
-    (ry//copy-to-osx-clipboard link)
-    (message link)))
+  (let ((link (format "http://localhost:3000/open-note?id=%s" (org-id-get)))
+        (title (substring-no-properties (org-get-heading))))
+    (shell-command (format "LANG=en_US.UTF-8 echo '<a href=\"%s\">%s</a>' | ~/utils/copy-html-to-clipboard.sh" link title))
+    ;; (ry//copy-to-osx-clipboard link)
+    (message "[%s](%s)" title link)))
 
 (defun ry//copy-to-osx-clipboard (string)
   (shell-command (format "LANG=en_US.UTF-8 echo \"%s\" | pbcopy"
