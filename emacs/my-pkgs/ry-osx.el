@@ -115,7 +115,7 @@ It only works in Mac OS "
          (content (org-export-string-as region-string 'html t))
          (fname (make-temp-file "org-clipboard")))
     (write-region content nil fname)
-    (shell-command (format "LANG=en_US.UTF-8 cat %s | ~/utils/copy-html-to-clipboard.sh" fname))
+    (shell-command (format "LANG=en_US.UTF-8 cat %s | ~/utils/clipboard.py --html=stdin" fname))
     (delete-file fname)))
 
 
@@ -131,7 +131,7 @@ It only works in Mac OS "
   (let* ((link (format "http://localhost:3000/open-note?id=%s" (org-id-get)))
          (title (substring-no-properties (org-get-heading)))
          (html (format "<a href='%s'>%s</a>" link title)))
-    (shell-command (format "LANG=en_US.UTF-8 ~/utils/copy-html-to-clipboard.sh \"%s\" \"%s\"" html link))
+    (shell-command (format "LANG=en_US.UTF-8 ~/utils/clipboard.py --html=\"%s\" --text=\"%s\"" html link))
     ;; (ry//copy-to-osx-clipboard link)
     (message "[%s](%s)" title link)))
 
