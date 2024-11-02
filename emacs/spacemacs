@@ -887,6 +887,7 @@ layers configuration."
   (define-key evil-insert-state-map (kbd "C-e") 'end-of-line)
   (define-key evil-insert-state-map (kbd "s-C-a") 'ry/helm-abbrev)
   (define-key evil-insert-state-map (kbd "s-t") 'ry/insert-today-date)
+  (define-key minibuffer-local-map (kbd "s-t") 'ry/insert-today-date)
 
   ;; all modes
   (global-set-key (kbd "s-o") 'ry/pkm-note-create-interactive)
