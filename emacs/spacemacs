@@ -952,7 +952,8 @@ layers configuration."
               "nc" 'ry/pkm-note-change-category
               "nr" 'ry/pkm-note-set-root
               "ni" 'ry/pkm-note-index
-              "nd" 'ry/pkm-note-file-delete
+              "nD" 'ry/pkm-note-file-delete
+              "nd" 'ry/pkm-note-diary-create
               "nu" 'ry/pkm-note-update-file-location
               "nl" 'ry/org-protocol-copy-link
               "bl" 'ry/org-find-backlinks

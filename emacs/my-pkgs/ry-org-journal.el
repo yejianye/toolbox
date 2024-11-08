@@ -209,10 +209,5 @@
     (unless nolink
       (insert (format "[[id:%s][%s]]" heading-id heading-text)))))
 
-;; Diary
-
-(defun ry/new-diary ()
-  "Create a new diary for today"
-  (interactive)
-  (let* (title (format "%s - 随))))
+
 (provide 'ry-org-journal)

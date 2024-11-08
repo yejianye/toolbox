@@ -188,6 +188,20 @@
       (delete-file fname)
       (ry/orgentry-db-sync fname))))
 
+(defun ry/pkm-note-open (note-id)
+  "Goto a specific note"
+  (interactive)
+  (let* ((link (format "[[id:%s]]" note-id)))
+    (org-open-link-from-string link)))
+
+(defun ry/pkm-note-diary-create ()
+  "Create today's diary note"
+  (interactive)
+  (let* ((title (format "%s - Diary" (format-time-string "%Y-%m-%d")))
+         (note (ry/pkm-note-create title "diary"))
+         (note-id (plist-get note :id)))
+    (ry/pkm-note-open note-id)))
+
 (defun ry//pkm-test-cases ()
   (ry/pkm-note-create "Note Create Test 3" "project" '(("status" . "WIP")))
   (ry//pkm-note-filename "default" "Test Note" "2023-01-20 10:12:33"))
