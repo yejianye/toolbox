@@ -152,6 +152,7 @@
     (ry/pkm-note-update-file-location)))
 
 (defun ry/pkm-note-update-file-location ()
+  "Update note file location based on its name and category"
   (interactive)
   (save-buffer) ; save buffer before moving to new location
   (ry/pkm-note-goto-root-heading)
