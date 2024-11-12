@@ -21,6 +21,12 @@
         (ry/orgx-content-prepend (format "- [ ] %s\n" topic)))
     (ry/alfred-message "Topic '%s' added to '%s'\n" topic (plist-get node :title))))
 
+(defun ry/alfred-one-on-one-v2 (topic name)
+  (let ((node (ry/orgx-select-one (list 'heading name) "~/org/bytedance/one-on-one/others.org")))
+    (-> (ry/orgx-child-prepend node "To be discussed" :tset t)
+        (ry/orgx-content-prepend (format "- [ ] %s\n" topic)))
+    (ry/alfred-message "Topic '%s' added to '%s'\n" topic (plist-get node :title))))
+
 (defun ry/alfred-meeting-notes (_)
   (let ((title (ry/insert-meeting-notes-from-clipboard)))
     (ry/alfred-message "Meeting Notes Added: %s" title)))
@@ -34,6 +40,7 @@
     (f-delete ry/alfred-msg-file))
   (f-touch ry/alfred-msg-file))
 
-;; (ry/alfred-command :one-on-one "this is an alfred test @shaochi")
+(defun ry/alfred-test-cases ()
+  (ry/alfred-one-on-one-v2 "this is an alfred test" "zhangjie"))
 
 (provide 'ry-alfred)
