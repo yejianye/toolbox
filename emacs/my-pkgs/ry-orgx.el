@@ -52,6 +52,10 @@ If LAZY is non-nil, only Proxy Nodes are returned. Otherwise, nodes will be real
 (defun ry/orgx-select-one (&optional query file lazy)
   (-first-item (ry/orgx-select query file lazy)))
 
+(defun ry/orgx-select-by-id (node-id &optional lazy)
+  (let ((file (org-id-find-id-file node-id)))
+    (ry/orgx-select-one (list 'property "ID" node-id) file lazy)))
+
 (defmacro ry/orgx-with-narrow-to-node (proxy-node &rest body)
   "Goto PROXY-NODE, narrow to the subtree and execute BODY"
   `(-let* (((fpath . pos) (ry//orgx-node-location ,proxy-node)))
