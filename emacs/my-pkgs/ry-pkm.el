@@ -200,7 +200,9 @@
   (let* ((title (format "%s - Diary" (format-time-string "%Y-%m-%d")))
          (note (ry/pkm-note-create title "diary"))
          (note-id (plist-get note :id)))
-    (ry/pkm-note-open note-id)))
+    (ry/pkm-note-open note-id)
+    (spacemacs/toggle-maximize-buffer)
+    (writeroom-mode)))
 
 (defun ry//pkm-test-cases ()
   (ry/pkm-note-create "Note Create Test 3" "project" '(("status" . "WIP")))
