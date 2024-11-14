@@ -201,7 +201,6 @@
          (note (ry/pkm-note-create title "diary"))
          (note-id (plist-get note :id)))
     (ry/pkm-note-open note-id)
-    (spacemacs/toggle-maximize-buffer)
     (writeroom-mode)))
 
 (defun ry//pkm-test-cases ()
