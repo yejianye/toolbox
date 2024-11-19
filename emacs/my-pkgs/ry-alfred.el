@@ -15,12 +15,6 @@
          (func (plist-get cmd-map :func)))
     (apply func (-drop 1 params))))
 
-;; (defun ry/alfred-one-on-one (topic name)
-;;   (let ((node (ry/orgx-select-one (list 'heading name) "~/org/bytedance/one-on-one/others.org")))
-;;     (-> (ry/orgx-child-prepend node "To be discussed" :tset t)
-;;         (ry/orgx-content-prepend (format "- [ ] %s\n" topic)))
-;;     (ry/alfred-message "Topic '%s' added to '%s'\n" topic (plist-get node :title))))
-
 (defun ry/alfred-one-on-one (topic name)
   (let ((node (-> (ry/search-note name nil "one-on-one")
                   (first)

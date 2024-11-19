@@ -201,17 +201,32 @@
   "Create a version snapshot of current note."
   (interactive)
   (ry/pkm-note-goto-root-heading)
-  (let* ((note-content (ry/orgx-content-get))
+  (org-copy-subtree nil t)
+  (let* ((org-node (ry/orgx-node-at-point))
+         (ts (format-time-string "%Y%m%d-%H%M%S"))
          (title (-> (org-get-heading)
                     (substring-no-properties)
                     (ry//pkm-sanitize-title-string)))
-         (fname (format "%s/archive/%s/%s-%s.org")))
+         (category (or (org-entry-get nil "CATEGORY") "default"))
+         (fname (format "%s/archive/%s/%s-%s.org"
+                        org-directory category ts title))
+         (dir (file-name-directory fname))
+         (version-id (org-id-new))
+         (description (->> (read-string "Version Description: ")
+                           (concat (format-time-string "%Y.%m.%d") " - ")))
+         (version-line (format "- [[id:%s][%s]]\n" version-id description)))
+
+    (unless (file-exists-p dir)
+      (make-directory dir t))
+    ;; get content of current note and save it to version history
     (with-temp-buffer
+      (org-mode)
       (insert note-content)
-      (write-region (point-min) (point-max) filename))))
-  ;; get content of current note and save it to version history
-  ;; create a "Version" heading on top of current note
-  ;; append link to the snapshot version
+      (ry/pkm-note-goto-root-heading)
+      (org-entry-put nil "ID" version-id)
+      (write-region (point-min) (point-max) fname))
+    (-> (ry/orgx-child-prepend org-node "Version History" :content "\n" :tset t)
+        (ry/orgx-content-prepend version-line))))
 
 (defun ry/pkm-note-diary-create ()
   "Create today's diary note"
