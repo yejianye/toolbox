@@ -47,16 +47,19 @@
     (list :id note-id
           :path fname)))
 
+(defun ry//pkm-sanitize-title-string (title)
+  (thread-last title
+               (s-replace "-" "")
+               (s-replace-regexp "[ ~!@#$&();:',.<>/?]+" "-")
+               (downcase)))
+
 (defun ry//pkm-note-filename (category title &optional time-created)
   (let* ((ts (if time-created
                  (ryc/string-to-timestamp time-created "%Y-%m-%d %H:%M:%S")
                nil))
          (year (format-time-string "%Y" ts))
          (today (format-time-string "%Y%m%d" ts))
-         (title (thread-last title
-                             (s-replace "-" "")
-                             (s-replace-regexp "[ ~!@#$&();:',.<>/?]+" "-")
-                             (downcase)))
+         (title (ry/pkm-sanitize-title-string title))
          (fname (format "%s/%s/%s/%s-%s.org"
                         org-directory category year today title))
          (suffix-count 1))
@@ -193,6 +196,22 @@
   (interactive)
   (let* ((link (format "[[id:%s]]" note-id)))
     (org-open-link-from-string link)))
+
+(defun ry/pkm-note-create-version ()
+  "Create a version snapshot of current note."
+  (interactive)
+  (ry/pkm-note-goto-root-heading)
+  (let* ((note-content (ry/orgx-content-get))
+         (title (-> (org-get-heading)
+                    (substring-no-properties)
+                    (ry//pkm-sanitize-title-string)))
+         (fname (format "%s/archive/%s/%s-%s.org")))
+    (with-temp-buffer
+      (insert note-content)
+      (write-region (point-min) (point-max) filename))))
+  ;; get content of current note and save it to version history
+  ;; create a "Version" heading on top of current note
+  ;; append link to the snapshot version
 
 (defun ry/pkm-note-diary-create ()
   "Create today's diary note"
