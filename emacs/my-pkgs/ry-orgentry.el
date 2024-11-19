@@ -1,3 +1,6 @@
+(defvar ry/orgentry-ignore-directories
+  '("note-template/" "archives/" "views/"))
+
 (defun ry//orgentry-get-hash ()
   (thread-last (ry/org-get-content)
     (s-replace "\n" "")
@@ -41,7 +44,8 @@
     (ry/orgentry-index-entry-default)))
 
 (defun ry/orgentry-ignore-buffer (&optional org-file)
-  (or (s-contains-p "note-template" (or org-file buffer-file-name))))
+  (let ((fname (or org-file buffer-file-name)))
+    (--some (s-contains-p it fname) ry/orgentry-ignore-directories)))
 
 (defun ry/orgentry-index-buffer ()
   "Index current buffer"

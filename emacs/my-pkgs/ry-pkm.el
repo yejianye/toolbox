@@ -201,30 +201,30 @@
   "Create a version snapshot of current note."
   (interactive)
   (ry/pkm-note-goto-root-heading)
-  (org-copy-subtree nil t)
+  (org-copy-subtree)
   (let* ((org-node (ry/orgx-node-at-point))
          (ts (format-time-string "%Y%m%d-%H%M%S"))
          (title (-> (org-get-heading)
                     (substring-no-properties)
                     (ry//pkm-sanitize-title-string)))
          (category (or (org-entry-get nil "CATEGORY") "default"))
-         (fname (format "%s/archive/%s/%s-%s.org"
+         (fname (format "%s/archives/%s/%s-%s.org"
                         org-directory category ts title))
          (dir (file-name-directory fname))
          (version-id (org-id-new))
          (description (->> (read-string "Version Description: ")
                            (concat (format-time-string "%Y.%m.%d") " - ")))
          (version-line (format "- [[id:%s][%s]]\n" version-id description)))
-
     (unless (file-exists-p dir)
       (make-directory dir t))
     ;; get content of current note and save it to version history
-    (with-temp-buffer
+    (with-current-buffer (find-file-noselect fname)
       (org-mode)
-      (insert note-content)
+      (org-paste-subtree)
       (ry/pkm-note-goto-root-heading)
       (org-entry-put nil "ID" version-id)
-      (write-region (point-min) (point-max) fname))
+      (save-buffer))
+    ;; Add a description line for this version in the original note
     (-> (ry/orgx-child-prepend org-node "Version History" :content "\n" :tset t)
         (ry/orgx-content-prepend version-line))))
 
