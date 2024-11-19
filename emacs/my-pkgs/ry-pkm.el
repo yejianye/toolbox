@@ -59,7 +59,7 @@
                nil))
          (year (format-time-string "%Y" ts))
          (today (format-time-string "%Y%m%d" ts))
-         (title (ry/pkm-sanitize-title-string title))
+         (title (ry//pkm-sanitize-title-string title))
          (fname (format "%s/%s/%s/%s-%s.org"
                         org-directory category year today title))
          (suffix-count 1))
