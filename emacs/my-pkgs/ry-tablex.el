@@ -478,8 +478,8 @@
 [l] Move to Next Column. [L] Insert Column to Right  [-] Decrease Column Width
 [k] Move to Prev Row.    [K] Insert Row Above        [D] Delete Column
 [j] Move to Next Row.    [J] INsert Row Below        [d] Delete Row
-[E] Edit Raw Table       [p] Paste Text to Cell
-[Y] Yank Table           [P] Paste Table
+[E] Edit Raw Table       [p] Paste Text to Cell.     [,] Scroll Left
+[Y] Yank Table           [P] Paste Table             [.] Scroll Right
 [q or any other key to exit]
 "
   ("t" ry/org-tablex-create-interactively)
