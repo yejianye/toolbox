@@ -244,6 +244,7 @@
     (insert cell-content)
     (local-set-key (kbd "C-c C-c") 'ry/org-tablex-cell-edit-commit)
     (local-set-key (kbd "C-c C-k") 'ry/org-tablex-cell-edit-abort)
+    (undo-tree-mode 1)
     (setq-local ry/tablex-source-table-id table-id)
     (setq-local ry/tablex-source-buffer src-buffer)
     (setq-local ry/tablex-source-row cur-row)
