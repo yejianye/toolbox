@@ -8,3 +8,5 @@ custom/
 
 tags
 session.vim
+.aider*
+.env

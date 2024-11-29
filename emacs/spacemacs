@@ -100,6 +100,7 @@ This function should only modify configuration layer settings."
    dotspacemacs-delete-orphan-packages t
    dotspacemacs-additional-packages
    '(
+     (aider :location (recipe :fetcher github :repo "tninja/aider.el"))
      github-theme
      jade-mode
      vue-mode
@@ -899,6 +900,7 @@ layers configuration."
   (global-set-key (kbd "C-h k") 'helpful-key)
   (global-set-key (kbd "s-}") 'tab-bar-switch-to-next-tab)
   (global-set-key (kbd "s-{") 'tab-bar-switch-to-prev-tab)
+  (global-set-key (kbd "s-a") 'aider-transient-menu)
 
   (global-set-key (kbd "s-w t") 'ry/writing-translate)
   (global-set-key (kbd "s-w r") 'ry/writing-proofread)
