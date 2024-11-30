@@ -257,25 +257,17 @@
     (ry/helm-org-entries nil category)))
 
 
-;; Semantic Search for Note Content
-(defun ry/search-note-content (question)
-  (let ((result (-> (ry/http-get "http://localhost:3000/search-note-content" (list :question question :limit 20))
-                    (plist-get :data))))
-    (plist-get result :data)))
+;; Semantic Search with Chroma
+(defun ry/semantic-note-search (question)
+  (ry/pyfunc "rypy.search.note_semantic_search" "note_search" question))
 
-(defun ry//render-content-search-item (item)
-  (let* ((title (plist-get item :title))
-         (note-id (plist-get item :id))
-         (link (format "[[id:%s][Open note]]" note-id)))
-    (format "* %s\n%s\n%s\n" title link (plist-get item :text))))
-
-(defun ry//search-note-content-candidates (question)
+(defun ry//semantic-note-search-candidates (question)
   (-map 'ry//helm-org-entry-build-item (ry/search-note-content question)))
 
-(defun ry/search-note-content-interactive (question)
+(defun ry/semantic-note-search-interactive (question)
   (interactive "sEnter your question: ")
   (helm :sources (helm-build-sync-source "Related Notes"
-                   :candidates (ry//search-note-content-candidates question)
+                   :candidates (ry//semantic-note-search-candidates question)
                    :action 'ry//helm-org-entry-indirect-buffer
                    :persistent-action 'ry//helm-org-entry-indirect-buffer)
         :buffer "*helm org entries*"))
