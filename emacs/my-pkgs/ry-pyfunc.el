@@ -6,7 +6,7 @@
 
 (defun ry/prop-get (obj key)
   (if (hash-table-p obj)
-      (gethash (substring key (symbol-name key) 1) obj)
+      (gethash (substring (symbol-name key) 1) obj)
     (plist-get obj key)))
 
 (defun ry/pyfunc (module func-name &rest args)
