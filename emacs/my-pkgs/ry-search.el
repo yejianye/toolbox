@@ -197,8 +197,8 @@
          (category-maxlen (-max (-map 'length ry/pkm-category-choices)))
          (category (s-pad-right category-maxlen " " (plist-get entry :category)))
          (last-modified (thread-last (plist-get entry :time_modified)
-                         (s-split " ")
-                         (-first-item)))
+                                     (s-split " ")
+                                     (-first-item)))
          (display-item (concat
                         (propertize (format "%s | %s" last-modified category)
                                     'face font-lock-comment-face)
@@ -259,7 +259,8 @@
 
 ;; Semantic Search with Chroma
 (defun ry/semantic-note-search (question)
-  (ry/pyfunc "rypy.search.note_semantic_search" "note_search" question))
+  (let ((ry/pyfunc-object-type 'plist))
+    (ry/pyfunc "rypy.search.note_semantic_search" "note_search" question)))
 
 (defun ry//semantic-note-search-candidates (question)
   (-map 'ry//helm-org-entry-build-item (ry/semantic-note-search question)))

@@ -1,6 +1,14 @@
 (defvar ry/python-executable "python"
   "Python executable used in ry-pyfunc")
 
+(defvar ry/pyfunc-object-type 'hash-table
+  "JSON object type for return value in pyfunc")
+
+(defun ry/prop-get (obj key)
+  (if (hash-table-p obj)
+      (gethash (substring key (symbol-name key) 1) obj)
+    (plist-get obj key)))
+
 (defun ry/pyfunc (module func-name &rest args)
     (with-temp-buffer
       (if args
@@ -11,19 +19,19 @@
                             ry/python-executable
                             t (list (current-buffer) nil) nil
                             "-mrypy.emacs" module func-name))
-      (let* ((json-object-type 'hash-table)
+      (let* ((json-object-type ry/pyfunc-object-type)
              (result (ry/log-time "[pyfunc] Time spent in JSON Parsing"
                                   (json-read-from-string (buffer-string)))))
-        (if (= (gethash "rc" result) 0)
+        (if (= (ry/prop-get result :rc) 0)
             (progn
               (when ry/log-time-enabled
                 (message "[pyfunc] Time spent in actual python function: %dms"
-                         (->> result
-                              (gethash "debug")
-                              (gethash "time_spent"))))
-              (gethash "data" result))
+                         (-> result
+                             (ry/prop-get :debug)
+                             (ry/prop-get :time_spent))))
+              (ry/prop-get result :data))
           (progn
-            (message (gethash "data" result))
+            (message (ry/prop-get result :data))
             (error (format "Failed to call Python function %s.%s" module func-name)))))))
 
 (defun ry//use-rect-p ()

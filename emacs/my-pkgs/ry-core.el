@@ -36,6 +36,15 @@ E.g. (ryc/plist-path '(:a (:b 1) :c 2) '(:a :b)) => 1"
 
 (defalias 'ryc/plist-merge 'org-combine-plists)
 
+;; hashtable
+(defun ryc/hashtable-to-plist (hashtable)
+  "Convert HASHTABLE to a plist."
+  (let (plist)
+    (maphash (lambda (key value)
+               (setq plist (append plist (list (intern (concat ":" (format "%s" key))) value))))
+             hashtable)
+    plist))
+
 ;; list conversion
 (defun ryc/vector-to-list (vec)
   "Convert vector to list"
