@@ -262,7 +262,7 @@
   (ry/pyfunc "rypy.search.note_semantic_search" "note_search" question))
 
 (defun ry//semantic-note-search-candidates (question)
-  (-map 'ry//helm-org-entry-build-item (ry/search-note-content question)))
+  (-map 'ry//helm-org-entry-build-item (ry/semantic-note-search question)))
 
 (defun ry/semantic-note-search-interactive (question)
   (interactive "sEnter your question: ")
