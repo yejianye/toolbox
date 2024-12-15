@@ -86,6 +86,14 @@ def proofread(text, model=DEFAULT_MODEL):
     html = md_to_html(content)
     return {"rewritten": rewritten_version, "html": html}
 
+def text_to_speech(text, output_file="/tmp/alfred-openai-tts.mp3"):
+    with client.audio.speech.with_streaming_response.create(
+        model="tts-1",
+        voice="echo",
+        input=text
+    ) as response:
+        response.stream_to_file(output_file)
+    return output_file
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
@@ -103,3 +111,5 @@ if __name__ == '__main__':
         print(translate(text, lang1=args.lang1, lang2=args.lang2, model=args.model))
     elif args.action == 'proofread':
         print(json.dumps(proofread(text, model=args.model)))
+    elif args.action == 'tts':
+        print(text_to_speech(text))
