@@ -186,7 +186,7 @@
   (let* ((query-params (-> (list :term term :limit 100)
                            (ry//search-note-add-params :group query-group)
                            (ry//search-note-add-params :category category)))
-         (result (-> (ry/http-get "http://localhost:3000/search-note" query-params)
+         (result (-> (ry/http-get "http://cmdsrv.ryanye.com/search-note" query-params)
                      (plist-get :data)))
          (query-id (plist-get result :id)))
     (--map (plist-put it :query_id query-id) (plist-get result :data))))
