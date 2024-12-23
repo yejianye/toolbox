@@ -105,8 +105,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
     text = sys.stdin.read() if args.text == '-' else args.text
     if args.action == 'translate-filter':
-        text = translate(text, lang1=args.lang1, lang2=args.lang2, model=args.model)
-        print(json.dumps({'items': [{'title': text, 'arg': text}]}))
+        translation = translate(text, lang1=args.lang1, lang2=args.lang2, model=args.model)
+        value = json.dumps({'text': text, 'translation': translation})
+        print(json.dumps({'items': [{'title': translation, 'arg': value}]}))
     elif args.action == 'translate':
         print(translate(text, lang1=args.lang1, lang2=args.lang2, model=args.model))
     elif args.action == 'proofread':
