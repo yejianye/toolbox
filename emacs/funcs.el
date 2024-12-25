@@ -88,8 +88,13 @@ current buffer's, reload dir-locals."
     (insert (format "[[file:%s]]\n" filename))
     (org-redisplay-inline-images)))
 
-(defun ry/org-ctrl-c-redisplay-image ())
-  
+(defun ry/org-ctrl-c-redisplay-image ()
+  (interactive)
+  (if (looking-at "#+ATTR_ORG: :width")
+      (progn
+        (org-redisplay-inline-images)
+        t)
+    nil))
 
 (defun ry/org-hide-other-subtrees ()
   "Show next entry, keeping other entries closed.
