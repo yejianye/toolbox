@@ -81,17 +81,11 @@ current buffer's, reload dir-locals."
 
 (defun ry/org-paste-image()
   (interactive)
-  (let* ((width (string-to-number (read-string "Resize to width (empty for original size): ")))
-         (date-string (format-time-string "%Y-%m-%d-%H-%M"))
-         (random-id (random (expt 16 4)))
-         (filename (format "%s-%04x.png" date-string random-id))
-         (fullpath (expand-file-name (concat ry-org-images-dir filename))))
-    (shell-command (format "~/utils/save_screen.py --scale=0.5 --filename='%s'" fullpath))
-    (shell-command (format "~/utils/save_screen.py --filename='%s'"
-                           (s-replace ".png" "@2x.png" fullpath)))
-    (if (> width 0)
-        (insert (format "#+ATTR_ORG: :width %d\n" width)))
-    (insert (format "[[file:%s]]\n" fullpath))
+  (let* ((result (ry/pyfunc "rypy.org_paste_image" "screenshot_image"))
+         (filename (gethash "filename" result))
+         (width (gethash "width" result)))
+    (insert (format "#+ATTR_ORG: :width %d\n" width))
+    (insert (format "[[file:%s]]\n" filename))
     (org-redisplay-inline-images)))
 
 (defun ry/org-hide-other-subtrees ()
