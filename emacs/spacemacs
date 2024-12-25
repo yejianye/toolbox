@@ -1074,6 +1074,9 @@ layers configuration."
   (ry/org-entry-settings)
   (ry/org-mode-look-and-feel)
 
+  ;; org-ctrl-c-ctrl-c hooks
+  (add-hook 'org-ctrl-c-ctrl-c-hook 'ry/org-ctrl-c-redisplay-image)
+
   ;; org-capture
   (ry/org-capture-templates)
 

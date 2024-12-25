@@ -90,13 +90,13 @@ current buffer's, reload dir-locals."
 
 (defun ry/org-ctrl-c-redisplay-image ()
   (interactive)
-  (if (looking-at "#+ATTR_ORG: :width")
-      (progn
-        (org-redisplay-inline-images)
-        t)
-    nil))
-
-(add-hook 'org-ctrl-c-ctrl-c-hook 'ry/org-ctrl-c-redisplay-image)
+  (save-excursion
+    (beginning-of-line)
+    (if (re-search-forward "^#\\+ATTR_ORG:.*:width" (line-end-position) t)
+        (progn
+          (org-redisplay-inline-images)
+          t)
+      nil)))
 
 (defun ry/org-hide-other-subtrees ()
   "Show next entry, keeping other entries closed.
