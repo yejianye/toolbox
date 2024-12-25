@@ -81,17 +81,14 @@ current buffer's, reload dir-locals."
 
 (defun ry/org-paste-image()
   (interactive)
-  (let* ((is-retina (y-or-n-p "Is the screenshot taken from a retina display?"))
-         (width (string-to-number (read-string "Resize to width (empty for original size): ")))
+  (let* ((width (string-to-number (read-string "Resize to width (empty for original size): ")))
          (date-string (format-time-string "%Y-%m-%d-%H-%M"))
          (random-id (random (expt 16 4)))
          (filename (format "%s-%04x.png" date-string random-id))
          (fullpath (expand-file-name (concat ry-org-images-dir filename))))
-    (if (not is-retina)
-        (shell-command (format "~/utils/save_screen.py --filename='%s'" fullpath))
-      (shell-command (format "~/utils/save_screen.py --scale=0.5 --filename='%s'" fullpath))
-      (shell-command (format "~/utils/save_screen.py --filename='%s'"
-                             (s-replace ".png" "@2x.png" fullpath))))
+    (shell-command (format "~/utils/save_screen.py --scale=0.5 --filename='%s'" fullpath))
+    (shell-command (format "~/utils/save_screen.py --filename='%s'"
+                           (s-replace ".png" "@2x.png" fullpath)))
     (if (> width 0)
         (insert (format "#+ATTR_ORG: :width %d\n" width)))
     (insert (format "[[file:%s]]\n" fullpath))
