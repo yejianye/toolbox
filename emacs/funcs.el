@@ -96,6 +96,8 @@ current buffer's, reload dir-locals."
         t)
     nil))
 
+(add-hook 'org-ctrl-c-ctrl-c-hook 'ry/org-ctrl-c-redisplay-image)
+
 (defun ry/org-hide-other-subtrees ()
   "Show next entry, keeping other entries closed.
    Source: https://stackoverflow.com/questions/25161792/emacs-org-mode-how-can-i-fold-everything-but-the-current-headline
