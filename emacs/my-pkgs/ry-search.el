@@ -229,6 +229,17 @@
               (plist-get (ry/orgx-node-at-point) :ROOT))
     (ry/org-heading-to-indirect-buffer)))
 
+(defun ry//helm-org-preview-entry (entry)
+  (let ((display-buffer-alist '(("." (display-buffer-same-window)))))  ; Always use the same window
+    ((org-open-link-from-string (ry//helm-org-entry-build-link entry)))))
+  ;; (org-tree-to-indirect-buffer t))
+
+(defun org-open-link-in-current-window (link)
+  "Force `org-open-link-from-string` to open LINK in the current window."
+  (let ((display-buffer-alist
+         '(("." (display-buffer-same-window)))))  ; Always use the same window
+    (org-open-link-from-string link)))
+
 (defun ry//helm-org-entry-insert-link (entry)
   (ry/log-heading-click entry)
   (if (ry//helm-org-entry-new? entry)
@@ -270,7 +281,7 @@
   (helm :sources (helm-build-sync-source "Related Notes"
                    :candidates (ry//semantic-note-search-candidates question)
                    :action 'ry//helm-org-entry-indirect-buffer
-                   :persistent-action 'ry//helm-org-entry-indirect-buffer)
+                   :persistent-action 'ry//helm-org-preview-entry)
         :buffer "*helm org entries*"))
 
 
