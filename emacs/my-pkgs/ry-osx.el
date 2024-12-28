@@ -191,10 +191,5 @@ It only works in Mac OS "
   (message "Copied to system clipboard.")
   (evil-normal-state))
 
-(defun ry/osx-get-version ()
-  "Get the current macOS version."
-  (interactive)
-  (let ((version (shell-command-to-string "sw_vers -productVersion")))
-    (message "Current macOS version: %s" (string-trim version))))
 
 (provide 'ry-osx)
