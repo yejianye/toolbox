@@ -171,7 +171,7 @@
                 (kbd "s-<return>") (ry/helm-run-action 'ry//helm-org-entry-goto)
                 (kbd "s-i") (ry/helm-run-action 'ry//helm-org-entry-insert-link))
       :action (if default-insert-link 'ry//helm-org-entry-insert-link default-action)
-      :persistent-action 'ry//helm-org-entry-indirect-buffer)))
+      :persistent-action 'ry//helm-org-preview-entry)))
 
 (defun ry//helm-org-entry--candidates ()
   (-map 'ry//helm-org-entry-build-item
@@ -231,8 +231,8 @@
 
 (defun ry//helm-org-preview-entry (entry)
   (let ((display-buffer-alist '(("." (display-buffer-same-window)))))  ; Always use the same window
-    ((org-open-link-from-string (ry//helm-org-entry-build-link entry)))))
-  ;; (org-tree-to-indirect-buffer t))
+    (org-open-link-from-string (ry//helm-org-entry-build-link entry))
+    (org-tree-to-indirect-buffer t)))
 
 (defun org-open-link-in-current-window (link)
   "Force `org-open-link-from-string` to open LINK in the current window."
