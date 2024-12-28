@@ -191,4 +191,6 @@ It only works in Mac OS "
   (message "Copied to system clipboard.")
   (evil-normal-state))
 
+// Write a function that could get current mac os version. AI!
+
 (provide 'ry-osx)
