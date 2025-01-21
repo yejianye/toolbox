@@ -18,7 +18,7 @@
   (let ((time-created (org-entry-get nil "CREATED"))
         (prev-hash (org-entry-get nil "HASH"))
         (cur-hash (ry//orgentry-get-hash))
-        (now (format-time-string "%Y-%m-%d %H:%M:%S")))
+        (now (format-time-string "%Y-%m-%d %H:%M:%S" nil t)))
     (when (not time-created)
       (org-set-property "CREATED" now))
     (unless (and prev-hash (string= prev-hash cur-hash))
@@ -26,7 +26,7 @@
       (org-set-property "HASH" cur-hash))))
 
 (defun ry/orgentry-index-entry-root ()
-  (let* ((now (format-time-string "%Y-%m-%d %H:%M:%S"))
+  (let* ((now (format-time-string "%Y-%m-%d %H:%M:%S" nil t))
          (time-created (if (f-exists-p buffer-file-name)
                            (thread-first
                              (s-replace "{}" buffer-file-name "stat -f '%SB' -t '%Y-%m-%d %H:%M:%S' '{}'")

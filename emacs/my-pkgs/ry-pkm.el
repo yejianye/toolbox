@@ -32,7 +32,7 @@
          (fname (ry//pkm-note-filename category title))
          (dir (file-name-directory fname))
          (template (ry//pkm-note-get-template category))
-         (now (format-time-string "%Y-%m-%d %H:%M:%S"))
+         (now (format-time-string "%Y-%m-%d %H:%M:%S" nil t))  ;; nil=current-time, t=UTC
          (content (thread-last template
                                (s-replace "{title}" title)
                                (s-replace "{note-id}" note-id)
@@ -123,7 +123,7 @@
   (let* ((title (substring-no-properties (org-get-heading)))
          (note-id (org-id-get-create))
          (time-created (or (org-entry-get nil "CREATED")
-                           (format-time-string "%Y-%m-%d %H:%M:%S")))
+                           (format-time-string "%Y-%m-%d %H:%M:%S" nil t)))  ;; nil=current-time, t=UTC
          (category (ry//pkm-note-select-category))
          (fname (ry//pkm-note-filename category title time-created))
          (dir (file-name-directory fname))
