@@ -29,7 +29,7 @@ Sets current dir, uses existing window or creates new one."
     (other-window -1)))
 
 (defun ry/aider-stop ()
-  "Stop aider by killing its buffer and process."
+  "Stop aider by killing its buffer and process without confirmation."
   (interactive)
   (when-let ((buffer (get-buffer "*aider*")))
     (let ((process (get-buffer-process buffer)))
@@ -44,17 +44,15 @@ If region is selected, modifies the selected lines. Otherwise inserts at current
   (interactive "sCode generation/modification prompt: ")
   (if-let ((term-buffer (get-buffer "*aider*"))
            (file-path (buffer-file-name)))
-      (let ((region-info (when (use-region-p)
-                           (cons (line-number-at-pos (region-beginning))
-                                 (line-number-at-pos (region-end)))))
+      (let ((region-content (when (use-region-p)
+                              (buffer-substring-no-properties (region-beginning) (region-end))))
             (line-num (line-number-at-pos)))
         (with-current-buffer term-buffer
           (term-send-string nil (format "/add %s\n" file-path))
           (sleep-for 0.2)  ;; Brief pause to ensure file is added
-          (if region-info
-              (let ((region-content (buffer-substring-no-properties (region-beginning) (region-end))))
-                (term-send-string nil (format "{\nModify the following code in %s according to the instruction:\n```\n%s\n```\nInstruction: %s\n}\n"
-                                              (file-name-nondirectory file-path) region-content prompt)))
+          (if region-content
+            (term-send-string nil (format "{\nModify the following code in %s according to the instruction:\n```\n%s\n```\nInstruction: %s\n}\n"
+                                          (file-name-nondirectory file-path) region-content prompt))
             (term-send-string nil (format "{\n%s\nInsert the code at line %d\n}\n" prompt line-num)))))
     (message "aider is not started")))
 
