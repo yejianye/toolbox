@@ -7,9 +7,6 @@
 
 (require 'term)
 
-(defvar ry/aider-restart-wait-time 2.0
-  "Time in seconds to wait after stopping aider before restarting.")
-
 (defun ry/git-root-dir ()
   "Get the git root directory for current buffer's file."
   (when-let ((file (buffer-file-name))
@@ -37,8 +34,11 @@ Requires the buffer to be in a git repository."
     (let ((term-buffer (term "/bin/zsh")))
       (rename-buffer buffer-name)
       (with-current-buffer term-buffer
-        (setq-local ry/aider-git-root git-root))
-      (term-send-string term-buffer (format "cd %s\n" git-root))
+        (setq-local ry/aider-git-root git-root)
+        ;; Add evil mode hooks
+        (add-hook 'evil-normal-state-entry-hook 'term-line-mode nil t)
+        (add-hook 'evil-insert-state-entry-hook 'term-char-mode nil t))
+      (term-send-string term-buffer (format "cd %s\n" dir))
       (term-send-string term-buffer "aider\n"))
     ;; Return to original window
     (other-window -1)))
@@ -56,7 +56,6 @@ Requires the buffer to be in a git repository."
   "Restart aider by stopping and starting it again."
   (interactive)
   (ry/aider-stop)
-  (sleep-for ry/aider-restart-wait-time)  ;; Brief pause to ensure clean restart
   (ry/aider-start))
 
 (defun ry/aider-generate (prompt)
@@ -86,6 +85,17 @@ If region is selected, modifies the selected lines. Otherwise inserts at current
             (term-send-string nil (format "{\n%s\nInsert the code at line %d\n}\n" prompt line-num)))))
     (message "aider is not started")))
 
+(defun ry/aider-add-current-file ()
+  "Add current file to aider if it's running."
+  (interactive)
+  (if-let ((term-buffer (get-buffer "*aider*"))
+           (file-path (buffer-file-name)))
+      (progn
+        (with-current-buffer term-buffer
+          (term-send-string nil (format "/add %s\n" file-path))
+          (sleep-for 0.2)))  ;; Brief pause to ensure file is added
+    (message "aider is not started")))
+
 (defun ry/aider-switch-buffer ()
   "Switch to aider buffer if it exists."
   (interactive)
@@ -95,12 +105,14 @@ If region is selected, modifies the selected lines. Otherwise inserts at current
 
 (defhydra ry/hydra-aider (:color blue :hint nil)
   "
-_a_: start aider   _s_: stop aider   _g_: generate code   _b_: switch buffer   _q_: quit
+_a_: start aider   _s_: stop aider   _r_: restart aider   _g_: generate code   _b_: switch buffer   _f_: add file   _q_: quit
 "
   ("a" ry/aider-start)
   ("s" ry/aider-stop)
+  ("r" ry/aider-restart)
   ("g" ry/aider-generate)
   ("b" ry/aider-switch-buffer)
+  ("f" ry/aider-add-current-file)
   ("q" nil "quit"))
 
 (provide 'ry-llm)

@@ -902,7 +902,7 @@ layers configuration."
   (global-set-key (kbd "C-h f") 'helpful-callable)
   (global-set-key (kbd "C-h v") 'helpful-variable)
   (global-set-key (kbd "C-h k") 'helpful-key)
-  (global-set-key (kbd "s-a") 'aider-transient-menu)
+  (global-set-key (kbd "s-a") 'ry/hydra-aider/body)
 
   (global-set-key (kbd "s-w t") 'ry/writing-translate)
   (global-set-key (kbd "s-w r") 'ry/writing-proofread)
