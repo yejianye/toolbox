@@ -7,12 +7,25 @@
 
 (require 'term)
 
+(defvar ry/aider-restart-wait-time 2.0
+  "Time in seconds to wait after stopping aider before restarting.")
+
+(defun ry/git-root-dir ()
+  "Get the git root directory for current buffer's file."
+  (when-let ((file (buffer-file-name))
+             (default-directory (file-name-directory file)))
+    (locate-dominating-file default-directory ".git")))
+
 (defun ry/aider-start ()
   "Start aider in terminal buffer.
-Sets current dir, uses existing window or creates new one."
+Sets current dir, uses existing window or creates new one.
+Requires the buffer to be in a git repository."
   (interactive)
   (let ((buffer-name "*aider*")
-        (dir (file-name-directory (buffer-file-name))))
+        (dir (file-name-directory (buffer-file-name)))
+        (git-root (ry/git-root-dir)))
+    (unless git-root
+      (user-error "Not in a git repository"))
     ;; Kill existing buffer if it exists
     (when (get-buffer buffer-name)
       (kill-buffer buffer-name))
@@ -23,7 +36,9 @@ Sets current dir, uses existing window or creates new one."
     ;; Create new terminal and start aider
     (let ((term-buffer (term "/bin/zsh")))
       (rename-buffer buffer-name)
-      (term-send-string term-buffer (format "cd %s\n" dir))
+      (with-current-buffer term-buffer
+        (setq-local ry/aider-git-root git-root))
+      (term-send-string term-buffer (format "cd %s\n" git-root))
       (term-send-string term-buffer "aider\n"))
     ;; Return to original window
     (other-window -1)))
@@ -37,6 +52,13 @@ Sets current dir, uses existing window or creates new one."
         (delete-process process))
       (kill-buffer buffer))))
 
+(defun ry/aider-restart ()
+  "Restart aider by stopping and starting it again."
+  (interactive)
+  (ry/aider-stop)
+  (sleep-for ry/aider-restart-wait-time)  ;; Brief pause to ensure clean restart
+  (ry/aider-start))
+
 (defun ry/aider-generate (prompt)
   "Send PROMPT to aider for code generation or modification.
 Requires aider to be already running. Adds current file to aider first.
@@ -46,8 +68,16 @@ If region is selected, modifies the selected lines. Otherwise inserts at current
            (file-path (buffer-file-name)))
       (let ((region-content (when (use-region-p)
                               (buffer-substring-no-properties (region-beginning) (region-end))))
-            (line-num (line-number-at-pos)))
+            (line-num (line-number-at-pos))
+            (current-git-root (ry/git-root-dir)))
         (with-current-buffer term-buffer
+          (when (and ry/aider-git-root current-git-root
+                     (not (string= ry/aider-git-root current-git-root)))
+            (if (yes-or-no-p "Git root directory changed. Restart aider?")
+                (progn
+                  (ry/aider-restart)
+                  (sleep-for ry/aider-restart-wait-time))  ;; Wait for restart
+              (user-error "Git root directory mismatch")))
           (term-send-string nil (format "/add %s\n" file-path))
           (sleep-for 0.2)  ;; Brief pause to ensure file is added
           (if region-content
@@ -55,6 +85,23 @@ If region is selected, modifies the selected lines. Otherwise inserts at current
                                           (file-name-nondirectory file-path) region-content prompt))
             (term-send-string nil (format "{\n%s\nInsert the code at line %d\n}\n" prompt line-num)))))
     (message "aider is not started")))
+
+(defun ry/aider-switch-buffer ()
+  "Switch to aider buffer if it exists."
+  (interactive)
+  (if-let ((buffer (get-buffer "*aider*")))
+      (switch-to-buffer buffer)
+    (message "No aider buffer found")))
+
+(defhydra ry/hydra-aider (:color blue :hint nil)
+  "
+_a_: start aider   _s_: stop aider   _g_: generate code   _b_: switch buffer   _q_: quit
+"
+  ("a" ry/aider-start)
+  ("s" ry/aider-stop)
+  ("g" ry/aider-generate)
+  ("b" ry/aider-switch-buffer)
+  ("q" nil "quit"))
 
 (provide 'ry-llm)
 ;;; ry-llm.el ends here
