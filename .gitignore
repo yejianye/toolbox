@@ -10,3 +10,5 @@ tags
 session.vim
 .aider*
 .env
+
+prefs.plist
