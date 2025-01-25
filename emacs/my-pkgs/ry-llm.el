@@ -36,6 +36,7 @@ Requires the buffer to be in a git repository."
       (rename-buffer buffer-name)
       (with-current-buffer term-buffer
         (setq-local ry/aider-git-root git-root)
+        (local-set-key (kbd "s-v") 'ry/aider-paste)
         ;; Add evil mode hooks
         (add-hook 'evil-normal-state-entry-hook 'term-line-mode nil t)
         (add-hook 'evil-insert-state-entry-hook 'term-char-mode nil t))
@@ -103,6 +104,16 @@ If region is selected, modifies the selected lines. Otherwise inserts at current
   (if-let ((buffer (get-buffer "*aider*")))
       (switch-to-buffer-other-window buffer)
     (message "No aider buffer found")))
+
+(defun ry/aider-paste ()
+  "Send clipboard content to aider using macOS pbpaste."
+  (interactive)
+  (if-let ((term-buffer (get-buffer "*aider*")))
+      (with-current-buffer term-buffer
+        (let ((clipboard-content (shell-command-to-string "pbpaste")))
+          (term-send-string nil clipboard-content)
+          (term-send-string nil "\n")))
+    (message "aider is not started")))
 
 (defhydra ry/hydra-aider (:color blue :hint nil)
   "
