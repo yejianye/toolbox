@@ -100,7 +100,6 @@ This function should only modify configuration layer settings."
    dotspacemacs-delete-orphan-packages t
    dotspacemacs-additional-packages
    '(
-     (aider :location (recipe :fetcher github :repo "tninja/aider.el"))
      github-theme
      jade-mode
      vue-mode
@@ -730,6 +729,9 @@ layers configuration."
 
   ;; margin
   (setq-default left-margin-width 1 right-margin-width 1)
+
+  ;; trailing whitespace
+  (setq show-trailing-whitespace nil)
 
   ;; remove menu bar
   (ry/remove-menu-from-keymap global-map)
