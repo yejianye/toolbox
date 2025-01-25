@@ -82,6 +82,9 @@ alias fl='fab -f ~/toolbox/fabfile.py -l' # show all available commands
 alias fh='fab -f ~/toolbox/fabfile.py -d' # show help on specific command
 alias fedit='vim -S ~/toolbox/project.vim' # open vim to edit files in toolbox 
 
+# Other shortcut
+alias ai='ai_command.py'
+
 # }}}
 # {{{ ===MISC===
 [[ -s $HOME/.tmuxinator/scripts/tmuxinator ]] && source $HOME/.tmuxinator/scripts/tmuxinator
