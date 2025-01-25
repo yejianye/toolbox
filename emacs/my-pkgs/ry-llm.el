@@ -97,10 +97,10 @@ If region is selected, modifies the selected lines. Otherwise inserts at current
     (message "aider is not started")))
 
 (defun ry/aider-switch-buffer ()
-  "Switch to aider buffer if it exists."
+  "Switch to aider buffer in other window if it exists."
   (interactive)
   (if-let ((buffer (get-buffer "*aider*")))
-      (switch-to-buffer buffer)
+      (switch-to-buffer-other-window buffer)
     (message "No aider buffer found")))
 
 (defhydra ry/hydra-aider (:color blue :hint nil)
