@@ -110,9 +110,8 @@ If region is selected, modifies the selected lines. Otherwise inserts at current
   (interactive)
   (if-let ((term-buffer (get-buffer "*aider*")))
       (with-current-buffer term-buffer
-        (let ((clipboard-content (shell-command-to-string "pbpaste")))
-          (term-send-string nil clipboard-content)
-          (term-send-string nil "\n")))
+        (let ((clipboard-content (string-trim (shell-command-to-string "pbpaste"))))
+          (term-send-string nil clipboard-content)))
     (message "aider is not started")))
 
 (defhydra ry/hydra-aider (:color blue :hint nil)
