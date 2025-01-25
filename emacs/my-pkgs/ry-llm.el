@@ -19,6 +19,7 @@ Sets current dir, uses existing window or creates new one.
 Requires the buffer to be in a git repository."
   (interactive)
   (let ((buffer-name "*aider*")
+        (file-name (buffer-file-name))
         (dir (file-name-directory (buffer-file-name)))
         (git-root (ry/git-root-dir)))
     (unless git-root
@@ -39,7 +40,7 @@ Requires the buffer to be in a git repository."
         (add-hook 'evil-normal-state-entry-hook 'term-line-mode nil t)
         (add-hook 'evil-insert-state-entry-hook 'term-char-mode nil t))
       (term-send-string term-buffer (format "cd %s\n" dir))
-      (term-send-string term-buffer "aider\n"))
+      (term-send-string term-buffer (format "aider --file %s\n" file-name)))
     ;; Return to original window
     (other-window -1)))
 
