@@ -7,6 +7,11 @@
 
 (require 'term)
 
+(defcustom ry/aider-chat-window-height 10
+  "Height of the aider chat window in lines."
+  :type 'integer
+  :group 'ry-llm)
+
 (defun ry/git-root-dir ()
   "Get the git root directory for current buffer's file."
   (when-let ((file (buffer-file-name))
@@ -114,9 +119,41 @@ If region is selected, modifies the selected lines. Otherwise inserts at current
           (term-send-string nil clipboard-content)))
     (message "aider is not started")))
 
+(defun ry/aider-send-chat-message ()
+  "Send current buffer content to aider chat and clear buffer."
+  (interactive)
+  (when-let ((content (buffer-string))
+             (aider-buffer (get-buffer "*aider*")))
+    (with-current-buffer aider-buffer
+      (term-send-string nil content)
+      (term-send-string nil "\n"))
+    (erase-buffer)))
+
+(defun ry/aider-chat-message ()
+  "Open or show chat buffer to send messages to aider."
+  (interactive)
+  (let ((buf (get-buffer-create "*aider-chat-buffer*")))
+    ;; If buffer is already visible, just switch to it
+    (if (get-buffer-window buf)
+        (select-window (get-buffer-window buf))
+      ;; Otherwise create new window and show buffer
+      (split-window-below)
+      (other-window 1)
+      (switch-to-buffer buf)
+      (window-resize nil (- ry/aider-chat-window-height (window-height)))
+      (text-mode)
+      (use-local-map (copy-keymap text-mode-map))
+      (local-set-key (kbd "C-c C-c") 'ry/aider-send-chat-message)
+      (evil-local-set-key 'normal ",cc" 'ry/aider-send-chat-message)
+      (evil-local-set-key 'normal "q" (lambda ()
+                                       (interactive)
+                                       (delete-window)))
+      (setq-local header-line-format
+                  "Type your message. C-c C-c to send, q to hide"))))
+
 (defhydra ry/hydra-aider (:color blue :hint nil)
   "
-_a_: start aider   _s_: stop aider   _r_: restart aider   _g_: generate code   _b_: switch buffer   _f_: add file   _q_: quit
+_a_: start aider   _s_: stop aider   _r_: restart aider   _g_: generate code   _b_: switch buffer   _f_: add file   _c_: chat   _q_: quit
 "
   ("a" ry/aider-start)
   ("s" ry/aider-stop)
@@ -124,6 +161,7 @@ _a_: start aider   _s_: stop aider   _r_: restart aider   _g_: generate code   _
   ("g" ry/aider-generate)
   ("b" ry/aider-switch-buffer)
   ("f" ry/aider-add-current-file)
+  ("c" ry/aider-chat-message)
   ("q" nil "quit"))
 
 (provide 'ry-llm)
