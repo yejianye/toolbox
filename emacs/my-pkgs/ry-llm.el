@@ -134,7 +134,8 @@ If region is selected, modifies the selected lines. Otherwise inserts at current
 Starts aider if it's not already running."
   (interactive)
   ;; Start aider if not running
-  (unless (get-buffer "*aider*")
+  (if (get-buffer "*aider*")
+      (ry/aider-switch-buffer)
     (ry/aider-start))
   
   (let ((buf (get-buffer-create "*aider-chat-buffer*")))
