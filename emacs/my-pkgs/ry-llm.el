@@ -119,38 +119,6 @@ If region is selected, modifies the selected lines. Otherwise inserts at current
           (term-send-string nil clipboard-content)))
     (message "aider is not started")))
 
-(defun ry/aider-wait-until (pattern &optional timeout)
-  "Wait until PATTERN appears in aider buffer.
-PATTERN is a regular expression to match against new output lines.
-Optional TIMEOUT specifies maximum seconds to wait (default 60).
-Returns t if pattern found, nil if timeout reached."
-  (let ((start-time (float-time))
-        (timeout (or timeout 180))
-        found)
-    (with-current-buffer aider-buffer
-      (save-excursion
-        ;; Move to end of buffer
-        (term-char-mode)
-        (let ((start-pos (point)))
-          
-          ;; Loop until pattern found or timeout
-          (while (and (not found)
-                      (< (- (float-time) start-time) timeout))
-            (accept-process-output nil 1.0)  ;; Wait for new output
-            (let ((new-content (buffer-substring start-pos (point-max))))
-              (when (string-match-p pattern new-content)
-                (setq found t)))))
-        (term-line-mode))
-      
-      ;; Return whether pattern was found
-      found)))
-
-(defun ry/aider-wait-until-complete (&optional timeout)
-  "Wait until aider prompt '>' appears at start of line.
-Optional TIMEOUT specifies maximum seconds to wait (default 180).
-Returns t if prompt found, nil if timeout reached."
-  (ry/aider-wait-until "^>" timeout))
-
 (defun ry/aider-send-chat-message ()
   "Send current buffer content to aider chat and clear buffer.
 Stays in aider buffer until processing completes, then returns to chat buffer."
@@ -159,15 +127,9 @@ Stays in aider buffer until processing completes, then returns to chat buffer."
              (aider-buffer (get-buffer "*aider*"))
              (chat-buffer (current-buffer)))
     (erase-buffer)
-    (with-current-buffer aider-buffer
-      (term-send-string nil content)
-      (term-send-string nil "\n"))
-    ;; Switch to aider buffer
     (ry/aider-switch-buffer)
-    ;; Wait for completion
-    (ry/aider-wait-until-complete)
-    ;; Return to chat buffer
-    (switch-to-buffer chat-buffer)))
+    (term-send-string nil content)
+    (term-send-string nil "\n")))
 
 (defun ry/aider-chat-message ()
   "Open or show chat buffer to send messages to aider.
