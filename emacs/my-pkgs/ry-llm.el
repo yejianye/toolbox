@@ -124,26 +124,23 @@ If region is selected, modifies the selected lines. Otherwise inserts at current
 PATTERN is a regular expression to match against new output lines.
 Optional TIMEOUT specifies maximum seconds to wait (default 60).
 Returns t if pattern found, nil if timeout reached."
-  (let ((aider-buffer (get-buffer "*aider*"))
-        (start-time (float-time))
+  (let ((start-time (float-time))
         (timeout (or timeout 180))
         found)
-    (unless aider-buffer
-      (error "No aider buffer found"))
-    
     (with-current-buffer aider-buffer
       (save-excursion
         ;; Move to end of buffer
-        (goto-char (point-max))
+        (term-char-mode)
         (let ((start-pos (point)))
           
           ;; Loop until pattern found or timeout
           (while (and (not found)
                       (< (- (float-time) start-time) timeout))
-            (accept-process-output nil 0.1)  ;; Wait for new output
-            (goto-char (point-max))  ;; Always check from end
-            (when (search-backward-regexp pattern start-pos t)
-              (setq found t)))))
+            (accept-process-output nil 1.0)  ;; Wait for new output
+            (let ((new-content (buffer-substring start-pos (point-max))))
+              (when (string-match-p pattern new-content)
+                (setq found t)))))
+        (term-line-mode))
       
       ;; Return whether pattern was found
       found)))
@@ -166,7 +163,7 @@ Stays in aider buffer until processing completes, then returns to chat buffer."
       (term-send-string nil content)
       (term-send-string nil "\n"))
     ;; Switch to aider buffer
-    (switch-to-buffer aider-buffer)
+    (ry/aider-switch-buffer)
     ;; Wait for completion
     (ry/aider-wait-until-complete)
     ;; Return to chat buffer
