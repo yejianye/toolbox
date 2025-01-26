@@ -130,8 +130,13 @@ If region is selected, modifies the selected lines. Otherwise inserts at current
     (erase-buffer)))
 
 (defun ry/aider-chat-message ()
-  "Open or show chat buffer to send messages to aider."
+  "Open or show chat buffer to send messages to aider.
+Starts aider if it's not already running."
   (interactive)
+  ;; Start aider if not running
+  (unless (get-buffer "*aider*")
+    (ry/aider-start))
+  
   (let ((buf (get-buffer-create "*aider-chat-buffer*")))
     ;; If buffer is already visible, just switch to it
     (if (get-buffer-window buf)
